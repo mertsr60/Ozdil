@@ -594,7 +594,12 @@ class Parser:
                 node = Endeks(node, index_expr, curr.lineno)
             elif curr.type == 'OP' and curr.value == '.':
                 self.eat('OP')
-                attr_tok = self.eat('ID')
+                tok = self.current()
+                if tok.type in ('ID', 'KEYWORD'):
+                    self.pos += 1
+                    attr_tok = tok
+                else:
+                    raise SyntaxError(f"Yazım hatası: Beklenen ID, fakat '{tok.value}' bulundu.")
                 node = Nitelik(node, attr_tok.value, curr.lineno)
             else:
                 break

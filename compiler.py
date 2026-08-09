@@ -621,13 +621,20 @@ class Parser:
             'metin', 'liste', 'sözlük', 'sozluk'
         )
         if curr.type == 'KEYWORD' and curr.value in type_modifiers:
-            mod_tok = self.eat('KEYWORD')
-            target_tok = self.eat('ID')
-            target = Degisken(target_tok.value, target_tok.lineno)
-            self.eat('OP', '=')
-            value = self.parse_expression()
-            self.expect_statement_end()
-            return Atama(target, value, curr.lineno, modifier=mod_tok.value)
+            allowed_keyword_ids = ('tam_sayı', 'tam_sayi', 'ondalık', 'ondalik', 'metin', 'liste', 'sözlük', 'sozluk')
+            next_tok = self.peek()
+            if next_tok.type == 'ID' or (next_tok.type == 'KEYWORD' and next_tok.value in allowed_keyword_ids):
+                mod_tok = self.eat('KEYWORD')
+                target_tok = self.current()
+                if target_tok.type == 'ID':
+                    self.eat('ID')
+                else:
+                    self.eat('KEYWORD')
+                target = Degisken(target_tok.value, target_tok.lineno)
+                self.eat('OP', '=')
+                value = self.parse_expression()
+                self.expect_statement_end()
+                return Atama(target, value, curr.lineno, modifier=mod_tok.value)
             
         expr = self.parse_expression()
         if self.current().type == 'OP' and self.current().value == '=':
@@ -726,7 +733,12 @@ class Parser:
                 node = Endeks(node, index_expr, curr.lineno)
             elif curr.type == 'OP' and curr.value == '.':
                 self.eat('OP')
-                attr_tok = self.eat('ID')
+                tok = self.current()
+                if tok.type in ('ID', 'KEYWORD'):
+                    self.pos += 1
+                    attr_tok = tok
+                else:
+                    raise SyntaxError(f"Yazım hatası: Beklenen ID, fakat '{tok.value}' bulundu.")
                 node = Nitelik(node, attr_tok.value, curr.lineno)
             else:
                 break
@@ -755,6 +767,9 @@ class Parser:
         elif tok.type == 'KEYWORD' and tok.value in ('yok', 'boş', 'bos'):
             self.eat('KEYWORD')
             return Deger(None, tok.lineno)
+        elif tok.type == 'KEYWORD' and tok.value in ('tam_sayı', 'tam_sayi', 'ondalık', 'ondalik', 'metin', 'liste', 'sözlük', 'sozluk'):
+            self.eat('KEYWORD')
+            return Degisken(tok.value, tok.lineno)
         elif tok.type == 'ID':
             self.eat('ID')
             return Degisken(tok.value, tok.lineno)
@@ -964,6 +979,8 @@ def load_external_package(name, lineno, stdout_ref):
     from ozdil.package_manager import verify_package_signature
     from ozdil.sandbox import verify_python_code
     import ozdil.plugin_api
+    import sys
+    sys.modules['plugin_api'] = ozdil.plugin_api
     
     package_dirs = [
         os.path.abspath(os.path.expanduser("~/.ozdil/packages")),
@@ -1010,6 +1027,24 @@ def load_external_package(name, lineno, stdout_ref):
             f"'{name}' kütüphanesi güvenlik/imza testini geçemedi: {sig_msg}",
             lineno
         )
+        
+    # 1.5. Bağımlılıkları otomatik yükle (sys.modules kaydı için)
+    bagimliliklar = meta.get("bagimliliklar", [])
+    for dep in bagimliliklar:
+        m = re.match(r'^([a-zA-Z0-9_]+)', dep.strip())
+        if m:
+            dep_name = m.group(1)
+            if dep_name not in sys.modules:
+                try:
+                    load_external_package(dep_name, lineno, stdout_ref)
+                except Exception as e:
+                    if isinstance(e, OzdilError):
+                        raise e
+                    raise OzdilError(
+                        "Kütüphane Hatası (ImportError)",
+                        f"'{name}' kütüphanesinin bağımlılığı olan '{dep_name}' yüklenemedi: {str(e)}",
+                        lineno
+                    )
         
     pkg_type = meta.get("tur", "ozdil")
     permissions = meta.get("izinler", [])
@@ -1094,7 +1129,6 @@ def load_external_package(name, lineno, stdout_ref):
             )
             
         try:
-            local_scope = {}
             exec_globals = {
                 "__builtins__": __builtins__,
                 "print": lambda *args: stdout_ref.append(" ".join(str(x) for x in args) + "\n"),
@@ -1103,7 +1137,8 @@ def load_external_package(name, lineno, stdout_ref):
                 "time": time,
                 "plugin_api": ozdil.plugin_api
             }
-            exec(code_content, exec_globals, local_scope)
+            exec(code_content, exec_globals, exec_globals)
+            local_scope = exec_globals
             
             if "plugin" not in local_scope:
                 raise OzdilError(
@@ -1127,6 +1162,14 @@ def load_external_package(name, lineno, stdout_ref):
                     f"'{name}' kütüphanesinin 'plugin()' fonksiyonu bir sözlük döndürmeli.",
                     lineno
                 )
+                
+            # Dinamik modül kaydı (diğer modüllerin import edebilmesi için)
+            import types
+            mod = types.ModuleType(name)
+            for k, v in local_scope.items():
+                setattr(mod, k, v)
+            mod.plugin = plugin_func
+            sys.modules[name] = mod
                 
             return plugin_apis
         except Exception as e:
