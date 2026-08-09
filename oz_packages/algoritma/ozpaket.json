@@ -1,0 +1,10 @@
+{
+  "isim": "algoritma",
+  "surum": "1.1.0",
+  "yazar": "ozdil_toplulugu",
+  "tur": "ozdil",
+  "aciklama": "Tamamen ÖzDil ile yazılmış ilk kütüphane. Sıralama, arama, istatistik, matematiksel ve sayı dizisi (Fibonacci) algoritmaları içerir.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "1d92e9e77928a8fa1f8b27959e1988c2fec59601033faf68d0986b1802bcc6e2"
+}

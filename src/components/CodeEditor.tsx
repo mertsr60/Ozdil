@@ -42,9 +42,10 @@ interface CodeEditorProps {
   isRunning: boolean;
   flat?: boolean;
   onCursorChange?: (line: number, col: number) => void;
+  errorLine?: number | null;
 }
 
-export default function CodeEditor({ value, onChange, onRun, isRunning, flat = false, onCursorChange }: CodeEditorProps) {
+export default function CodeEditor({ value, onChange, onRun, isRunning, flat = false, onCursorChange, errorLine = null }: CodeEditorProps) {
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
   const [selectionStart, setSelectionStart] = useState(0);
   const [suggestions, setSuggestions] = useState<KeywordInfo[]>([]);
@@ -205,12 +206,136 @@ export default function CodeEditor({ value, onChange, onRun, isRunning, flat = f
       }
     }
 
-    // If suggestions are NOT showing but Tab is pressed, insert 4 spaces instead of tab-focus out
+    // Indent (Tab) or Outdent (Shift + Tab) with multi-line selection support
     if (e.key === "Tab") {
       e.preventDefault();
-      // If there's a single ghost text option available even if suggestions are closed, or let's just insert spaces
-      insertText("    ");
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+
+      if (start !== end || e.shiftKey) {
+        // Multi-line selection indent/outdent or shift-tab on a single line
+        const beforeSelection = value.slice(0, start);
+        const selectionText = value.slice(start, end);
+        const afterSelection = value.slice(end);
+
+        // Find the absolute start of the first selected line and end of the last selected line
+        const lineStartIdx = beforeSelection.lastIndexOf("\n") + 1;
+        const nextNewline = afterSelection.indexOf("\n");
+        const lineEndIdx = end + (nextNewline === -1 ? afterSelection.length : nextNewline);
+
+        const fullSelectionText = value.slice(lineStartIdx, lineEndIdx);
+        const linesArray = fullSelectionText.split("\n");
+
+        let modifiedLines: string[] = [];
+        let cursorShiftStart = 0;
+        let cursorShiftEnd = 0;
+
+        if (e.shiftKey) {
+          // Outdent
+          linesArray.forEach((line, idx) => {
+            if (line.startsWith("    ")) {
+              modifiedLines.push(line.slice(4));
+              if (idx === 0) cursorShiftStart -= 4;
+              cursorShiftEnd -= 4;
+            } else if (line.startsWith("\t")) {
+              modifiedLines.push(line.slice(1));
+              if (idx === 0) cursorShiftStart -= 1;
+              cursorShiftEnd -= 1;
+            } else {
+              const match = line.match(/^ {1,3}/);
+              const spacesCount = match ? match[0].length : 0;
+              modifiedLines.push(line.slice(spacesCount));
+              if (idx === 0) cursorShiftStart -= spacesCount;
+              cursorShiftEnd -= spacesCount;
+            }
+          });
+        } else {
+          // Indent
+          linesArray.forEach((line, idx) => {
+            modifiedLines.push("    " + line);
+            if (idx === 0) cursorShiftStart += 4;
+            cursorShiftEnd += 4;
+          });
+        }
+
+        const newFullText = modifiedLines.join("\n");
+        const newValue = value.slice(0, lineStartIdx) + newFullText + value.slice(lineEndIdx);
+        onChange(newValue);
+
+        // Restore focus and precise selection range
+        setTimeout(() => {
+          textarea.focus();
+          const newStart = Math.max(lineStartIdx, start + cursorShiftStart);
+          const newEnd = Math.max(lineStartIdx, end + cursorShiftEnd);
+          textarea.setSelectionRange(newStart, newEnd);
+          handleCursorMove();
+        }, 0);
+      } else {
+        // Normal single line Tab press
+        insertText("    ");
+      }
       return;
+    }
+
+    // Auto-Indent on Enter key press
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+
+      const textBeforeCursor = value.slice(0, start);
+      const currentLineStart = textBeforeCursor.lastIndexOf("\n") + 1;
+      const currentLine = textBeforeCursor.slice(currentLineStart);
+
+      // Extract existing indentation of the current line
+      const indentMatch = currentLine.match(/^[ \t]*/);
+      const currentIndent = indentMatch ? indentMatch[0] : "";
+
+      // Add extra indent if current line opens a block (ends with colon `:` or bracket `{` or `(`)
+      const trimmedLine = currentLine.trim();
+      let extraIndent = "";
+      if (trimmedLine.endsWith(":") || trimmedLine.endsWith("{") || trimmedLine.endsWith("(")) {
+        extraIndent = "    ";
+      }
+
+      const newlineAndIndent = "\n" + currentIndent + extraIndent;
+      const newValue = value.slice(0, start) + newlineAndIndent + value.slice(end);
+      onChange(newValue);
+
+      const newCursorPos = start + newlineAndIndent.length;
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+        handleCursorMove();
+      }, 0);
+      return;
+    }
+
+    // Smart Backspace (deletes a full tab of 4 spaces if cursor is aligned to tab boundary)
+    if (e.key === "Backspace") {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+
+      if (start === end) {
+        const textBeforeCursor = value.slice(0, start);
+        const currentLineStart = textBeforeCursor.lastIndexOf("\n") + 1;
+        const lineTextBeforeCursor = textBeforeCursor.slice(currentLineStart);
+
+        if (lineTextBeforeCursor.length > 0 && /^[ ]+$/.test(lineTextBeforeCursor)) {
+          const spacesCount = lineTextBeforeCursor.length;
+          if (spacesCount % 4 === 0) {
+            e.preventDefault();
+            const newValue = value.slice(0, start - 4) + value.slice(end);
+            onChange(newValue);
+            setTimeout(() => {
+              textarea.focus();
+              textarea.setSelectionRange(start - 4, start - 4);
+              handleCursorMove();
+            }, 0);
+            return;
+          }
+        }
+      }
     }
 
     // Auto brackets/quotes closing
@@ -363,15 +488,36 @@ export default function CodeEditor({ value, onChange, onRun, isRunning, flat = f
             ? "bg-zinc-50/50 dark:bg-zinc-900/20 border-zinc-100 dark:border-zinc-800/30"
             : "bg-zinc-50 dark:bg-zinc-900/40 border-zinc-100 dark:border-zinc-800/40"
         }`} id="line-numbers">
-          {Array.from({ length: lineCount }).map((_, i) => (
-            <div key={i} className="h-6">
-              {i + 1}
-            </div>
-          ))}
+          {Array.from({ length: lineCount }).map((_, i) => {
+            const isErrorLine = errorLine === i + 1;
+            return (
+              <div 
+                key={i} 
+                className={`h-6 transition-colors duration-200 ${
+                  isErrorLine 
+                    ? "bg-red-500/15 text-red-500 dark:text-red-400 font-bold border-r-2 border-red-500 pr-1 select-none" 
+                    : ""
+                }`}
+              >
+                {i + 1}
+              </div>
+            );
+          })}
         </div>
 
         {/* Overlapping Editor Component */}
         <div className="flex-1 relative overflow-auto h-full" id="overlapping-editor">
+          {/* Error Line Highlight Background */}
+          {errorLine && errorLine > 0 && errorLine <= lineCount && (
+            <div 
+              className="absolute left-0 right-0 h-6 bg-red-500/10 dark:bg-red-500/10 border-y border-red-500/20 pointer-events-none transition-all duration-200"
+              style={{
+                top: `${(errorLine - 1) * 24 + 16}px`,
+              }}
+              id="error-line-highlight-bar"
+            />
+          )}
+
           {/* Syntax Highlighted Underlay */}
           <pre
             ref={highlightRef}
@@ -426,7 +572,7 @@ export default function CodeEditor({ value, onChange, onRun, isRunning, flat = f
               <div className="max-h-48 overflow-y-auto">
                 {suggestions.map((item, idx) => (
                   <button
-                    key={item.keyword}
+                    key={`${item.keyword}-${item.pythonEquivalent}-${idx}`}
                     onClick={() => insertText(item.keyword, value.slice(0, selectionStart).split(/[^a-zA-Z0-9_ğüşöçİĞÜŞÖÇ]/).pop()?.length || 0)}
                     className={`w-full text-left px-3 py-2 text-xs flex flex-col transition border-b border-zinc-100 dark:border-zinc-900/40 last:border-b-0 ${
                       idx === selectedSuggestionIndex

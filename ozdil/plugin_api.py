@@ -20,6 +20,9 @@ class PluginAPI:
             "hata_olustu": [],
             "program_bitti": []
         }
+        # Telefon GUI Elementleri
+        self.gui_elements = []
+        self.current_page = None
 
     def fonksiyon_ekle(self, name, func):
         """
@@ -37,12 +40,10 @@ class PluginAPI:
     def event_ekle(self, event_name, func):
         """
         ÖzDil çalışma zamanı olaylarına dinleyici ekler.
-        Olaylar: program_basladi, paket_yuklendi, hata_olustu, program_bitti
         """
-        if event_name in self.events:
-            self.events[event_name].append(func)
-        else:
-            print(f"[Plugin API Uyarı] Geçersiz olay adı: {event_name}", file=sys.stderr)
+        if event_name not in self.events:
+            self.events[event_name] = []
+        self.events[event_name].append(func)
 
     def trigger_event(self, event_name, *args, **kwargs):
         """
@@ -63,6 +64,8 @@ class PluginAPI:
         self.commands.clear()
         for k in self.events.keys():
             self.events[k] = []
+        self.gui_elements.clear()
+        self.current_page = None
 
 # Global tekil (singleton) nesne. Python eklentileri bu nesneyi 'import plugin_api' diyerek kullanır.
 plugin = PluginAPI()

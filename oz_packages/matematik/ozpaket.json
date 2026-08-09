@@ -1,10 +1,10 @@
 {
   "isim": "matematik",
-  "surum": "1.0.0",
+  "surum": "1.1.0",
   "yazar": "ozdil_toplulugu",
   "tur": "python",
   "aciklama": "Gelişmiş matematiksel işlemler ve sabitler kütüphanesi.",
   "izinler": [],
   "bagimliliklar": [],
-  "imza": "31ebd9efbd4f476ec73c098b5ccd6f5d96c585e42303b7f8ab7c83837e065147"
+  "imza": "4600f772961e363c40a153c29d09d854a7b7167c8072696783ed007e098771ce"
 }

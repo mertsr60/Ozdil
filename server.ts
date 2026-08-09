@@ -12,7 +12,7 @@ async function startServer() {
 
   // API endpoint to compile and run code
   app.post("/api/run", (req, res) => {
-    const { code } = req.body;
+    const { code, inputs, event } = req.body;
     
     // Spawn python3 with compiler.py
     const child = spawn("python3", ["compiler.py"]);
@@ -39,7 +39,7 @@ async function startServer() {
     
     // Write request body to process stdin
     try {
-      child.stdin.write(JSON.stringify({ code: code || "" }));
+      child.stdin.write(JSON.stringify({ code: code || "", inputs: inputs || [], event: event || null }));
       child.stdin.end();
     } catch (writeErr) {
       clearTimeout(timeout);
@@ -94,44 +94,20 @@ async function startServer() {
 
   // API endpoint to list packages
   app.get("/api/packages", (req, res) => {
-    const REGISTRY_PACKAGES = [
-      {
-        isim: "grafik",
-        surum: "1.2.0",
-        yazar: "ozdil_toplulugu",
-        tur: "ozdil",
-        aciklama: "ÖzDil için konsol tabanlı grafik çizim ve görselleştirme araçları.",
-        izinler: []
-      },
-      {
-        isim: "kamera",
-        surum: "1.0.4",
-        yazar: "sistem_gelistirici",
-        tur: "python",
-        aciklama: "Kamera kontrolleri ve fotoğraf çekme işlevleri sağlayan Python eklentisi.",
-        izinler: ["kamera", "dosya_sistemi"]
-      },
-      {
-        isim: "veri_analizi",
-        surum: "2.1.0",
-        yazar: "veri_bilimci",
-        tur: "python",
-        aciklama: "Veri listeleri üzerinde ortalama, medyan ve mod hesaplayan gelişmiş istatistik kütüphanesi.",
-        izinler: []
-      },
-      {
-        isim: "yapay_zeka",
-        surum: "1.1.2",
-        yazar: "ai_uzmani",
-        tur: "ozdil",
-        aciklama: "Temel yapay zeka ve doğrusal regresyon tahmin modeli.",
-        izinler: []
-      }
-    ];
-
     try {
+      const repoPath = path.join(process.cwd(), "ozdil", "repository.json");
+      let registryPackages: any[] = [];
+      if (fs.existsSync(repoPath)) {
+        try {
+          const repoData = JSON.parse(fs.readFileSync(repoPath, "utf-8"));
+          registryPackages = repoData.paketler || [];
+        } catch (e) {
+          console.error("repository.json okuma hatası:", e);
+        }
+      }
+
       const packagesDir = path.join(process.cwd(), "oz_packages");
-      const list = REGISTRY_PACKAGES.map(pkg => {
+      const list = registryPackages.map((pkg: any) => {
         const isInstalled = fs.existsSync(path.join(packagesDir, pkg.isim));
         let installedVersion = "";
         if (isInstalled) {

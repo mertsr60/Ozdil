@@ -130,6 +130,24 @@ class SandboxChecker(ast.NodeVisitor):
 
         self.generic_visit(node)
 
+    def visit_Name(self, node):
+        if node.id.startswith("__") and node.id != "__init__":
+            self.errors.append(f"Güvenlik İhlali: Sistem seviyesi nesnelere erişim yasaktır ('{node.id}').")
+        self.generic_visit(node)
+
+    def visit_Attribute(self, node):
+        if node.attr.startswith("__") and node.attr != "__init__":
+            self.errors.append(f"Güvenlik İhlali: Sistem seviyesi özniteliklere erişim yasaktır ('{node.attr}').")
+        self.generic_visit(node)
+
+    def visit_Constant(self, node):
+        if isinstance(node.value, str):
+            val_lower = node.value.lower()
+            for forbidden in ("__builtins__", "__globals__", "__subclasses__", "__code__"):
+                if forbidden in val_lower:
+                    self.errors.append(f"Güvenlik İhlali: Gizli öznitelik veya sistem kelimesi kullanımı yasaktır ('{forbidden}').")
+        self.generic_visit(node)
+
     def _get_attribute_path(self, node):
         parts = []
         curr = node

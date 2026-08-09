@@ -11,7 +11,9 @@ import hashlib
 import re
 from ozdil.repository import fetch_package_data, generate_sha256
 
-LOCAL_PACKAGES_DIR = os.path.abspath("./oz_packages")
+_CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.abspath(os.path.join(_CURRENT_DIR, ".."))
+LOCAL_PACKAGES_DIR = os.path.join(_PROJECT_ROOT, "oz_packages")
 GLOBAL_PACKAGES_DIR = os.path.abspath(os.path.expanduser("~/.ozdil/packages"))
 
 def ensure_dirs():
@@ -94,10 +96,14 @@ def verify_package_signature(pkg_name):
         
     # Mevcut dosyaları hashle
     current_files = {}
-    for root, _, files in os.walk(pkg_path):
+    for root, dirs, files in os.walk(pkg_path):
+        # Skip hidden directories and __pycache__ from os.walk traversal
+        dirs[:] = [d for d in dirs if not d.startswith(".") and d != "__pycache__"]
         for f in files:
             if f == "ozpaket.json":
                 continue # ozpaket.json imza içermez, bu yüzden hariç bırakılır
+            if f.startswith(".") or f.endswith((".pyc", ".pyo")):
+                continue
             filepath = os.path.join(root, f)
             rel_path = os.path.relpath(filepath, pkg_path)
             try:
