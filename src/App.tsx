@@ -15,7 +15,8 @@ import {
   Sparkles,
   Play,
   Copy,
-  Check
+  Check,
+  Download
 } from "lucide-react";
 import CodeEditor from "./components/CodeEditor";
 import ASTViewer from "./components/ASTViewer";
@@ -31,6 +32,7 @@ export default function App() {
     error: null
   });
   const [isRunning, setIsRunning] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [activeTab, setActiveTab] = useState<"console" | "ast" | "python">("console");
   const [copiedKeyword, setCopiedKeyword] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(false);
@@ -58,6 +60,37 @@ export default function App() {
       setIsDark(true);
       document.documentElement.classList.add("dark");
       localStorage.setItem("theme", "dark");
+    }
+  };
+
+  const handleExportZip = async () => {
+    setIsExporting(true);
+    try {
+      const response = await fetch("/api/export", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ code })
+      });
+
+      if (!response.ok) {
+        throw new Error(`İndirme Hatası: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "ozdil_projesi.zip";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(`Dışa aktarma başarısız oldu: ${(err as Error).message}`);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -140,6 +173,22 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={handleExportZip}
+            disabled={isExporting}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-sm border border-zinc-200 dark:border-zinc-800 ${
+              isExporting
+                ? "bg-zinc-100 text-zinc-400 dark:bg-zinc-850 cursor-not-allowed"
+                : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 dark:text-indigo-300"
+            }`}
+            id="export-zip-btn"
+            title="Dili ve Kodları Çevrimdışı/Termux için Dışa Aktar (.zip)"
+          >
+            <Download className={`w-3.5 h-3.5 ${isExporting ? "animate-bounce" : ""}`} />
+            <span className="hidden sm:inline">Dışa Aktar (.zip)</span>
+            <span className="sm:hidden">Dışa Aktar</span>
+          </button>
+
           <button
             onClick={toggleTheme}
             className="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition"

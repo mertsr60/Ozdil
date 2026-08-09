@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { spawn } from "child_process";
 
@@ -87,6 +88,59 @@ async function startServer() {
           output: stdoutData || "",
           error: `Sonuç çözümlenirken hata oluştu: ${(err as Error).message}`
         });
+      }
+    });
+  });
+
+  // API endpoint to export code and runner files as a zip project
+  app.post("/api/export", (req, res) => {
+    const { code } = req.body;
+    
+    const child = spawn("python3", ["make_zip.py"]);
+    
+    let stdoutData = "";
+    let stderrData = "";
+    
+    child.stdin.write(JSON.stringify({ code: code || "" }));
+    child.stdin.end();
+    
+    child.stdout.on("data", (data) => {
+      stdoutData += data.toString();
+    });
+    
+    child.stderr.on("data", (data) => {
+      stderrData += data.toString();
+    });
+    
+    child.on("close", (exitCode) => {
+      if (stderrData.trim()) {
+        res.status(500).json({ error: `Sıkıştırma Hatası: ${stderrData}` });
+        return;
+      }
+      
+      try {
+        const parsed = JSON.parse(stdoutData);
+        if (parsed.success && parsed.filename) {
+          const zipPath = path.join(process.cwd(), parsed.filename);
+          
+          if (fs.existsSync(zipPath)) {
+            // Send file to client
+            res.download(zipPath, "ozdil_projesi.zip", (err) => {
+              // Delete zip file after download completed or failed
+              try {
+                fs.unlinkSync(zipPath);
+              } catch (unlinkErr) {
+                console.error("Temp zip silinemedi:", unlinkErr);
+              }
+            });
+          } else {
+            res.status(404).json({ error: "Oluşturulan zip dosyası bulunamadı." });
+          }
+        } else {
+          res.status(500).json({ error: parsed.error || "Zip oluşturulamadı." });
+        }
+      } catch (err) {
+        res.status(500).json({ error: `JSON çözme hatası: ${(err as Error).message}` });
       }
     });
   });
