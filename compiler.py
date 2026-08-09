@@ -8,6 +8,7 @@ import time
 
 class OzdilError(Exception):
     def __init__(self, friendly_type, message, lineno):
+        super().__init__(message)
         self.friendly_type = friendly_type
         self.message = message
         self.lineno = lineno
@@ -85,7 +86,7 @@ def tokenize_line(line_str, lineno):
                 'döndür', 'dondur', 'doğru', 'dogru', 'yanlış', 'yanlis', 've', 'veya', 'değil', 'degil', 
                 'içinde', 'icinde', 'in', 'getir', 'dur', 'devam_et', 'yok', 'boş', 'bos', 
                 'değişken', 'degisken', 'sabit', 'tam_sayı', 'tam_sayi', 'ondalık', 'ondalik', 
-                'metin', 'liste', 'sözlük', 'sozluk'
+                'metin', 'liste', 'sözlük', 'sozluk', 'break', 'continue', 'and', 'or', 'not'
             )
             if val in keywords_list:
                 tokens.append(Token('KEYWORD', val, lineno, start_col))
@@ -177,16 +178,18 @@ class Program(ASTNode):
         }
 
 class Atama(ASTNode):
-    def __init__(self, target, value, lineno):
+    def __init__(self, target, value, lineno, modifier=None):
         self.target = target
         self.value = value
         self.lineno = lineno
+        self.modifier = modifier
     def to_dict(self):
         return {
             "type": "Atama (Atama)",
             "lineno": self.lineno,
             "hedef": self.target.to_dict(),
-            "değer": self.value.to_dict()
+            "değer": self.value.to_dict(),
+            "belirleyici": self.modifier
         }
 
 class Eger(ASTNode):
@@ -490,7 +493,7 @@ class Parser:
             body.append(self.parse_statement())
         self.eat('DEDENT')
         
-        orelse = []
+        elif_nodes = []
         while self.current().type == 'KEYWORD' and self.current().value in ('değişken_eğer', 'degilse_eger', 'değilse_eğer', 'degilse_eğer', 'değilse_eger'):
             elif_tok = self.eat('KEYWORD')
             elif_test = self.parse_expression()
@@ -505,14 +508,14 @@ class Parser:
                     break
                 elif_body.append(self.parse_statement())
             self.eat('DEDENT')
-            orelse = [Eger(elif_test, elif_body, [], elif_tok.lineno)]
+            elif_nodes.append(Eger(elif_test, elif_body, [], elif_tok.lineno))
             
+        else_body = []
         if self.current().type == 'KEYWORD' and self.current().value in ('değilse', 'degilse'):
             self.eat('KEYWORD')
             self.eat('OP', ':')
             self.eat('NEWLINE')
             self.eat('INDENT')
-            else_body = []
             while self.current().type != 'DEDENT' and self.current().type != 'EOF':
                 while self.current().type == 'NEWLINE':
                     self.eat('NEWLINE')
@@ -520,12 +523,13 @@ class Parser:
                     break
                 else_body.append(self.parse_statement())
             self.eat('DEDENT')
-            if orelse:
-                orelse[0].orelse = else_body
-            else:
-                orelse = else_body
-                
-        return Eger(test, body, orelse, tok.lineno)
+            
+        current_orelse = else_body
+        for elif_node in reversed(elif_nodes):
+            elif_node.orelse = current_orelse
+            current_orelse = [elif_node]
+            
+        return Eger(test, body, current_orelse, tok.lineno)
         
     def parse_iken(self):
         tok = self.eat('KEYWORD')
@@ -548,7 +552,11 @@ class Parser:
         target_tok = self.eat('ID')
         target = Degisken(target_tok.value, target_tok.lineno)
         
-        self.eat('KEYWORD') # içinde / icinde / in
+        # 'içinde' / 'icinde' / 'in' is optional
+        next_tok = self.current()
+        if next_tok.type == 'KEYWORD' and next_tok.value in ('içinde', 'icinde', 'in'):
+            self.pos += 1
+            
         iter_expr = self.parse_expression()
         self.eat('OP', ':')
         self.eat('NEWLINE')
@@ -613,13 +621,13 @@ class Parser:
             'metin', 'liste', 'sözlük', 'sozluk'
         )
         if curr.type == 'KEYWORD' and curr.value in type_modifiers:
-            self.eat('KEYWORD')
+            mod_tok = self.eat('KEYWORD')
             target_tok = self.eat('ID')
             target = Degisken(target_tok.value, target_tok.lineno)
             self.eat('OP', '=')
             value = self.parse_expression()
             self.expect_statement_end()
-            return Atama(target, value, curr.lineno)
+            return Atama(target, value, curr.lineno, modifier=mod_tok.value)
             
         expr = self.parse_expression()
         if self.current().type == 'OP' and self.current().value == '=':
@@ -684,10 +692,10 @@ class Parser:
         
     def parse_power(self):
         node = self.parse_unary()
-        while self.current().type == 'OP' and self.current().value == '**':
+        if self.current().type == 'OP' and self.current().value == '**':
             op_tok = self.eat('OP')
-            right = self.parse_unary()
-            node = IkiliIslem('**', node, right, op_tok.lineno)
+            right = self.parse_power()
+            return IkiliIslem('**', node, right, op_tok.lineno)
         return node
         
     def parse_unary(self):
@@ -788,10 +796,17 @@ class Parser:
 class Environment:
     def __init__(self, parent=None):
         self.values = {}
+        self.types = {}
+        self.constants = set()
         self.parent = parent
         
-    def define(self, name, value):
+    def define(self, name, value, modifier=None):
         self.values[name] = value
+        if modifier:
+            if modifier in ('sabit',):
+                self.constants.add(name)
+            elif modifier in ('tam_sayı', 'tam_sayi', 'ondalık', 'ondalik', 'metin', 'liste', 'sözlük', 'sozluk'):
+                self.types[name] = modifier
         
     def lookup(self, name, lineno):
         if name in self.values:
@@ -805,14 +820,83 @@ class Environment:
             lineno
         )
         
-    def assign(self, name, value, lineno):
-        if name in self.values:
+    def assign(self, name, value, lineno, modifier=None):
+        if self.is_constant(name):
+            raise OzdilError(
+                "Değer Hatası (ValueError)",
+                f"'{name}' bir sabittir (constant) ve değeri değiştirilemez.",
+                lineno
+            )
+            
+        if modifier:
+            self.validate_type(modifier, value, lineno)
+            
+        target_env = self.find_env_for_var(name)
+        if target_env:
+            if name in target_env.types:
+                target_env.validate_type(target_env.types[name], value, lineno)
+            target_env.values[name] = value
+            if modifier == 'sabit':
+                target_env.constants.add(name)
+            elif modifier:
+                target_env.types[name] = modifier
+        else:
             self.values[name] = value
-            return
+            if modifier == 'sabit':
+                self.constants.add(name)
+            elif modifier:
+                self.types[name] = modifier
+                
+    def is_constant(self, name):
+        if name in self.constants:
+            return True
         if self.parent:
-            self.parent.assign(name, value, lineno)
-            return
-        self.values[name] = value
+            return self.parent.is_constant(name)
+        return False
+        
+    def find_env_for_var(self, name):
+        if name in self.values:
+            return self
+        if self.parent:
+            return self.parent.find_env_for_var(name)
+        return None
+        
+    def validate_type(self, modifier, value, lineno):
+        if modifier in ('tam_sayı', 'tam_sayi'):
+            if not isinstance(value, int) or isinstance(value, bool):
+                raise OzdilError(
+                    "Tür Hatası (TypeError)",
+                    f"Beklenen tür 'tam_sayı', ancak '{type(value).__name__}' türünde değer verildi.",
+                    lineno
+                )
+        elif modifier in ('ondalık', 'ondalik'):
+            if not isinstance(value, (int, float)) or isinstance(value, bool):
+                raise OzdilError(
+                    "Tür Hatası (TypeError)",
+                    f"Beklenen tür 'ondalık', ancak '{type(value).__name__}' türünde değer verildi.",
+                    lineno
+                )
+        elif modifier == 'metin':
+            if not isinstance(value, str):
+                raise OzdilError(
+                    "Tür Hatası (TypeError)",
+                    f"Beklenen tür 'metin', ancak '{type(value).__name__}' türünde değer verildi.",
+                    lineno
+                )
+        elif modifier == 'liste':
+            if not isinstance(value, list):
+                raise OzdilError(
+                    "Tür Hatası (TypeError)",
+                    f"Beklenen tür 'liste', ancak '{type(value).__name__}' türünde değer verildi.",
+                    lineno
+                )
+        elif modifier in ('sözlük', 'sozluk'):
+            if not isinstance(value, dict):
+                raise OzdilError(
+                    "Tür Hatası (TypeError)",
+                    f"Beklenen tür 'sözlük', ancak '{type(value).__name__}' türünde değer verildi.",
+                    lineno
+                )
 
 class ReturnException(Exception):
     def __init__(self, value):
@@ -834,6 +918,16 @@ def get_attribute(obj, attr, lineno):
             return obj.clear
         if attr in ('uzunluk', 'len'):
             return lambda: len(obj)
+        if attr in ('sırala', 'sirala', 'sort'):
+            return obj.sort
+        if attr in ('ters_çevir', 'ters_cevir', 'reverse'):
+            return obj.reverse
+        if attr in ('bul', 'index'):
+            return obj.index
+        if attr in ('say', 'count'):
+            return obj.count
+        if attr in ('sil', 'pop'):
+            return obj.pop
     elif isinstance(obj, dict):
         if attr in ('anahtarlar', 'keys'):
             return lambda: list(obj.keys())
@@ -858,6 +952,197 @@ def get_attribute(obj, attr, lineno):
         f"'{type(obj).__name__}' nesnesinin '{attr}' adında bir özelliği veya fonksiyonu yok.",
         lineno
     )
+
+def load_external_package(name, lineno, stdout_ref):
+    import os
+    import json
+    import re
+    import math
+    import random
+    import time
+    
+    from ozdil.package_manager import verify_package_signature
+    from ozdil.sandbox import verify_python_code
+    import ozdil.plugin_api
+    
+    package_dirs = [
+        os.path.abspath(os.path.expanduser("~/.ozdil/packages")),
+        os.path.abspath("./oz_packages"),
+    ]
+    
+    found_pkg_dir = None
+    for pdir in package_dirs:
+        potential_dir = os.path.join(pdir, name)
+        if os.path.isdir(potential_dir):
+            found_pkg_dir = potential_dir
+            break
+            
+    if not found_pkg_dir:
+        raise OzdilError(
+            "Kütüphane Hatası (ImportError)",
+            f"'{name}' kütüphanesi bulunamadı. Lütfen 'ozpip' ile yüklendiğinden veya yerel olarak mevcut olduğundan emin olun.",
+            lineno
+        )
+        
+    config_file = os.path.join(found_pkg_dir, "ozpaket.json")
+    if not os.path.isfile(config_file):
+        raise OzdilError(
+            "Kütüphane Hatası (ImportError)",
+            f"'{name}' kütüphanesinde 'ozpaket.json' yapılandırma dosyası eksik.",
+            lineno
+        )
+        
+    try:
+        with open(config_file, "r", encoding="utf-8") as f:
+            meta = json.load(f)
+    except Exception as e:
+        raise OzdilError(
+            "Kütüphane Hatası (ImportError)",
+            f"'{name}' kütüphanesinin 'ozpaket.json' dosyası okunamadı veya geçersiz JSON: {str(e)}",
+            lineno
+        )
+        
+    # 1. Sürüm imza doğrulaması (SHA256)
+    sig_ok, sig_msg = verify_package_signature(name)
+    if not sig_ok:
+        raise OzdilError(
+            "Güvenlik Hatası (SignatureError)",
+            f"'{name}' kütüphanesi güvenlik/imza testini geçemedi: {sig_msg}",
+            lineno
+        )
+        
+    pkg_type = meta.get("tur", "ozdil")
+    permissions = meta.get("izinler", [])
+    
+    # Tetikle: paket_yuklendi
+    ozdil.plugin_api.plugin.trigger_event("paket_yuklendi", name)
+    
+    if pkg_type == "ozdil":
+        entry_file = os.path.join(found_pkg_dir, f"{name}.oz")
+        if not os.path.isfile(entry_file):
+            entry_file = os.path.join(found_pkg_dir, "main.oz")
+            
+        if not os.path.isfile(entry_file):
+            raise OzdilError(
+                "Kütüphane Hatası (ImportError)",
+                f"'{name}' kütüphanesinde bir giriş dosyası ('{name}.oz' veya 'main.oz') bulunamadı.",
+                lineno
+            )
+            
+        try:
+            with open(entry_file, "r", encoding="utf-8") as f:
+                code_content = f.read()
+        except Exception as e:
+            raise OzdilError(
+                "Kütüphane Hatası (ImportError)",
+                f"'{name}' kütüphanesinin giriş dosyası okunamadı: {str(e)}",
+                lineno
+            )
+            
+        try:
+            pkg_tokens = lex_ozdil(code_content)
+            pkg_parser = Parser(pkg_tokens)
+            pkg_ast = pkg_parser.parse_program()
+            
+            pkg_interpreter = Interpreter()
+            pkg_interpreter.stdout = stdout_ref
+            
+            pkg_interpreter.eval(pkg_ast, pkg_interpreter.global_env)
+            return pkg_interpreter.global_env.values
+        except Exception as e:
+            if isinstance(e, OzdilError):
+                raise OzdilError(
+                    f"Kütüphane Hatası ({e.friendly_type})",
+                    f"'{name}' kütüphanesi yüklenirken hata oluştu (Satır {e.lineno}): {e.message}",
+                    lineno
+                )
+            raise OzdilError(
+                "Kütüphane Hatası (ImportError)",
+                f"'{name}' kütüphanesi yürütülürken hata: {str(e)}",
+                lineno
+            )
+            
+    elif pkg_type == "python":
+        entry_file = os.path.join(found_pkg_dir, f"{name}.py")
+        if not os.path.isfile(entry_file):
+            entry_file = os.path.join(found_pkg_dir, "main.py")
+            
+        if not os.path.isfile(entry_file):
+            raise OzdilError(
+                "Kütüphane Hatası (ImportError)",
+                f"'{name}' kütüphanesinde Python giriş dosyası ('{name}.py' veya 'main.py') bulunamadı.",
+                lineno
+            )
+            
+        try:
+            with open(entry_file, "r", encoding="utf-8") as f:
+                code_content = f.read()
+        except Exception as e:
+            raise OzdilError(
+                "Kütüphane Hatası (ImportError)",
+                f"'{name}' kütüphanesinin Python dosyası okunamadı: {str(e)}",
+                lineno
+            )
+            
+        # 2. Gelişmiş AST-tabanlı Python Sandbox Güvenlik Kontrolü
+        sandbox_ok, sandbox_errors = verify_python_code(code_content, name, permissions)
+        if not sandbox_ok:
+            raise OzdilError(
+                "Güvenlik Hatası (SecurityError)",
+                f"'{name}' Python eklentisi güvenlik süzgecini geçemedi:\n" + "\n".join(sandbox_errors),
+                lineno
+            )
+            
+        try:
+            local_scope = {}
+            exec_globals = {
+                "__builtins__": __builtins__,
+                "print": lambda *args: stdout_ref.append(" ".join(str(x) for x in args) + "\n"),
+                "math": math,
+                "random": random,
+                "time": time,
+                "plugin_api": ozdil.plugin_api
+            }
+            exec(code_content, exec_globals, local_scope)
+            
+            if "plugin" not in local_scope:
+                raise OzdilError(
+                    "Güvenlik Hatası (PluginError)",
+                    f"'{name}' kütüphanesinde 'plugin()' fonksiyonu tanımlanmamış.",
+                    lineno
+                )
+                
+            plugin_func = local_scope["plugin"]
+            if not callable(plugin_func):
+                raise OzdilError(
+                    "Güvenlik Hatası (PluginError)",
+                    f"'{name}' kütüphanesindeki 'plugin' bir fonksiyon değil.",
+                    lineno
+                )
+                
+            plugin_apis = plugin_func()
+            if not isinstance(plugin_apis, dict):
+                raise OzdilError(
+                    "Güvenlik Hatası (PluginError)",
+                    f"'{name}' kütüphanesinin 'plugin()' fonksiyonu bir sözlük döndürmeli.",
+                    lineno
+                )
+                
+            return plugin_apis
+        except Exception as e:
+            if isinstance(e, OzdilError):
+                raise e
+            raise OzdilError(
+                "Kütüphane Hatası (ImportError)",
+                f"'{name}' Python eklentisi yüklenirken hata oluştu: {str(e)}",
+                lineno
+            )
+    else:
+        raise OzdilError(
+            "Kütüphane Hatası (ImportError)",
+            f"'{name}' kütüphanesinin türü ('{pkg_type}') desteklenmiyor. Geçerli türler: 'ozdil', 'python'",
+            lineno
+        )
 
 class Interpreter:
     def __init__(self):
@@ -952,7 +1237,7 @@ class Interpreter:
         elif isinstance(node, Atama):
             val = self.eval(node.value, env)
             if isinstance(node.target, Degisken):
-                env.assign(node.target.name, val, node.lineno)
+                env.assign(node.target.name, val, node.lineno, modifier=node.modifier)
             elif isinstance(node.target, Endeks):
                 obj = self.eval(node.target.value, env)
                 idx = self.eval(node.target.index, env)
@@ -1078,18 +1363,23 @@ class Interpreter:
             return None
             
         elif isinstance(node, Islem):
-            def oz_func(*args):
-                if len(args) != len(node.args):
-                    raise OzdilError("Tür Hatası (TypeError)", f"'{node.name}' işlemi {len(node.args)} parametre bekliyor, fakat {len(args)} tane verildi.", node.lineno)
-                local_env = Environment(env)
-                for name, val in zip(node.args, args):
-                    local_env.define(name, val)
+            def make_oz_func(fn_node, fn_env):
+                def oz_func(*args):
+                    if len(args) != len(fn_node.args):
+                        raise OzdilError("Tür Hatası (TypeError)", f"'{fn_node.name}' işlemi {len(fn_node.args)} parametre bekliyor, fakat {len(args)} tane verildi.", fn_node.lineno)
+                    local_env = Environment(fn_env)
+                    for name, val in zip(fn_node.args, args):
+                        local_env.define(name, val)
+                    
+                    try:
+                        for stmt in fn_node.body:
+                            self.eval(stmt, local_env)
+                    except ReturnException as r:
+                        return r.value
+                    return None
+                return oz_func
                 
-                for stmt in node.body:
-                    self.eval(stmt, local_env)
-                return None
-                
-            env.define(node.name, oz_func)
+            env.define(node.name, make_oz_func(node, env))
             return None
             
         elif isinstance(node, Dondur):
@@ -1127,7 +1417,21 @@ class Interpreter:
                 }
                 env.define('zaman', time_ns)
             else:
-                raise OzdilError("Kütüphane Hatası (ImportError)", f"'{node.name}' kütüphanesi bulunamadı.", node.lineno)
+                try:
+                    pkg_ns = load_external_package(node.name, node.lineno, self.stdout)
+                    env.define(node.name, pkg_ns)
+                    
+                    # Kopya al: plugin_api tarafından kayıt edilmiş tüm fonksiyonları ve komutları global env alanına aktar
+                    import ozdil.plugin_api
+                    for func_name, func_obj in ozdil.plugin_api.plugin.functions.items():
+                        env.define(func_name, func_obj)
+                    for cmd_name, cmd_obj in ozdil.plugin_api.plugin.commands.items():
+                        env.define(cmd_name, cmd_obj)
+                        
+                except OzdilError as oz_err:
+                    raise oz_err
+                except Exception as e:
+                    raise OzdilError("Kütüphane Hatası (ImportError)", f"'{node.name}' kütüphanesi yüklenirken hata oluştu: {str(e)}", node.lineno)
             return None
             
         elif isinstance(node, DurNode):
@@ -1146,6 +1450,10 @@ def run_code(custom_code):
     ast_dict = None
     translated_tokens_str = ""
     
+    import ozdil.plugin_api
+    # Temizle ve sıfırla
+    ozdil.plugin_api.plugin.clear()
+    
     try:
         # Lexer
         tokens = lex_ozdil(custom_code)
@@ -1161,9 +1469,15 @@ def run_code(custom_code):
         ast_root = parser.parse_program()
         ast_dict = ast_root.to_dict()
         
+        # Olay tetikle: program_basladi
+        ozdil.plugin_api.plugin.trigger_event("program_basladi")
+        
         # Interpreter VM
         interpreter = Interpreter()
         interpreter.eval(ast_root, interpreter.global_env)
+        
+        # Olay tetikle: program_bitti
+        ozdil.plugin_api.plugin.trigger_event("program_bitti")
         
         output = "".join(interpreter.stdout)
         
@@ -1184,6 +1498,7 @@ def run_code(custom_code):
             f"--------------------------------------------------\n"
             f"Hatalı Kod: {err_line}"
         )
+        ozdil.plugin_api.plugin.trigger_event("hata_olustu", error)
     except SyntaxError as syn_err:
         lines = custom_code.splitlines()
         # Retrieve actual or estimated lineno and col
@@ -1212,6 +1527,7 @@ def run_code(custom_code):
             f"--------------------------------------------------\n"
             f"Hatalı Kod: {err_line}"
         )
+        ozdil.plugin_api.plugin.trigger_event("hata_olustu", error)
     except OzdilError as oz_err:
         lines = custom_code.splitlines()
         err_line = lines[oz_err.lineno - 1].strip() if 1 <= oz_err.lineno <= len(lines) else "Bilinmiyor"
@@ -1225,6 +1541,7 @@ def run_code(custom_code):
             f"{oz_err.friendly_type}: {oz_err.message}\n"
             f"Hatalı Kod: {err_line}"
         )
+        ozdil.plugin_api.plugin.trigger_event("hata_olustu", error)
     except Exception as e:
         tb = traceback.extract_tb(sys.exc_info()[2])
         lineno = tb[-1].lineno if tb else 1
@@ -1238,6 +1555,7 @@ def run_code(custom_code):
             f"--------------------------------------------------\n"
             f"Hatalı Kod: {err_line}"
         )
+        ozdil.plugin_api.plugin.trigger_event("hata_olustu", error)
         
     return {
         "translated": translated_tokens_str,

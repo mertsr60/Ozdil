@@ -1,0 +1,74 @@
+{
+  "paketler": [
+    {
+      "isim": "matematik",
+      "surum": "1.0.0",
+      "yazar": "ozdil_toplulugu",
+      "tur": "python",
+      "aciklama": "Gelişmiş matematiksel işlemler ve sabitler kütüphanesi.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "368e54737a09f874ab037d4f9b8c04fe8ff4ef8cb1323f66810a905a8f6e80b2"
+    },
+    {
+      "isim": "renkler",
+      "surum": "1.2.0",
+      "yazar": "tasarim_merkezi",
+      "tur": "python",
+      "aciklama": "Konsol çıktılarını renklendirmek için kullanılan ANSI renk kütüphanesi.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "4da67ef88a12bc2070ff0a936a5b6c2fe8ff4ef8cb2332ef439b120c8f5e71c1"
+    },
+    {
+      "isim": "hesap",
+      "surum": "2.0.0",
+      "yazar": "hesap_uzmani",
+      "tur": "python",
+      "aciklama": "İstatistiksel hesaplamalar yapan ve renkler paketini kullanan kütüphane.",
+      "izinler": [],
+      "bagimliliklar": ["renkler>=1.2.0"],
+      "imza": "a5deef9012a9ef43c9ff0a93c9e6f21bc9dd0e9f2cb428ff3920cde8f6b5a34e"
+    },
+    {
+      "isim": "grafik",
+      "surum": "1.2.0",
+      "yazar": "ozdil_toplulugu",
+      "tur": "ozdil",
+      "aciklama": "ÖzDil için konsol tabanlı grafik çizim ve görselleştirme araçları.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "82be6c90efc35478abcefa20cf4c39cb8a992e9e2cb098fe11d9bcde8f2f98bd"
+    },
+    {
+      "isim": "kamera",
+      "surum": "1.0.4",
+      "yazar": "sistem_gelistirici",
+      "tur": "python",
+      "aciklama": "Kamera kontrolleri ve fotoğraf çekme işlevleri sağlayan Python eklentisi.",
+      "izinler": ["kamera", "dosya_sistemi"],
+      "bagimliliklar": [],
+      "imza": "bc992cf8efc35478abcefa20cf4c39cb8a992e9e2cb098fe11d9bcde8f2f98bd"
+    },
+    {
+      "isim": "veri_analizi",
+      "surum": "2.1.0",
+      "yazar": "veri_bilimci",
+      "tur": "python",
+      "aciklama": "Veri listeleri üzerinde istatistiksel işlemler yapan kütüphane.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "fc9a3cefe912ab254c7d0a93c9d6f21bc9dd0e9f2cb428ff3920cde8f6b5a34e"
+    },
+    {
+      "isim": "yapay_zeka",
+      "surum": "1.1.2",
+      "yazar": "ai_uzmani",
+      "tur": "ozdil",
+      "aciklama": "Temel yapay zeka ve doğrusal regresyon tahmin modeli.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "dc7a9efea23ab4907c0f0a93c9e6f21bc9dd0e9f2cb428ff3920cde8f6b5a34e"
+    }
+  ]
+}
