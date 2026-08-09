@@ -258,7 +258,16 @@ export default function CodeEditor({ value, onChange, onRun, isRunning, flat = f
       'yazdir', 'yazdır', 'fonksiyon', 'islem', 'işlem', 'dondur', 'dogru', 'doğru', 'yanlis', 'yanlış',
       've', 'veya', 'degil', 'değil', 'icinde', 'içinde', 'aralik', 'aralık', 'uzunluk', 'ekle',
       'tam_sayi', 'tam_sayı', 'metin', 'ondalik', 'ondalık', 'liste', 'sozluk', 'sözlük', 'olarak',
-      'getir', 'dur', 'devam_et', 'yok', 'bos', 'boş'
+      'getir', 'dur', 'devam_et', 'yok', 'bos', 'boş',
+      // Built-in Library: matematik
+      'matematik', 'karekok', 'karekök', 'faktoriyel', 'faktöriyel', 'sinus', 'sinüs', 'kosinus', 'kosinüs',
+      'tanjant', 'radyan', 'derece', 'us', 'üs', 'mutlak', 'asagi_yuvarla', 'aşağı_yuvarla',
+      'yukari_yuvarla', 'yukarı_yuvarla', 'ebob', 'en_buyuk_ortak_bolen',
+      // Built-in Library: rastgele
+      'rastgele', 'ondalik_sec', 'ondalık_seç', 'tamsayi_sec', 'tamsayı_seç', 'aralikta_sec', 'aralıkta_seç',
+      'sec', 'seç', 'karistir', 'karıştır', 'ornek_sec', 'örnek_seç',
+      // Built-in Library: zaman
+      'zaman', 'bekle', 'yerel_zaman', 'tarih_saat'
     ]);
 
     // Token scanner regex matches double-quoted strings, single-quoted strings, comments, or words

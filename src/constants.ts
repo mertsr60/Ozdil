@@ -32,7 +32,30 @@ export const KEYWORDS: KeywordInfo[] = [
   { keyword: 'getir', pythonEquivalent: 'import', description: 'Harici bir Python modülünü içe aktarır.', usage: 'getir math' },
   { keyword: 'dur', pythonEquivalent: 'break', description: 'Aktif döngüyü anında sonlandırır.', usage: 'dur' },
   { keyword: 'devam_et', pythonEquivalent: 'continue', description: 'Döngünün geri kalanını atlayıp sonraki tura geçer.', usage: 'devam_et' },
-  { keyword: 'bos', pythonEquivalent: 'None', description: 'Değersizliği veya boşluğu ifade eder (None).', usage: 'sonuc = bos' }
+  { keyword: 'bos', pythonEquivalent: 'None', description: 'Değersizliği veya boşluğu ifade eder (None).', usage: 'sonuc = bos' },
+  // Built-in Libraries
+  { keyword: 'matematik', pythonEquivalent: 'math', description: 'Matematiksel fonksiyonlar ve sabitler kütüphanesi.', usage: 'getir matematik' },
+  { keyword: 'karekök', pythonEquivalent: 'sqrt', description: 'Bir sayının karekökünü hesaplar.', usage: 'matematik.karekök(16)' },
+  { keyword: 'faktöriyel', pythonEquivalent: 'factorial', description: 'Bir tam sayının faktöriyelini hesaplar.', usage: 'matematik.faktöriyel(5)' },
+  { keyword: 'üs', pythonEquivalent: 'pow', description: 'Tabanın belirtilen üssünü alır (x^y).', usage: 'matematik.üs(2, 3)' },
+  { keyword: 'sinüs', pythonEquivalent: 'sin', description: 'Radyan cinsinden açının sinüsünü hesaplar.', usage: 'matematik.sinüs(0.5)' },
+  { keyword: 'kosinüs', pythonEquivalent: 'cos', description: 'Radyan cinsinden açının kosinüsünü hesaplar.', usage: 'matematik.kosinüs(0.5)' },
+  { keyword: 'tanjant', pythonEquivalent: 'tan', description: 'Radyan cinsinden açının tanjantını hesaplar.', usage: 'matematik.tanjant(0.5)' },
+  { keyword: 'radyan', pythonEquivalent: 'radians', description: 'Derece cinsinden bir açıyı radyana çevirir.', usage: 'matematik.radyan(180)' },
+  { keyword: 'derece', pythonEquivalent: 'degrees', description: 'Radyan cinsinden bir açıyı dereceye çevirir.', usage: 'matematik.derece(3.14)' },
+  { keyword: 'aşağı_yuvarla', pythonEquivalent: 'floor', description: 'Bir ondalıklı sayıyı en yakın küçük tam sayıya yuvarlar.', usage: 'matematik.aşağı_yuvarla(3.8)' },
+  { keyword: 'yukarı_yuvarla', pythonEquivalent: 'ceil', description: 'Bir ondalıklı sayıyı en yakın büyük tam sayıya yuvarlar.', usage: 'matematik.yukarı_yuvarla(3.1)' },
+  { keyword: 'ebob', pythonEquivalent: 'gcd', description: 'İki tam sayının En Büyük Ortak Bölenini (EBOB) verir.', usage: 'matematik.ebob(12, 18)' },
+  { keyword: 'rastgele', pythonEquivalent: 'random', description: 'Rastgele sayı ve seçim işlemleri kütüphanesi.', usage: 'getir rastgele' },
+  { keyword: 'tamsayı_seç', pythonEquivalent: 'randint', description: 'Belirlenen iki sınır arasında rastgele bir tam sayı seçer (sınırlar dahil).', usage: 'rastgele.tamsayı_seç(1, 10)' },
+  { keyword: 'ondalık_seç', pythonEquivalent: 'random', description: '0.0 ile 1.0 arasında rastgele ondalıklı bir sayı üretir.', usage: 'rastgele.ondalık_seç()' },
+  { keyword: 'seç', pythonEquivalent: 'choice', description: 'Bir listeden rastgele bir eleman seçer.', usage: 'rastgele.seç(["elma", "armut", "muz"])' },
+  { keyword: 'karıştır', pythonEquivalent: 'shuffle', description: 'Bir listenin elemanlarının sırasını rastgele karıştırır.', usage: 'rastgele.karıştır(liste)' },
+  { keyword: 'örnek_seç', pythonEquivalent: 'sample', description: 'Bir koleksiyondan belirtilen miktarda benzersiz rastgele eleman seçer.', usage: 'rastgele.örnek_seç(liste, 2)' },
+  { keyword: 'zaman', pythonEquivalent: 'time', description: 'Zaman ve tarih işlemleri kütüphanesi.', usage: 'getir zaman' },
+  { keyword: 'bekle', pythonEquivalent: 'sleep', description: 'Programı belirtilen saniye boyunca duraklatır.', usage: 'zaman.bekle(2)' },
+  { keyword: 'yerel_zaman', pythonEquivalent: 'localtime', description: 'Mevcut yerel saat ve tarih yapısını döner.', usage: 'zaman.yerel_zaman()' },
+  { keyword: 'tarih_saat', pythonEquivalent: 'ctime', description: 'Mevcut zamanı okunabilir bir metin formatında verir.', usage: 'zaman.tarih_saat()' }
 ];
 
 export const EXAMPLES: ExampleCode[] = [
@@ -150,6 +173,38 @@ dene:
 hata_yakala ValueError olarak hata:
     yazdir("Dönüştürme Hatası Yakalandı! Detay: " + metin(hata))
     yazdir("Lütfen geçerli bir sayısal metin giriniz.")
+`
+  },
+  {
+    title: "Kütüphane Kullanımı (math, random, time)",
+    description: "Matematik, Rastgele ve Zaman modüllerini Türkçe kodlayarak harika uygulamalar yapın.",
+    code: `# Türkçe Kütüphane Paketlerinin Kullanımı
+
+getir matematik
+getir rastgele
+getir zaman
+
+yazdir("--- Matematik Kütüphanesi ---")
+yazdir("Pi Sayısı: " + metin(matematik.pi))
+yazdir("9 sayısının karekökü: " + metin(matematik.karekök(9)))
+yazdir("5 sayısının faktöriyeli: " + metin(matematik.faktöriyel(5)))
+yazdir("Dereceyi radyana çevir (180): " + metin(matematik.radyan(180)))
+
+yazdir("")
+yazdir("--- Rastgele Kütüphanesi ---")
+rastgele_sayi = rastgele.tamsayı_seç(1, 100)
+yazdir("1 ile 100 arasında rastgele sayı: " + metin(rastgele_sayi))
+
+meyveler = ["elma", "armut", "muz", "çilek"]
+secilen_meyve = rastgele.seç(meyveler)
+yazdir("Sizin için rastgele seçilen meyve: " + secilen_meyve)
+
+yazdir("")
+yazdir("--- Zaman Kütüphanesi ---")
+yazdir("Tarih ve Saat: " + zaman.tarih_saat())
+yazdir("Zamanlayıcı başlatılıyor. 1.5 saniye bekleniyor...")
+zaman.bekle(1.5)
+yazdir("Bekleme süresi doldu! Program başarıyla tamamlandı. 🎉")
 `
   }
 ];

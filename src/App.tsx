@@ -36,7 +36,6 @@ import CodeEditor from "./components/CodeEditor";
 import ASTViewer from "./components/ASTViewer";
 import { KEYWORDS, EXAMPLES } from "./constants";
 import { CompilerResult } from "./types";
-import confetti from "canvas-confetti";
 
 export default function App() {
   const [code, setCode] = useState<string>(EXAMPLES[0].code);
@@ -173,12 +172,6 @@ export default function App() {
         showToast("Hata ile sonuçlandı!", "error");
       } else {
         showToast("İşlem başarıyla tamamlandı!", "success");
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ["#6366f1", "#a855f7", "#ec4899", "#3b82f6"]
-        });
       }
     } catch (err) {
       setResults({
