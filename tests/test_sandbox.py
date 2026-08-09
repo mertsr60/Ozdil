@@ -32,5 +32,23 @@ class TestSandbox(unittest.TestCase):
         self.assertFalse(ok)
         self.assertTrue(any("eval" in err for err in errors))
 
+    def test_forbidden_builtins_import(self):
+        code = "import builtins\nbuiltins.eval('1')"
+        ok, errors = verify_python_code(code, "test_builtins")
+        self.assertFalse(ok)
+        self.assertTrue(any("builtins" in err for err in errors))
+
+    def test_forbidden_importlib(self):
+        code = "import importlib\n"
+        ok, errors = verify_python_code(code, "test_importlib")
+        self.assertFalse(ok)
+        self.assertTrue(any("importlib" in err for err in errors))
+
+    def test_introspection_blocking(self):
+        code = "x = ().__class__"
+        ok, errors = verify_python_code(code, "test_introspection")
+        self.assertFalse(ok)
+        self.assertTrue(any("sistem seviyesi" in err.lower() or "__class__" in err.lower() for err in errors))
+
 if __name__ == "__main__":
     unittest.main()

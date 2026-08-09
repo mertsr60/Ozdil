@@ -21,11 +21,30 @@ def base64_coz(metin):
         return f"Çözme Hatası: {str(e)}"
 
 def sezar_sifrele(metin, anahtar):
+    tr_lower = "abcçdefgğhıijklmnoöprsştuüvyz"
+    tr_upper = "ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ"
+    en_lower = "abcdefghijklmnopqrstuvwxyz"
+    en_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    
     res = []
+    shift = int(anahtar)
     for char in str(metin):
-        if char.isalpha():
-            start = ord('a') if char.islower() else ord('A')
-            res.append(chr((ord(char) - start + int(anahtar)) % 26 + start))
+        if char in tr_lower:
+            idx = tr_lower.index(char)
+            new_idx = (idx + shift) % 29
+            res.append(tr_lower[new_idx])
+        elif char in tr_upper:
+            idx = tr_upper.index(char)
+            new_idx = (idx + shift) % 29
+            res.append(tr_upper[new_idx])
+        elif char in en_lower:
+            idx = en_lower.index(char)
+            new_idx = (idx + shift) % 26
+            res.append(en_lower[new_idx])
+        elif char in en_upper:
+            idx = en_upper.index(char)
+            new_idx = (idx + shift) % 26
+            res.append(en_upper[new_idx])
         else:
             res.append(char)
     return "".join(res)

@@ -6,6 +6,7 @@ olay dinleyicileri (event handlers) eklemesini sağlayan merkezi plugin arabirim
 """
 
 import sys
+import threading
 
 class PluginAPI:
     def __init__(self):
@@ -51,10 +52,7 @@ class PluginAPI:
         """
         if event_name in self.events:
             for func in self.events[event_name]:
-                try:
-                    func(*args, **kwargs)
-                except Exception as e:
-                    print(f"[Plugin API Hata] '{event_name}' olayı tetiklenirken hata oluştu: {str(e)}", file=sys.stderr)
+                func(*args, **kwargs)
 
     def clear(self):
         """
@@ -67,5 +65,24 @@ class PluginAPI:
         self.gui_elements.clear()
         self.current_page = None
 
-# Global tekil (singleton) nesne. Python eklentileri bu nesneyi 'import plugin_api' diyerek kullanır.
-plugin = PluginAPI()
+class PluginAPIProxy:
+    _local = threading.local()
+
+    @classmethod
+    def get_current(cls):
+        if not hasattr(cls._local, "active_api"):
+            cls._local.active_api = PluginAPI()
+        return cls._local.active_api
+
+    @classmethod
+    def set_current(cls, api):
+        cls._local.active_api = api
+
+    def __getattr__(self, name):
+        return getattr(self.get_current(), name)
+
+    def __setattr__(self, name, value):
+        setattr(self.get_current(), name, value)
+
+# Global proxy nesne. Python eklentileri bu nesneyi 'import plugin_api' diyerek kullanır.
+plugin = PluginAPIProxy()

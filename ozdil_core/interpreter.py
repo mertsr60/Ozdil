@@ -131,6 +131,7 @@ def get_attribute(obj, attr, lineno):
 def validate_url_for_ssrf(url):
     import urllib.parse
     import socket
+    import ipaddress
     try:
         parsed = urllib.parse.urlparse(url)
         host = parsed.hostname
@@ -138,39 +139,45 @@ def validate_url_for_ssrf(url):
             raise ValueError("Geçersiz URL veya sunucu adı bulunamadı.")
         
         host_lower = host.lower()
-        if host_lower in ("localhost", "127.0.0.1", "0.0.0.0", "::1"):
+        if host_lower in ("localhost", "0.0.0.0", "::1"):
             raise ValueError("Yerel adreslere erişim engellendi.")
-        
-        if host_lower.startswith("10.") or host_lower.startswith("192.168.") or host_lower.startswith("169.254."):
-            raise ValueError("Özel ağ veya bulut metadata adreslerine erişim engellendi.")
-        
-        if host_lower.startswith("172."):
-            parts = host_lower.split('.')
-            if len(parts) >= 2 and parts[1].isdigit():
-                sec = int(parts[1])
-                if 16 <= sec <= 31:
-                    raise ValueError("Özel ağ adreslerine erişim engellendi.")
-                    
-        # DNS Rebinding & SSRF Koruması: Hostname IP adresini çözümleyip kontrol et
+            
+        # Quick syntax checks
+        if "localhost" in host_lower or "127.0.0.1" in host_lower:
+            raise ValueError("Yerel adreslere erişim engellendi.")
+            
+        # DNS Rebinding & SSRF Koruması: Hostname IP adreslerini çözümleyip kontrol et
         try:
-            ip = socket.gethostbyname(host)
-            if ip in ("127.0.0.1", "0.0.0.0"):
-                raise ValueError("Yerel IP adreslerine erişim engellendi.")
-            if ip.startswith("10.") or ip.startswith("192.168.") or ip.startswith("169.254."):
-                raise ValueError("Çözümlenen IP özel veya metadata ağındadır.")
-            if ip.startswith("172."):
-                parts = ip.split('.')
-                if len(parts) >= 2 and parts[1].isdigit():
-                    sec = int(parts[1])
-                    if 16 <= sec <= 31:
-                        raise ValueError("Çözümlenen IP özel ağdadır.")
+            # Resolve all IPs (handles both IPv4 and IPv6)
+            addr_info = socket.getaddrinfo(host, None)
+            for item in addr_info:
+                ip_str = item[4][0]
+                ip_obj = ipaddress.ip_address(ip_str)
+                if (ip_obj.is_loopback or 
+                    ip_obj.is_private or 
+                    ip_obj.is_link_local or 
+                    ip_obj.is_multicast or 
+                    ip_obj.is_reserved or 
+                    ip_obj.is_unspecified):
+                    raise ValueError(f"Erişim engellendi: IP {ip_str} özel, yerel veya geçersiz bir ağ adresidir.")
         except Exception as dns_err:
-            if "engellendi" in str(dns_err):
+            if "engellendi" in str(dns_err) or "Erişim engellendi" in str(dns_err):
                 raise dns_err
+            raise ValueError(f"DNS çözümleme hatası: {str(dns_err)}")
     except Exception as e:
         if "engellendi" in str(e):
             raise RuntimeError(f"Güvenlik Hatası (SSRF): {str(e)}")
         raise RuntimeError(f"URL doğrulama hatası: {str(e)}")
+
+def validate_filepath_for_sandbox(filepath):
+    abs_path = os.path.abspath(filepath)
+    allowed_root = os.path.abspath(_PROJECT_ROOT)
+    if not abs_path.startswith(allowed_root):
+        raise PermissionError("Hata: Dosya sisteminde bu dizine erişim güvenlik nedeniyle engellenmiştir!")
+    # Block access to sensitive system paths or critical code files
+    base_name = os.path.basename(abs_path)
+    if base_name in (".env", "config.json", "repository.py", "server.ts", "package.json"):
+        raise PermissionError("Hata: Hassas dosyalara erişim güvenlik nedeniyle engellenmiştir!")
 
 def _web_getir(url):
     import urllib.request
@@ -207,6 +214,68 @@ _BUILTIN_NAME_MAP = {
 }
 
 _BUILTIN_MODULE_CACHE = {}
+
+def make_restricted_builtins(permissions, stdout_ref):
+    import builtins
+    
+    safe_builtins = {}
+    
+    # Allowed safe builtin function and class names
+    safe_names = [
+        'abs', 'all', 'any', 'bin', 'chr', 'divmod', 'enumerate', 'filter', 'hex',
+        'id', 'len', 'map', 'max', 'min', 'next', 'oct', 'ord', 'pow', 'repr',
+        'reversed', 'round', 'sorted', 'sum', 'zip', 'int', 'float', 'str', 'bool',
+        'list', 'dict', 'tuple', 'set', 'frozenset', 'bytes', 'bytearray', 'range',
+        'slice', 'object', 'type', 'isinstance', 'issubclass', 'callable'
+    ]
+    
+    # Auto-allow exception classes
+    for name in dir(builtins):
+        obj = getattr(builtins, name)
+        if isinstance(obj, type) and issubclass(obj, BaseException):
+            safe_builtins[name] = obj
+            
+    for name in safe_names:
+        if hasattr(builtins, name):
+            safe_builtins[name] = getattr(builtins, name)
+            
+    # Custom print
+    safe_builtins['print'] = lambda *args: stdout_ref.append(" ".join(str(x) for x in args) + "\n")
+    
+    # Sandboxed open()
+    if "dosya_sistemi" in permissions:
+        def sandboxed_open(file, mode='r', *args, **kwargs):
+            validate_filepath_for_sandbox(file)
+            if mode not in ('r', 'w', 'a', 'rb', 'wb', 'ab', 'rt', 'wt', 'at'):
+                raise ValueError("Geçersiz veya güvensiz dosya açma modu.")
+            return builtins.open(file, mode, *args, **kwargs)
+        safe_builtins['open'] = sandboxed_open
+    else:
+        def disabled_open(*args, **kwargs):
+            raise PermissionError("Hata: Dosya sistemine erişim izniniz yok. Lütfen 'dosya_sistemi' izni talep edin.")
+        safe_builtins['open'] = disabled_open
+        
+    # Guarded getattr/setattr/hasattr
+    def sandboxed_getattr(obj, name, *args):
+        if isinstance(name, str) and (name.startswith('_') or '__' in name):
+            raise PermissionError(f"Güvenlik İhlali: Gizli veya sistem özniteliklerine erişim yasaktır ('{name}').")
+        return getattr(obj, name, *args)
+        
+    def sandboxed_setattr(obj, name, value):
+        if isinstance(name, str) and (name.startswith('_') or '__' in name):
+            raise PermissionError(f"Güvenlik İhlali: Gizli veya sistem özniteliklerine müdahale yasaktır ('{name}').")
+        setattr(obj, name, value)
+        
+    def sandboxed_hasattr(obj, name):
+        if isinstance(name, str) and (name.startswith('_') or '__' in name):
+            return False
+        return hasattr(obj, name)
+        
+    safe_builtins['getattr'] = sandboxed_getattr
+    safe_builtins['setattr'] = sandboxed_setattr
+    safe_builtins['hasattr'] = sandboxed_hasattr
+    
+    return safe_builtins
 
 def load_external_package(name, lineno, stdout_ref):
     if name in _PACKAGE_CACHE:
@@ -376,9 +445,10 @@ def load_external_package(name, lineno, stdout_ref):
             )
             
         try:
+            # Build heavily restricted and sandboxed __builtins__
+            restricted_builtins = make_restricted_builtins(permissions, stdout_ref)
             exec_globals = {
-                "__builtins__": __builtins__,
-                "print": lambda *args: stdout_ref.append(" ".join(str(x) for x in args) + "\n"),
+                "__builtins__": restricted_builtins,
                 "math": math,
                 "random": random,
                 "time": time,
@@ -844,8 +914,9 @@ class Interpreter:
                 return copied
 
             def _sifre_olustur(uzunluk):
+                import secrets
                 characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
-                return "".join(random.choice(characters) for _ in range(int(uzunluk)))
+                return "".join(secrets.choice(characters) for _ in range(int(uzunluk)))
 
             random_ns = {
                 'ondalık_seç': random.random, 'ondalik_sec': random.random,
@@ -923,12 +994,15 @@ class Interpreter:
             env.define(node.name, json_ns)
         elif node.name in ('dosya', 'file'):
             def _dosya_oku(filepath):
+                validate_filepath_for_sandbox(filepath)
                 with open(filepath, 'r', encoding='utf-8') as f:
                     return f.read()
             def _dosya_yaz(filepath, content):
+                validate_filepath_for_sandbox(filepath)
                 with open(filepath, 'w', encoding='utf-8') as f:
                     f.write(str(content))
             def _dosya_ekle(filepath, content):
+                validate_filepath_for_sandbox(filepath)
                 with open(filepath, 'a', encoding='utf-8') as f:
                     f.write(str(content))
             dosya_ns = {

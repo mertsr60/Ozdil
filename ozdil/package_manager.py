@@ -24,27 +24,86 @@ def parse_version(v_str):
     """
     Sürüm bilgisini sayısal tuple'a dönüştürür. '1.2.5' -> (1, 2, 5)
     """
-    m = re.match(r'v?(\d+)\.(\d+)\.(\d+)', v_str.strip())
+    m = re.match(r'^v?(\d+)\.(\d+)\.(\d+)$', v_str.strip())
     if m:
         return tuple(map(int, m.groups()))
-    return (0, 0, 0)
+    raise ValueError(f"Geçersiz sürüm formatı: '{v_str}'")
 
 def is_compatible(installed_v, req_str):
     """
     Kurulu sürümün, talep edilen sürüm kısıtına uygunluğunu denetler.
-    req_str örnekleri: ">=1.2.0", "==1.0.0", "<=2.0.0", ">1.0.0"
+    req_str can contain multiple constraints separated by commas, e.g. ">=1.0,<2.0",
+    or caret "^1.2.0", tilde "~1.2", or "!=" operators.
     """
-    m = re.match(r'^([><=]+)\s*(.*)$', req_str.strip())
-    if not m:
-        # Eğer operatör belirtilmediyse, doğrudan tam eşleşme veya herhangi bir uyumluluk kabul edilir
+    req_str = req_str.strip()
+    if not req_str:
         return True
+        
+    # Split by comma for multiple constraints (e.g. ">=1.0,<2.0")
+    parts = [p.strip() for p in req_str.split(',') if p.strip()]
+    if len(parts) > 1:
+        try:
+            return all(is_compatible(installed_v, part) for part in parts)
+        except Exception:
+            return False
+        
+    single_req = parts[0]
+    try:
+        inst = parse_version(installed_v)
+    except ValueError:
+        return False
     
+    # Check caret "^1.2.0"
+    if single_req.startswith('^'):
+        v_part = single_req[1:].strip()
+        try:
+            target = parse_version(v_part)
+        except ValueError:
+            return False
+        if inst < target:
+            return False
+        if target[0] > 0:
+            return inst[0] == target[0]
+        elif target[1] > 0:
+            return inst[0] == 0 and inst[1] == target[1]
+        else:
+            return inst[0] == 0 and inst[1] == 0 and inst[2] == target[2]
+            
+    # Check tilde "~1.2" or "~1.2.3"
+    if single_req.startswith('~'):
+        v_part = single_req[1:].strip()
+        dot_count = v_part.count('.')
+        try:
+            if dot_count == 1:
+                major, minor = map(int, v_part.split('.'))
+                target = (major, minor, 0)
+                limit = (major, minor + 1, 0)
+            else:
+                target = parse_version(v_part)
+                limit = (target[0], target[1] + 1, 0)
+        except Exception:
+            return False
+        return target <= inst < limit
+
+    # Check comparison operators
+    m = re.match(r'^([><=!]+)\s*(.*)$', single_req)
+    if not m:
+        try:
+            target = parse_version(single_req)
+            return inst == target
+        except ValueError:
+            return True
+            
     op, req_v_str = m.groups()
-    inst = parse_version(installed_v)
-    target = parse_version(req_v_str)
+    try:
+        target = parse_version(req_v_str)
+    except ValueError:
+        return False
     
     if op == '==':
         return inst == target
+    elif op == '!=':
+        return inst != target
     elif op == '>=':
         return inst >= target
     elif op == '<=':
@@ -59,8 +118,15 @@ def get_installed_package_meta(name):
     """
     Sistemde kurulu olan bir paketin ozpaket.json meta verilerini okur.
     """
+    name = os.path.basename(name.lower().strip())
+    if ".." in name or "/" in name or "\\" in name:
+        return None
+        
     for parent in [LOCAL_PACKAGES_DIR, GLOBAL_PACKAGES_DIR]:
-        pkg_path = os.path.join(parent, name)
+        pkg_path = os.path.abspath(os.path.join(parent, name))
+        normalized_parent = os.path.abspath(parent)
+        if not pkg_path.startswith(normalized_parent + os.sep) and pkg_path != normalized_parent:
+            continue
         meta_file = os.path.join(pkg_path, "ozpaket.json")
         if os.path.isfile(meta_file):
             try:
@@ -74,19 +140,25 @@ def verify_package_signature(pkg_name):
     """
     Kurulu paketin dosyalarını inceleyerek SHA256 imzası (bütünlük) kontrolü yapar.
     """
+    pkg_name = os.path.basename(pkg_name.lower().strip())
+    if ".." in pkg_name or "/" in pkg_name or "\\" in pkg_name:
+        return False, "Geçersiz paket adı."
+        
     meta = get_installed_package_meta(pkg_name)
     if not meta:
         return False, "Paket bulunamadı."
     
     expected_imza = meta.get("imza")
     if not expected_imza:
-        # Eski geriye dönük paketlerde imza zorunlu değil
-        return True, "İmzasız paket (eski sürüm uyumlu)."
+        return False, "Hata: İmzasız paketlerin kurulması veya çalıştırılması güvenlik nedeniyle engellenmiştir!"
         
     # Paket dizinini bul
     pkg_path = None
     for parent in [LOCAL_PACKAGES_DIR, GLOBAL_PACKAGES_DIR]:
-        p = os.path.join(parent, pkg_name)
+        p = os.path.abspath(os.path.join(parent, pkg_name))
+        normalized_parent = os.path.abspath(parent)
+        if not p.startswith(normalized_parent + os.sep) and p != normalized_parent:
+            continue
         if os.path.isdir(p):
             pkg_path = p
             break
@@ -124,7 +196,9 @@ def install_package(pkg_name, target="local", installing_set=None):
     SHA256 imzalarını doğrular ve sonsuz döngü kontrolü yapar.
     """
     ensure_dirs()
-    pkg_name = pkg_name.lower().strip()
+    pkg_name = os.path.basename(pkg_name.lower().strip())
+    if ".." in pkg_name or "/" in pkg_name or "\\" in pkg_name:
+        raise ValueError("Geçersiz paket adı.")
     
     if installing_set is None:
         installing_set = set()
@@ -135,69 +209,86 @@ def install_package(pkg_name, target="local", installing_set=None):
         
     installing_set.add(pkg_name)
     
-    # 1. Depodan paketi çek
-    repo_data = fetch_package_data(pkg_name)
-    if not repo_data:
-        raise ValueError(f"Hata: '{pkg_name}' adında bir paket depoda bulunamadı.")
-        
-    meta = repo_data["meta"]
-    files = repo_data["files"]
-    
-    # 2. Bağımlılıkları kontrol et ve kur
-    bagimliliklar = meta.get("bagimliliklar", [])
-    for dep in bagimliliklar:
-        # Bağımlılık tanımını parse et: örn. "renkler>=1.2.0"
-        m = re.match(r'^([a-zA-Z0-9_]+)\s*([><=]+.*)?$', dep.strip())
-        if m:
-            dep_name = m.group(1)
-            dep_constraint = m.group(2) or ""
+    try:
+        # 1. Depodan paketi çek
+        repo_data = fetch_package_data(pkg_name)
+        if not repo_data:
+            raise ValueError(f"Hata: '{pkg_name}' adında bir paket depoda bulunamadı.")
             
-            # Bağımlılık kurulu mu?
-            installed_meta = get_installed_package_meta(dep_name)
-            if installed_meta:
-                # Sürüm kontrolü
-                if dep_constraint and not is_compatible(installed_meta["surum"], dep_constraint):
-                    print(f"🔄 Sürüm Uyumsuzluğu: Kurulu '{dep_name}' ({installed_meta['surum']}) paketi '{dep_constraint}' kısıtını karşılamıyor. Güncelleniyor...")
-                    install_package(dep_name, target, installing_set)
-            else:
-                # Bağımlılığı kur
-                print(f"📦 Eksik bağımlılık tespit edildi: '{dep_name}' otomatik kuruluyor...")
-                install_package(dep_name, target, installing_set)
+        meta = repo_data["meta"]
+        files = repo_data["files"]
+        
+        # 2. Bağımlılıkları kontrol et ve kur
+        bagimliliklar = meta.get("bagimliliklar", [])
+        for dep in bagimliliklar:
+            # Bağımlılık tanımını parse et: örn. "renkler>=1.2.0"
+            m = re.match(r'^([a-zA-Z0-9_]+)\s*([><=]+.*)?$', dep.strip())
+            if m:
+                dep_name = m.group(1)
+                dep_constraint = m.group(2) or ""
                 
-    # 3. Paketi dizine yaz
-    dest_dir = GLOBAL_PACKAGES_DIR if target == "global" else LOCAL_PACKAGES_DIR
-    pkg_dest_path = os.path.join(dest_dir, pkg_name)
-    
-    # Eski varsa sil
-    if os.path.exists(pkg_dest_path):
-        shutil.rmtree(pkg_dest_path)
-    os.makedirs(pkg_dest_path, exist_ok=True)
-    
-    # Meta veriyi imza ile kaydet
-    with open(os.path.join(pkg_dest_path, "ozpaket.json"), "w", encoding="utf-8") as f:
-        json.dump(meta, f, indent=2, ensure_ascii=False)
+                # Bağımlılık kurulu mu?
+                installed_meta = get_installed_package_meta(dep_name)
+                if installed_meta:
+                    # Sürüm kontrolü
+                    if dep_constraint and not is_compatible(installed_meta["surum"], dep_constraint):
+                        print(f"🔄 Sürüm Uyumsuzluğu: Kurulu '{dep_name}' ({installed_meta['surum']}) paketi '{dep_constraint}' kısıtını karşılamıyor. Güncelleniyor...")
+                        install_package(dep_name, target, installing_set)
+                else:
+                    # Bağımlılığı kur
+                    print(f"📦 Eksik bağımlılık tespit edildi: '{dep_name}' otomatik kuruluyor...")
+                    install_package(dep_name, target, installing_set)
+                    
+        # 3. Paketi dizine yaz
+        dest_dir = GLOBAL_PACKAGES_DIR if target == "global" else LOCAL_PACKAGES_DIR
+        pkg_dest_path = os.path.abspath(os.path.join(dest_dir, pkg_name))
+        normalized_pkg_dest = os.path.abspath(pkg_dest_path)
         
-    # Dosyaları yaz
-    for filename, content in files.items():
-        filepath = os.path.join(pkg_dest_path, filename)
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        with open(filepath, "w", encoding="utf-8") as f:
-            f.write(content)
+        # Verifying target boundary
+        normalized_dest_dir = os.path.abspath(dest_dir)
+        if not pkg_dest_path.startswith(normalized_dest_dir + os.sep) and pkg_dest_path != normalized_dest_dir:
+            raise ValueError("Güvenlik İhlali: Geçersiz dizin konumu.")
+        
+        # Eski varsa sil
+        if os.path.exists(pkg_dest_path):
+            shutil.rmtree(pkg_dest_path)
+        os.makedirs(pkg_dest_path, exist_ok=True)
+        
+        # Meta veriyi imza ile kaydet
+        with open(os.path.join(pkg_dest_path, "ozpaket.json"), "w", encoding="utf-8") as f:
+            json.dump(meta, f, indent=2, ensure_ascii=False)
             
-    # Temizlik
-    installing_set.remove(pkg_name)
-    print(f"✨ Başarılı: '{pkg_name}' ({meta['surum']}) paketi başarıyla '{target}' dizinine kuruldu!")
-    return True
+        # Dosyaları yaz
+        for filename, content in files.items():
+            filepath = os.path.abspath(os.path.join(pkg_dest_path, filename))
+            if not filepath.startswith(normalized_pkg_dest + os.sep) and filepath != normalized_pkg_dest:
+                raise ValueError(f"Güvenlik İhlali: Geçersiz dosya yolu '{filename}'. Path traversal algılandı.")
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(content)
+                
+        print(f"✨ Başarılı: '{pkg_name}' ({meta['surum']}) paketi başarıyla '{target}' dizinine kuruldu!")
+        return True
+    finally:
+        # Temizlik - Exception oluşsa bile mutlaka çalışır
+        if pkg_name in installing_set:
+            installing_set.remove(pkg_name)
 
 def uninstall_package(pkg_name):
     """
     Belirtilen paketi yerel ve küresel dizinlerden kaldırır.
     """
-    pkg_name = pkg_name.lower().strip()
+    pkg_name = os.path.basename(pkg_name.lower().strip())
+    if ".." in pkg_name or "/" in pkg_name or "\\" in pkg_name:
+        raise ValueError("Geçersiz paket adı.")
+        
     removed = False
     
     for dest_dir in [LOCAL_PACKAGES_DIR, GLOBAL_PACKAGES_DIR]:
-        pkg_path = os.path.join(dest_dir, pkg_name)
+        pkg_path = os.path.abspath(os.path.join(dest_dir, pkg_name))
+        normalized_dest = os.path.abspath(dest_dir)
+        if not pkg_path.startswith(normalized_dest + os.sep) and pkg_path != normalized_dest:
+            continue
         if os.path.exists(pkg_path):
             print(f"🗑️ '{pkg_name}' paketi siliniyor...")
             shutil.rmtree(pkg_path)

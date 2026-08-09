@@ -429,9 +429,12 @@ class Parser:
             return Deger(float(tok.value), tok.lineno)
         elif tok.type == 'STRING':
             self.eat('STRING')
-            val = tok.value[1:-1]
-            # Handle minor escape sequences
-            val = val.replace('\\n', '\n').replace('\\t', '\t').replace('\\"', '"').replace("\\'", "'")
+            import ast
+            try:
+                val = ast.literal_eval(tok.value)
+            except Exception:
+                # Robust fallback
+                val = tok.value[1:-1].replace('\\n', '\n').replace('\\t', '\t').replace('\\"', '"').replace("\\'", "'").replace('\\\\', '\\')
             return Deger(val, tok.lineno)
         elif tok.type == 'KEYWORD' and tok.value in ('doğru', 'dogru'):
             self.eat('KEYWORD')

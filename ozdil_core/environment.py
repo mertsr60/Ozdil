@@ -31,28 +31,38 @@ class Environment:
         raise OzdilError("Tanımlanmamış Değişken (NameError)", f"'{name}' tanımlanmamış bir değişken.", lineno)
         
     def assign(self, name, value, lineno, modifier=None):
-        env = self.find_env_for_var(name)
-        if env:
-            # Check constant assignment
-            if env.is_constant(name):
+        # If a modifier is explicitly provided (except if it is None), it represents a variable declaration.
+        # It must be defined in the local environment directly to shadow outer variables.
+        if modifier is not None:
+            # Check constant assignment in local scope first
+            if name in self.values and self.is_constant(name):
                 raise OzdilError("Sabit Hatası (ConstantError)", f"'{name}' bir sabittir ve değeri değiştirilemez.", lineno)
             
-            # Type constraint check
-            target_mod = env.modifiers.get(name) or modifier
+            # If there's an existing type constraint in local scope:
+            target_mod = self.modifiers.get(name) or modifier
             if target_mod:
                 self.validate_type(target_mod, value, lineno)
-                if modifier and modifier != target_mod:
+                # If we redeclare with a different modifier
+                if modifier != target_mod and target_mod != 'değişken' and modifier != 'değişken':
                     raise OzdilError("Tip Hatası (TypeError)", f"'{name}' değişkeninin veri türü değiştirilemez (Mevcut: '{target_mod}', Verilen: '{modifier}').", lineno)
             
-            env.values[name] = value
-            if modifier:
-                env.modifiers[name] = modifier
-        else:
-            # Define as new variable in local scope
-            if modifier:
-                self.validate_type(modifier, value, lineno)
-                self.modifiers[name] = modifier
             self.values[name] = value
+            self.modifiers[name] = modifier
+        else:
+            # If modifier is None, we look up if the variable is already defined in the hierarchy.
+            env = self.find_env_for_var(name)
+            if env:
+                if env.is_constant(name):
+                    raise OzdilError("Sabit Hatası (ConstantError)", f"'{name}' bir sabittir ve değeri değiştirilemez.", lineno)
+                
+                target_mod = env.modifiers.get(name)
+                if target_mod:
+                    self.validate_type(target_mod, value, lineno)
+                
+                env.values[name] = value
+            else:
+                # If not found anywhere, define in the local scope
+                self.values[name] = value
             
     def is_constant(self, name):
         env = self

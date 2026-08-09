@@ -24,7 +24,14 @@ class SandboxChecker(ast.NodeVisitor):
             "shutil": "dosya_sistemi",
             "pathlib": "dosya_sistemi",
             "ctypes": "sistem",
-            "platform": "sistem"
+            "platform": "sistem",
+            "builtins": "sistem",
+            "importlib": "sistem",
+            "pickle": "sistem",
+            "marshal": "sistem",
+            "shelve": "sistem",
+            "runpy": "sistem",
+            "gc": "sistem"
         }
 
     def check_code(self, code_content):
@@ -133,11 +140,15 @@ class SandboxChecker(ast.NodeVisitor):
     def visit_Name(self, node):
         if node.id.startswith("__") and node.id != "__init__":
             self.errors.append(f"Güvenlik İhlali: Sistem seviyesi nesnelere erişim yasaktır ('{node.id}').")
+        elif node.id in ("eval", "exec", "compile"):
+            self.errors.append(f"Güvenlik İhlali: Güvensiz '{node.id}' kelimesinin kullanımı yasaktır.")
         self.generic_visit(node)
 
     def visit_Attribute(self, node):
         if node.attr.startswith("__") and node.attr != "__init__":
             self.errors.append(f"Güvenlik İhlali: Sistem seviyesi özniteliklere erişim yasaktır ('{node.attr}').")
+        elif node.attr in ("eval", "exec", "compile"):
+            self.errors.append(f"Güvenlik İhlali: Güvensiz '{node.attr}' özniteliğine erişim yasaktır.")
         self.generic_visit(node)
 
     def visit_Constant(self, node):
