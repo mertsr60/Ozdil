@@ -146,6 +146,9 @@ export default function App() {
   const handleRunCode = async () => {
     setIsRunning(true);
     setActiveMenu(null);
+    if (window.innerWidth < 1024) {
+      setSidebarTab(null);
+    }
     setPanelHeight("normal");
     setPanelTab("terminal");
     showToast("Kod derleniyor ve çalıştırılıyor...", "info");
@@ -193,6 +196,9 @@ export default function App() {
       output: "",
       error: null
     });
+    if (window.innerWidth < 1024) {
+      setSidebarTab(null);
+    }
     showToast(`"${exampleTitle}" şablonu yüklendi.`, "success");
   };
 
@@ -209,6 +215,9 @@ export default function App() {
       setOpenTabs([...openTabs, filename]);
     }
     setActiveFile(filename);
+    if (window.innerWidth < 1024) {
+      setSidebarTab(null);
+    }
   };
 
   const closeFileTab = (e: React.MouseEvent, filename: string) => {
@@ -229,6 +238,9 @@ export default function App() {
       setSidebarTab(null);
     } else {
       setSidebarTab(tab);
+      if (window.innerWidth < 1024) {
+        setPanelHeight("collapsed");
+      }
     }
   };
 
@@ -465,7 +477,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
             title="Kodu Çalıştır (Ctrl + Enter)"
           >
             <Play className={`w-3 h-3 ${isRunning ? "animate-spin" : "fill-current"}`} />
-            <span>{isRunning ? "Çalışıyor..." : "Çalıştır"}</span>
+            <span className="hidden sm:inline">{isRunning ? "Çalışıyor..." : "Çalıştır"}</span>
           </button>
 
           <button
@@ -496,7 +508,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
       <div className="flex-1 flex overflow-hidden relative" id="workspace-container">
         
         {/* ACTIVITY BAR (Leftmost strip) */}
-        <aside className="w-12 bg-zinc-100 dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-900 flex flex-col justify-between py-1 shrink-0 z-10 select-none" id="activity-bar">
+        <aside className="hidden lg:flex w-12 bg-zinc-100 dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-900 flex-col justify-between py-1 shrink-0 z-10 select-none" id="activity-bar">
           
           {/* Top Icons group */}
           <div className="flex flex-col items-center gap-0.5">
@@ -579,7 +591,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
         {/* COLLAPSIBLE SIDEBAR PANEL */}
         {sidebarTab && (
           <div 
-            className="w-64 bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-900 flex flex-col shrink-0 overflow-hidden select-none z-10" 
+            className="w-full lg:w-64 bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-900 flex flex-col shrink-0 overflow-hidden select-none z-10" 
             id="sidebar-panel"
           >
             {/* Sidebar Title Header */}
@@ -886,7 +898,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
         )}
 
         {/* MAIN WORKSPACE WRAPPER (Editor Tabs + Active Canvas + Terminal bottom panel) */}
-        <main className="flex-1 flex flex-col overflow-hidden min-w-0" id="main-editor-pane">
+        <main className={`flex-1 flex flex-col overflow-hidden min-w-0 ${sidebarTab ? "hidden lg:flex" : "flex"}`} id="main-editor-pane">
           
           {/* EDITOR TABS BAR */}
           <div className="h-10 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-900 flex items-center justify-between overflow-hidden shrink-0 select-none" id="editor-tabs-bar">
@@ -1256,9 +1268,9 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
       {/* MOBILE COMPACT NAVIGATION TAB BAR (Only shown on < 1024px screens) */}
       <nav className="flex lg:hidden bg-zinc-100 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-850 p-1 shrink-0 z-20 select-none" id="mobile-nav-bar">
         <button
-          onClick={() => { openFileTab("kod_alani.oz"); setSidebarTab(null); }}
+          onClick={() => { setSidebarTab(null); setPanelHeight("collapsed"); }}
           className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex flex-col items-center gap-1 ${
-            activeFile === "kod_alani.oz" && !sidebarTab
+            !sidebarTab && panelHeight === "collapsed"
               ? "bg-indigo-600 text-white dark:bg-indigo-500 shadow-sm"
               : "text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-850"
           }`}
@@ -1268,7 +1280,14 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
         </button>
 
         <button
-          onClick={() => toggleSidebarTab("explorer")}
+          onClick={() => {
+            if (sidebarTab === "explorer") {
+              setSidebarTab(null);
+            } else {
+              setSidebarTab("explorer");
+              setPanelHeight("collapsed");
+            }
+          }}
           className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex flex-col items-center gap-1 ${
             sidebarTab === "explorer"
               ? "bg-indigo-600 text-white dark:bg-indigo-500 shadow-sm"
@@ -1280,7 +1299,14 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
         </button>
 
         <button
-          onClick={() => toggleSidebarTab("search")}
+          onClick={() => {
+            if (sidebarTab === "search") {
+              setSidebarTab(null);
+            } else {
+              setSidebarTab("search");
+              setPanelHeight("collapsed");
+            }
+          }}
           className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex flex-col items-center gap-1 ${
             sidebarTab === "search"
               ? "bg-indigo-600 text-white dark:bg-indigo-500 shadow-sm"
@@ -1292,7 +1318,15 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
         </button>
 
         <button
-          onClick={() => { setPanelHeight("normal"); setPanelTab("terminal"); }}
+          onClick={() => {
+            if (panelHeight !== "collapsed" && !sidebarTab) {
+              setPanelHeight("collapsed");
+            } else {
+              setSidebarTab(null);
+              setPanelHeight("normal");
+              setPanelTab("terminal");
+            }
+          }}
           className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex flex-col items-center gap-1 ${
             panelHeight !== "collapsed" && !sidebarTab
               ? "bg-indigo-600 text-white dark:bg-indigo-500 shadow-sm"

@@ -303,9 +303,9 @@ export default function CodeEditor({ value, onChange, onRun, isRunning, flat = f
       )}
 
       {/* Code Editor Workspace */}
-      <div className="flex-1 flex relative overflow-hidden font-mono text-sm leading-relaxed" id="editor-workspace">
+      <div className="flex-1 flex relative overflow-hidden font-mono text-[16px] lg:text-sm leading-6" id="editor-workspace">
         {/* Line Numbers */}
-        <div className={`w-12 py-4 select-none text-right pr-3 text-zinc-400 border-r font-mono text-xs leading-relaxed ${
+        <div className={`w-12 py-4 select-none text-right pr-3 text-zinc-400 border-r font-mono text-xs leading-6 ${
           flat
             ? "bg-zinc-50/50 dark:bg-zinc-900/20 border-zinc-100 dark:border-zinc-800/30"
             : "bg-zinc-50 dark:bg-zinc-900/40 border-zinc-100 dark:border-zinc-800/40"
@@ -322,7 +322,7 @@ export default function CodeEditor({ value, onChange, onRun, isRunning, flat = f
           {/* Syntax Highlighted Underlay */}
           <pre
             ref={highlightRef}
-            className="absolute inset-0 p-4 font-mono text-sm leading-relaxed text-zinc-800 dark:text-zinc-200 pointer-events-none overflow-hidden whitespace-pre break-normal"
+            className="absolute inset-0 p-4 font-mono text-[16px] lg:text-sm leading-6 text-zinc-800 dark:text-zinc-200 pointer-events-none overflow-hidden whitespace-pre break-normal"
             style={{ margin: 0 }}
             dangerouslySetInnerHTML={{ __html: getHighlightedContent() }}
             id="syntax-highlighted-underlay"
@@ -349,7 +349,7 @@ export default function CodeEditor({ value, onChange, onRun, isRunning, flat = f
                 setGhostText("");
               }, 150);
             }}
-            className="absolute inset-0 w-full h-full p-4 font-mono text-sm leading-relaxed bg-transparent text-transparent caret-zinc-900 dark:caret-zinc-100 border-none outline-none resize-none overflow-auto whitespace-pre break-normal"
+            className="absolute inset-0 w-full h-full p-4 font-mono text-[16px] lg:text-sm leading-6 bg-transparent text-transparent caret-zinc-900 dark:caret-zinc-100 border-none outline-none resize-none overflow-auto whitespace-pre break-normal"
             style={{ margin: 0 }}
             placeholder="# Buraya Türkçe kod yazın...&#10;# Örn: yazdir('Merhaba Dünya!')"
             id="textarea-editor"
