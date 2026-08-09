@@ -128,9 +128,54 @@ def get_attribute(obj, attr, lineno):
         lineno
     )
 
+def validate_url_for_ssrf(url):
+    import urllib.parse
+    import socket
+    try:
+        parsed = urllib.parse.urlparse(url)
+        host = parsed.hostname
+        if not host:
+            raise ValueError("Geçersiz URL veya sunucu adı bulunamadı.")
+        
+        host_lower = host.lower()
+        if host_lower in ("localhost", "127.0.0.1", "0.0.0.0", "::1"):
+            raise ValueError("Yerel adreslere erişim engellendi.")
+        
+        if host_lower.startswith("10.") or host_lower.startswith("192.168.") or host_lower.startswith("169.254."):
+            raise ValueError("Özel ağ veya bulut metadata adreslerine erişim engellendi.")
+        
+        if host_lower.startswith("172."):
+            parts = host_lower.split('.')
+            if len(parts) >= 2 and parts[1].isdigit():
+                sec = int(parts[1])
+                if 16 <= sec <= 31:
+                    raise ValueError("Özel ağ adreslerine erişim engellendi.")
+                    
+        # DNS Rebinding & SSRF Koruması: Hostname IP adresini çözümleyip kontrol et
+        try:
+            ip = socket.gethostbyname(host)
+            if ip in ("127.0.0.1", "0.0.0.0"):
+                raise ValueError("Yerel IP adreslerine erişim engellendi.")
+            if ip.startswith("10.") or ip.startswith("192.168.") or ip.startswith("169.254."):
+                raise ValueError("Çözümlenen IP özel veya metadata ağındadır.")
+            if ip.startswith("172."):
+                parts = ip.split('.')
+                if len(parts) >= 2 and parts[1].isdigit():
+                    sec = int(parts[1])
+                    if 16 <= sec <= 31:
+                        raise ValueError("Çözümlenen IP özel ağdadır.")
+        except Exception as dns_err:
+            if "engellendi" in str(dns_err):
+                raise dns_err
+    except Exception as e:
+        if "engellendi" in str(e):
+            raise RuntimeError(f"Güvenlik Hatası (SSRF): {str(e)}")
+        raise RuntimeError(f"URL doğrulama hatası: {str(e)}")
+
 def _web_getir(url):
     import urllib.request
     try:
+        validate_url_for_ssrf(url)
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=10) as response:
             return response.read().decode('utf-8')
@@ -141,6 +186,7 @@ def _web_gonder(url, data_dict):
     import urllib.request
     import urllib.parse
     try:
+        validate_url_for_ssrf(url)
         data_bytes = urllib.parse.urlencode(data_dict).encode('utf-8')
         req = urllib.request.Request(url, data=data_bytes, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=10) as response:

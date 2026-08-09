@@ -242,7 +242,24 @@ def run_code(custom_code, inputs_list=None, trigger_event=None):
         "gui_elements": gui_elements
     }
 
+def set_resource_limits():
+    """
+    Kullanıcı kodunun aşırı RAM veya CPU tüketmesini engelleyen kaynak sınırlandırıcı.
+    """
+    try:
+        import resource
+        # Maksimum 5 saniye CPU süresi sınırı (sonsuz döngü koruması)
+        resource.setrlimit(resource.RLIMIT_CPU, (5, 6))
+        # Maksimum 128MB RAM / Sanal Bellek sınırı (bellek sızıntısı koruması)
+        resource.setrlimit(resource.RLIMIT_AS, (128 * 1024 * 1024, 160 * 1024 * 1024))
+    except Exception:
+        # Platform desteği yoksa (örn. Windows geliştirme ortamı) veya yetki hatası alınırsa yoksay
+        pass
+
 if __name__ == '__main__':
+    # Kaynak sınırlarını uygula
+    set_resource_limits()
+    
     input_data = sys.stdin.read()
     try:
         req = json.loads(input_data)

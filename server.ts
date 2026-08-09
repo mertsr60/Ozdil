@@ -92,6 +92,28 @@ async function startServer() {
     });
   });
 
+  // API endpoint to run automated unit tests on the core engine
+  app.post("/api/tests/run", (req, res) => {
+    const child = spawn("python3", ["tests/run_tests.py"]);
+    let stdoutData = "";
+    let stderrData = "";
+
+    child.stdout.on("data", (data) => {
+      stdoutData += data.toString();
+    });
+
+    child.stderr.on("data", (data) => {
+      stderrData += data.toString();
+    });
+
+    child.on("close", (code) => {
+      res.json({
+        success: code === 0,
+        output: stdoutData + (stderrData ? "\n" + stderrData : "")
+      });
+    });
+  });
+
   // API endpoint to list packages
   app.get("/api/packages", (req, res) => {
     try {
@@ -143,6 +165,12 @@ async function startServer() {
       return;
     }
 
+    // Safety validation on package name
+    if (!/^[a-zA-Z0-9_]+$/.test(name)) {
+      res.status(400).json({ success: false, error: "Geçersiz paket adı! Sadece harfler, sayılar ve alt çizgi kullanılabilir." });
+      return;
+    }
+
     const child = spawn("python3", ["ozpip.py", "install", name]);
     let stdoutData = "";
     let stderrData = "";
@@ -176,6 +204,12 @@ async function startServer() {
     const { name } = req.body;
     if (!name) {
       res.status(400).json({ success: false, error: "Paket adı belirtilmelidir." });
+      return;
+    }
+
+    // Safety validation on package name
+    if (!/^[a-zA-Z0-9_]+$/.test(name)) {
+      res.status(400).json({ success: false, error: "Geçersiz paket adı! Sadece harfler, sayılar ve alt çizgi kullanılabilir." });
       return;
     }
 
