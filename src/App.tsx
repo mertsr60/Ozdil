@@ -1153,7 +1153,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                   }`}
                 >
                   <Globe className="w-3.5 h-3.5" />
-                  <span>Python Karşılığı</span>
+                  <span>Sözcükler (Lexer)</span>
                 </button>
 
                 {/* Python AST Tree Tab */}
@@ -1267,18 +1267,18 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                   </div>
                 )}
 
-                {/* 2. Python Equivalent screen */}
+                {/* 2. Lexer Tokens screen */}
                 {panelTab === "python" && (
                   <div className="h-full flex flex-col select-text" id="python-screen-block">
                     <div className="text-zinc-500 mb-2 text-[10px] font-sans font-semibold uppercase tracking-wider">
-                      # Türkçe Kodun Python AST Tarafından Çevrilen Birebir Karşılığı
+                      # ÖzDil Sözcük Çözümleyici (Lexer) Tarafından Çözümlenen Token Listesi
                     </div>
                     {results.translated ? (
                       <pre className="text-zinc-300 whitespace-pre-wrap bg-zinc-950/40 p-3 rounded border border-zinc-900 leading-relaxed">
                         {results.translated}
                       </pre>
                     ) : (
-                      <div className="text-zinc-600 italic py-2">Henüz çevrilmiş kod yok. Lütfen önce kodunuzu koşturun.</div>
+                      <div className="text-zinc-600 italic py-2">Henüz çözümlenmiş sözcük (token) yok. Lütfen önce kodunuzu koşturun.</div>
                     )}
                   </div>
                 )}
