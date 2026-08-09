@@ -3,6 +3,38 @@ import { Play, RotateCcw, HelpCircle, Code, Eye, FileCode2 } from "lucide-react"
 import { KeywordInfo } from "../types";
 import { KEYWORDS } from "../constants";
 
+const ENHANCED_KEYWORDS: KeywordInfo[] = [];
+KEYWORDS.forEach(kw => {
+  ENHANCED_KEYWORDS.push(kw);
+  // Add Turkish accented version if applicable
+  let turkishAccent: string | null = null;
+  if (kw.keyword === 'yazdir') turkishAccent = 'yazdır';
+  else if (kw.keyword === 'eger') turkishAccent = 'eğer';
+  else if (kw.keyword === 'degilse_eger') turkishAccent = 'değilse_eğer';
+  else if (kw.keyword === 'degilse') turkishAccent = 'değilse';
+  else if (kw.keyword === 'dongu') turkishAccent = 'döngü';
+  else if (kw.keyword === 'islem') turkishAccent = 'işlem';
+  else if (kw.keyword === 'dogru') turkishAccent = 'doğru';
+  else if (kw.keyword === 'yanlis') turkishAccent = 'yanlış';
+  else if (kw.keyword === 'degil') turkishAccent = 'değil';
+  else if (kw.keyword === 'icinde') turkishAccent = 'içinde';
+  else if (kw.keyword === 'sinif') turkishAccent = 'sınıf';
+  else if (kw.keyword === 'aralik') turkishAccent = 'aralık';
+  else if (kw.keyword === 'tam_sayi') turkishAccent = 'tam_sayı';
+  else if (kw.keyword === 'ondalik') turkishAccent = 'ondalık';
+  else if (kw.keyword === 'sozluk') turkishAccent = 'sözlük';
+  else if (kw.keyword === 'bos') turkishAccent = 'boş';
+
+  if (turkishAccent) {
+    ENHANCED_KEYWORDS.push({
+      keyword: turkishAccent,
+      pythonEquivalent: kw.pythonEquivalent,
+      description: kw.description,
+      usage: kw.usage.replace(new RegExp(kw.keyword, 'g'), turkishAccent)
+    });
+  }
+});
+
 interface CodeEditorProps {
   value: string;
   onChange: (val: string) => void;
@@ -61,7 +93,7 @@ export default function CodeEditor({ value, onChange, onRun, isRunning, flat = f
     if (word && word.length >= 1) {
       // Find matching keywords
       const lowerWord = word.toLowerCase();
-      const filtered = KEYWORDS.filter((kw) =>
+      const filtered = ENHANCED_KEYWORDS.filter((kw) =>
         kw.keyword.toLowerCase().startsWith(lowerWord) &&
         kw.keyword.toLowerCase() !== lowerWord
       );
@@ -207,34 +239,46 @@ export default function CodeEditor({ value, onChange, onRun, isRunning, flat = f
   };
 
   const highlight = (codeText: string) => {
-    // Escape HTML entities to prevent rendering bugs
-    let html = codeText
+    // First escape HTML entities to prevent rendering bugs
+    const escaped = codeText
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
-    // Highlight strings in green
-    html = html.replace(/("(?:\\.|[^"\\])*")/g, '<span class="text-emerald-600 dark:text-emerald-400">$1</span>');
-    html = html.replace(/('(?:\\.|[^'\\])*')/g, '<span class="text-emerald-600 dark:text-emerald-400">$1</span>');
+    const controlKeywords = new Set([
+      'eger', 'eğer',
+      'degilse_eger', 'değilse_eğer', 'degilse_eğer', 'değilse_eger',
+      'degilse', 'değilse',
+      'dongu', 'döngü',
+      'her', 'iken', 'dene',
+      'hata_yakala', 'sinif', 'sınıf'
+    ]);
 
-    // Highlight comments in gray/italics
-    html = html.replace(/(#[^\n]*)/g, '<span class="text-zinc-400 dark:text-zinc-500 italic">$1</span>');
+    const builtinKeywords = new Set([
+      'yazdir', 'yazdır', 'fonksiyon', 'islem', 'işlem', 'dondur', 'dogru', 'doğru', 'yanlis', 'yanlış',
+      've', 'veya', 'degil', 'değil', 'icinde', 'içinde', 'aralik', 'aralık', 'uzunluk', 'ekle',
+      'tam_sayi', 'tam_sayı', 'metin', 'ondalik', 'ondalık', 'liste', 'sozluk', 'sözlük', 'olarak',
+      'getir', 'dur', 'devam_et', 'yok', 'bos', 'boş'
+    ]);
 
-    // Highlight control keywords (blue)
-    const controlKeywords = ['eger', 'degilse_eger', 'degilse', 'dongu', 'her', 'iken', 'dene', 'hata_yakala', 'sinif'];
-    controlKeywords.forEach(kw => {
-      const regex = new RegExp(`\\b${kw}\\b`, 'g');
-      html = html.replace(regex, `<span class="text-indigo-600 dark:text-indigo-400 font-semibold">${kw}</span>`);
+    // Token scanner regex matches double-quoted strings, single-quoted strings, comments, or words
+    const tokenRegex = /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|#[^\n]*|[a-zA-Z0-9_ğüşöçİĞÜŞÖÇıİ]+)/g;
+
+    return escaped.replace(tokenRegex, (match) => {
+      if (match.startsWith('"') || match.startsWith("'")) {
+        return `<span class="text-emerald-600 dark:text-emerald-400">${match}</span>`;
+      }
+      if (match.startsWith('#')) {
+        return `<span class="text-zinc-400 dark:text-zinc-500 italic">${match}</span>`;
+      }
+      if (controlKeywords.has(match)) {
+        return `<span class="text-indigo-600 dark:text-indigo-400 font-semibold">${match}</span>`;
+      }
+      if (builtinKeywords.has(match)) {
+        return `<span class="text-amber-600 dark:text-amber-400 font-medium">${match}</span>`;
+      }
+      return match;
     });
-
-    // Highlight builtins/standard variables (amber)
-    const builtinKeywords = ['yazdir', 'fonksiyon', 'islem', 'dondur', 'dogru', 'yanlis', 've', 'veya', 'degil', 'icinde', 'aralik', 'uzunluk', 'ekle', 'tam_sayi', 'metin', 'ondalik', 'liste', 'sozluk', 'olarak', 'getir', 'dur', 'devam_et', 'yok', 'bos'];
-    builtinKeywords.forEach(kw => {
-      const regex = new RegExp(`\\b${kw}\\b`, 'g');
-      html = html.replace(regex, `<span class="text-amber-600 dark:text-amber-400 font-medium">${kw}</span>`);
-    });
-
-    return html;
   };
 
   const getHighlightedContent = () => {

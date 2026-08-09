@@ -244,13 +244,27 @@ export default function App() {
     }
   };
 
+  // Normalize Turkish text to ASCII characters for accent-insensitive search
+  const normalizeTurkish = (str: string) => {
+    return str
+      .toLowerCase()
+      .replace(/ı/g, "i")
+      .replace(/ş/g, "s")
+      .replace(/ğ/g, "g")
+      .replace(/ç/g, "c")
+      .replace(/ö/g, "o")
+      .replace(/ü/g, "u");
+  };
+
   // Filter keywords in dictionary based on query
-  const filteredKeywords = KEYWORDS.filter(
-    (kw) =>
-      kw.keyword.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      kw.pythonEquivalent.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      kw.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredKeywords = KEYWORDS.filter((kw) => {
+    const query = normalizeTurkish(searchQuery);
+    return (
+      normalizeTurkish(kw.keyword).includes(query) ||
+      normalizeTurkish(kw.pythonEquivalent).includes(query) ||
+      normalizeTurkish(kw.description).includes(query)
+    );
+  });
 
   // Content for read-only runner script file "ozdil.py"
   const ozdilPyContent = `# -*- coding: utf-8 -*-
@@ -267,38 +281,56 @@ from io import BytesIO
 # Türkçe kelimelerden Python karşılıklarına birebir haritalama tablosu
 MAPPING = {
     'yazdir': 'print',
+    'yazdır': 'print',
     'eger': 'if',
+    'eğer': 'if',
     'degilse_eger': 'elif',
+    'değilse_eğer': 'elif',
+    'degilse_eğer': 'elif',
+    'değilse_eger': 'elif',
     'degilse': 'else',
+    'değilse': 'else',
     'dongu': 'for',
+    'döngü': 'for',
     'her': 'for',
     'iken': 'while',
     'fonksiyon': 'def',
     'islem': 'def',
+    'işlem': 'def',
     'dondur': 'return',
     'dogru': 'True',
+    'doğru': 'True',
     'yanlis': 'False',
+    'yanlış': 'False',
     've': 'and',
     'veya': 'or',
     'degil': 'not',
+    'değil': 'not',
     'icinde': 'in',
+    'içinde': 'in',
     'sinif': 'class',
+    'sınıf': 'class',
     'dene': 'try',
     'hata_yakala': 'except',
     'aralik': 'range',
+    'aralık': 'range',
     'uzunluk': 'len',
     'ekle': 'append',
     'tam_sayi': 'int',
+    'tam_sayı': 'int',
     'metin': 'str',
     'ondalik': 'float',
+    'ondalık': 'float',
     'liste': 'list',
     'sozluk': 'dict',
+    'sözlük': 'dict',
     'olarak': 'as',
     'getir': 'import',
     'dur': 'break',
     'devam_et': 'continue',
     'yok': 'None',
     'bos': 'None',
+    'boş': 'None',
 }
 
 def translate(code_str):

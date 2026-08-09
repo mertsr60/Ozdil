@@ -7,39 +7,57 @@ from io import BytesIO, StringIO
 
 MAPPING = {
     'yazdir': 'print',
+    'yazdır': 'print',
     'eger': 'if',
+    'eğer': 'if',
     'degilse_eger': 'elif',
+    'değilse_eğer': 'elif',
+    'degilse_eğer': 'elif',
+    'değilse_eger': 'elif',
     'degilse': 'else',
+    'değilse': 'else',
     'dongu': 'for',
+    'döngü': 'for',
     'her': 'for',
     'iken': 'while',
     'fonksiyon': 'def',
     'islem': 'def',
+    'işlem': 'def',
     'dondur': 'return',
     'dogru': 'True',
+    'doğru': 'True',
     'yanlis': 'False',
+    'yanlış': 'False',
     've': 'and',
     'veya': 'or',
     'degil': 'not',
+    'değil': 'not',
     'icinde': 'in',
+    'içinde': 'in',
     'sinif': 'class',
+    'sınıf': 'class',
     'dene': 'try',
     'hata_yakala': 'except',
     # Extra helper keywords
     'aralik': 'range',
+    'aralık': 'range',
     'uzunluk': 'len',
     'ekle': 'append',
     'tam_sayi': 'int',
+    'tam_sayı': 'int',
     'metin': 'str',
     'ondalik': 'float',
+    'ondalık': 'float',
     'liste': 'list',
     'sozluk': 'dict',
+    'sözlük': 'dict',
     'olarak': 'as',
     'getir': 'import',
     'dur': 'break',
     'devam_et': 'continue',
     'yok': 'None',
     'bos': 'None',
+    'boş': 'None',
 }
 
 def translate(code_str):
@@ -135,8 +153,13 @@ def run_code(custom_code):
         except Exception as exec_err:
             import traceback
             # Strip internal compiler traceback frames to show only user code errors
-            tb = traceback.format_exc()
-            error = tb
+            tb_lines = traceback.format_exception(type(exec_err), exec_err, exec_err.__traceback__)
+            filtered_lines = []
+            for line in tb_lines:
+                if "compiler.py" in line or "exec(code_obj" in line:
+                    continue
+                filtered_lines.append(line)
+            error = "".join(filtered_lines)
             
         sys.stdout = old_stdout
         output = mystdout.getvalue()
