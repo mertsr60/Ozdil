@@ -5,10 +5,10 @@ import {
   Layers,
   Globe,
   RefreshCw,
-  CheckCircle2,
   Moon,
   Sun,
   ChevronRight,
+  ChevronDown,
   Info,
   X,
   Code,
@@ -16,7 +16,21 @@ import {
   Play,
   Copy,
   Check,
-  Download
+  Download,
+  Settings,
+  Search,
+  Folder,
+  FolderOpen,
+  FileCode2,
+  Trash2,
+  Maximize2,
+  Minimize2,
+  HelpCircle,
+  Bug,
+  Cpu,
+  CornerDownRight,
+  Sparkle,
+  RotateCcw
 } from "lucide-react";
 import CodeEditor from "./components/CodeEditor";
 import ASTViewer from "./components/ASTViewer";
@@ -33,21 +47,45 @@ export default function App() {
   });
   const [isRunning, setIsRunning] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [activeTab, setActiveTab] = useState<"console" | "ast" | "python">("console");
-  const [copiedKeyword, setCopiedKeyword] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(true);
-
-  // Mobile Layout Tab selection: "editor", "results", "docs"
-  const [mobileTab, setMobileTab] = useState<"editor" | "results" | "docs">("editor");
+  
+  // VS Code IDE State managers
+  const [sidebarTab, setSidebarTab] = useState<"explorer" | "search" | "run" | "docs" | null>("explorer");
+  const [panelTab, setPanelTab] = useState<"terminal" | "python" | "ast">("terminal");
+  const [panelHeight, setPanelHeight] = useState<"collapsed" | "normal" | "maximized">("normal");
+  
+  // File System State (Open tabs in the editor)
+  const [openTabs, setOpenTabs] = useState<string[]>(["kod_alani.oz", "BENI_OKU.md"]);
+  const [activeFile, setActiveFile] = useState<string>("kod_alani.oz");
+  
+  // Sidebar folders toggle
+  const [folderExamplesExpanded, setFolderExamplesExpanded] = useState(true);
+  const [folderRootExpanded, setFolderRootExpanded] = useState(true);
+  
+  // Search state inside ÖzDil Dictionary
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Cursor position tracking
+  const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
+  
+  // Copied keyword visual feedback state
+  const [copiedKeyword, setCopiedKeyword] = useState<string | null>(null);
+  
+  // Dropdown menu toggle states
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  
+  // Simple toast status system
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
 
   // Sync Dark mode
   useEffect(() => {
-    // Check local storage or system preference
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
       setIsDark(true);
       document.documentElement.classList.add("dark");
+    } else {
+      setIsDark(false);
+      document.documentElement.classList.remove("dark");
     }
   }, []);
 
@@ -56,15 +94,25 @@ export default function App() {
       setIsDark(false);
       document.documentElement.classList.remove("dark");
       localStorage.setItem("theme", "light");
+      showToast("Açık tema aktif edildi", "info");
     } else {
       setIsDark(true);
       document.documentElement.classList.add("dark");
       localStorage.setItem("theme", "dark");
+      showToast("Karanlık tema aktif edildi", "info");
     }
+    setActiveMenu(null);
+  };
+
+  const showToast = (message: string, type: "success" | "error" | "info" = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
   };
 
   const handleExportZip = async () => {
     setIsExporting(true);
+    setActiveMenu(null);
+    showToast("ÖzDil projesi sıkıştırılıyor...", "info");
     try {
       const response = await fetch("/api/export", {
         method: "POST",
@@ -87,8 +135,9 @@ export default function App() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+      showToast("Dışa aktarma başarıyla tamamlandı!", "success");
     } catch (err) {
-      alert(`Dışa aktarma başarısız oldu: ${(err as Error).message}`);
+      showToast(`Dışa aktarma başarısız oldu: ${(err as Error).message}`, "error");
     } finally {
       setIsExporting(false);
     }
@@ -96,11 +145,10 @@ export default function App() {
 
   const handleRunCode = async () => {
     setIsRunning(true);
-    // On mobile, switch view automatically to see the terminal output when running!
-    if (window.innerWidth < 1024) {
-      setMobileTab("results");
-    }
-    setActiveTab("console");
+    setActiveMenu(null);
+    setPanelHeight("normal");
+    setPanelTab("terminal");
+    showToast("Kod derleniyor ve çalıştırılıyor...", "info");
 
     try {
       const response = await fetch("/api/run", {
@@ -112,11 +160,16 @@ export default function App() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status}`);
+        throw new Error(`HTTP Hatası: ${response.status}`);
       }
 
       const data: CompilerResult = await response.json();
       setResults(data);
+      if (data.error) {
+        showToast("Hata ile sonuçlandı!", "error");
+      } else {
+        showToast("İşlem başarıyla tamamlandı!", "success");
+      }
     } catch (err) {
       setResults({
         translated: "",
@@ -124,14 +177,15 @@ export default function App() {
         output: "",
         error: `Kod çalıştırılırken sunucu hatası oluştu: ${(err as Error).message}`
       });
+      showToast("Sunucu bağlantı hatası!", "error");
     } finally {
       setIsRunning(false);
     }
   };
 
-  const handleLoadExample = (exampleCode: string) => {
+  const handleLoadExample = (exampleTitle: string, exampleCode: string) => {
     setCode(exampleCode);
-    setMobileTab("editor");
+    openFileTab("kod_alani.oz");
     // Clear old results
     setResults({
       translated: "",
@@ -139,380 +193,1164 @@ export default function App() {
       output: "",
       error: null
     });
+    showToast(`"${exampleTitle}" şablonu yüklendi.`, "success");
   };
 
   const handleCopyKeyword = (keyword: string) => {
     navigator.clipboard.writeText(keyword);
     setCopiedKeyword(keyword);
+    showToast(`"${keyword}" panoya kopyalandı.`);
     setTimeout(() => setCopiedKeyword(null), 1500);
   };
 
+  // Switch or open a file tab in our virtual environment
+  const openFileTab = (filename: string) => {
+    if (!openTabs.includes(filename)) {
+      setOpenTabs([...openTabs, filename]);
+    }
+    setActiveFile(filename);
+  };
+
+  const closeFileTab = (e: React.MouseEvent, filename: string) => {
+    e.stopPropagation();
+    if (filename === "kod_alani.oz") return; // Primary file cannot be closed
+    
+    const remaining = openTabs.filter(t => t !== filename);
+    setOpenTabs(remaining);
+    
+    if (activeFile === filename) {
+      setActiveFile(remaining[remaining.length - 1] || "kod_alani.oz");
+    }
+  };
+
+  // Toggle active sidebar tab (collapse if clicked again)
+  const toggleSidebarTab = (tab: "explorer" | "search" | "run" | "docs") => {
+    if (sidebarTab === tab) {
+      setSidebarTab(null);
+    } else {
+      setSidebarTab(tab);
+    }
+  };
+
+  // Filter keywords in dictionary based on query
+  const filteredKeywords = KEYWORDS.filter(
+    (kw) =>
+      kw.keyword.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      kw.pythonEquivalent.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      kw.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Content for read-only runner script file "ozdil.py"
+  const ozdilPyContent = `# -*- coding: utf-8 -*-
+"""
+ÖzDil Türkçe Programlama Dili - Çekirdek Çevirici Motoru (v1.0)
+Bu kod, .oz uzantılı Türkçe kodlarınızı Python AST yapısına dönüştürür.
+"""
+import sys
+import os
+import ast
+import tokenize
+from io import BytesIO
+
+# Türkçe kelimelerden Python karşılıklarına birebir haritalama tablosu
+MAPPING = {
+    'yazdir': 'print',
+    'eger': 'if',
+    'degilse_eger': 'elif',
+    'degilse': 'else',
+    'dongu': 'for',
+    'her': 'for',
+    'iken': 'while',
+    'fonksiyon': 'def',
+    'islem': 'def',
+    'dondur': 'return',
+    'dogru': 'True',
+    'yanlis': 'False',
+    've': 'and',
+    'veya': 'or',
+    'degil': 'not',
+    'icinde': 'in',
+    'sinif': 'class',
+    'dene': 'try',
+    'hata_yakala': 'except',
+    'aralik': 'range',
+    'uzunluk': 'len',
+    'ekle': 'append',
+    'tam_sayi': 'int',
+    'metin': 'str',
+    'ondalik': 'float',
+    'liste': 'list',
+    'sozluk': 'dict',
+    'olarak': 'as',
+    'getir': 'import',
+    'dur': 'break',
+    'devam_et': 'continue',
+    'yok': 'None',
+    'bos': 'None',
+}
+
+def translate(code_str):
+    """
+    Türkçe anahtar kelimeleri token bazında analiz edip Python karşılığına çevirir.
+    String'leri ve yorum satırlarını bozmadan sadece kod deyimlerini hedefler.
+    """
+    try:
+        bytes_io = BytesIO(code_str.encode('utf-8'))
+        tokens = list(tokenize.tokenize(bytes_io.readline))
+        new_tokens = []
+        for tok in tokens:
+            if tok.type == tokenize.NAME and tok.string in MAPPING:
+                new_tokens.append((tok.type, MAPPING[tok.string], tok.start, tok.end, tok.line))
+            else:
+                new_tokens.append(tok)
+        return tokenize.untokenize(new_tokens).decode('utf-8')
+    except Exception:
+        # Hata durumunda güvenli regex tabanlı kelime değişimi devralır
+        import re
+        sorted_keys = sorted(MAPPING.keys(), key=len, reverse=True)
+        lines = code_str.splitlines()
+        translated_lines = []
+        for line in lines:
+            temp_line = line
+            for k in sorted_keys:
+                temp_line = re.sub(r'\\b' + re.escape(k) + r'\\b', MAPPING[k], temp_line)
+            translated_lines.append(temp_line)
+        return '\\n'.join(translated_lines)
+
+print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
+
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 transition-colors duration-300 flex flex-col font-sans" id="app-root">
+    <div className="h-screen w-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200 overflow-hidden font-sans select-none" id="app-root">
       
-      {/* Premium Header */}
-      <header className="sticky top-0 z-30 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-850 px-4 py-3.5 lg:px-8 flex items-center justify-between shadow-sm" id="main-header">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 dark:from-indigo-500 dark:to-violet-400 flex items-center justify-center text-white font-black text-lg tracking-wider shadow-md shadow-indigo-200 dark:shadow-none" id="logo-icon">
+      {/* Toast Notification */}
+      {toast && (
+        <div 
+          className={`fixed top-14 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-lg shadow-xl text-xs font-semibold animate-in fade-in slide-in-from-top-4 duration-200 border ${
+            toast.type === "success" 
+              ? "bg-emerald-500 text-white border-emerald-400" 
+              : toast.type === "error" 
+                ? "bg-red-500 text-white border-red-400" 
+                : "bg-indigo-600 text-white border-indigo-500"
+          }`}
+          id="toast-notification"
+        >
+          <Sparkles className="w-4 h-4 animate-pulse" />
+          <span>{toast.message}</span>
+        </div>
+      )}
+
+      {/* VS CODE TOP MENU BAR */}
+      <header className="h-10 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-850 flex items-center justify-between px-3 shrink-0" id="top-menu-bar">
+        <div className="flex items-center gap-2">
+          {/* Retro VS Code logo block */}
+          <div className="w-5 h-5 rounded bg-indigo-600 flex items-center justify-center text-[10px] text-white font-black tracking-tighter" title="ÖzDil IDE">
             ÖD
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-bold text-base md:text-lg tracking-tight bg-gradient-to-r from-zinc-900 via-indigo-950 to-zinc-900 dark:from-white dark:via-zinc-200 dark:to-white bg-clip-text text-transparent">
-                ÖzDil Oyun Alanı
-              </h1>
-              <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-200/40 select-none">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                Python Sunucusu Bağlı
-              </span>
+          
+          {/* File, Edit, View lists */}
+          <nav className="hidden md:flex items-center gap-1 text-[11px] font-medium text-zinc-600 dark:text-zinc-300">
+            {/* File Menu */}
+            <div className="relative">
+              <button 
+                onClick={() => setActiveMenu(activeMenu === "file" ? null : "file")}
+                className={`px-2.5 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer ${activeMenu === "file" ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white" : ""}`}
+              >
+                Dosya
+              </button>
+              {activeMenu === "file" && (
+                <div className="absolute top-7 left-0 w-52 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md shadow-lg py-1 z-50 text-[11px]" onMouseLeave={() => setActiveMenu(null)}>
+                  <button onClick={() => { openFileTab("kod_alani.oz"); setActiveMenu(null); }} className="w-full text-left px-3 py-1.5 hover:bg-indigo-600 hover:text-white flex items-center justify-between">
+                    <span>kod_alani.oz Düzenle</span>
+                    <span className="text-zinc-400 text-[10px]">Ctrl+1</span>
+                  </button>
+                  <button onClick={() => { openFileTab("BENI_OKU.md"); setActiveMenu(null); }} className="w-full text-left px-3 py-1.5 hover:bg-indigo-600 hover:text-white flex items-center justify-between">
+                    <span>Beni Oku Kılavuzunu Aç</span>
+                    <span className="text-zinc-400 text-[10px]">Ctrl+2</span>
+                  </button>
+                  <button onClick={() => { openFileTab("ozdil.py"); setActiveMenu(null); }} className="w-full text-left px-3 py-1.5 hover:bg-indigo-600 hover:text-white flex items-center justify-between">
+                    <span>ozdil.py Çekirdeği İncele</span>
+                    <span className="text-zinc-400 text-[10px]">Ctrl+3</span>
+                  </button>
+                  <hr className="my-1 border-zinc-150 dark:border-zinc-850" />
+                  <button onClick={() => { setCode(""); setActiveMenu(null); showToast("Yazım alanı temizlendi.", "info"); }} className="w-full text-left px-3 py-1.5 hover:bg-indigo-600 hover:text-white flex items-center justify-between text-red-500 dark:text-red-400">
+                    <span>Çalışma Alanını Sıfırla</span>
+                    <span className="text-zinc-400 text-[10px]"><Trash2 className="w-3 h-3 inline" /></span>
+                  </button>
+                  <button onClick={handleExportZip} className="w-full text-left px-3 py-1.5 hover:bg-indigo-600 hover:text-white flex items-center justify-between font-bold text-indigo-600 dark:text-indigo-400">
+                    <span>Projeyi ZIP Olarak İndir</span>
+                    <span className="text-zinc-400 text-[10px]"><Download className="w-3 h-3 inline" /></span>
+                  </button>
+                </div>
+              )}
             </div>
-            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 hidden sm:block">
-              Türkçe kodlama dili ve Python AST derleme simülatörü
-            </p>
-          </div>
+
+            {/* Edit Menu */}
+            <div className="relative">
+              <button 
+                onClick={() => setActiveMenu(activeMenu === "edit" ? null : "edit")}
+                className={`px-2.5 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer ${activeMenu === "edit" ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white" : ""}`}
+              >
+                Düzen
+              </button>
+              {activeMenu === "edit" && (
+                <div className="absolute top-7 left-0 w-48 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md shadow-lg py-1 z-50 text-[11px]" onMouseLeave={() => setActiveMenu(null)}>
+                  <button onClick={() => { setSearchQuery(""); toggleSidebarTab("search"); setActiveMenu(null); }} className="w-full text-left px-3 py-1.5 hover:bg-indigo-600 hover:text-white flex items-center justify-between">
+                    <span>Sözlükte Ara</span>
+                    <span className="text-zinc-400 text-[10px]">Ctrl+F</span>
+                  </button>
+                  <button onClick={toggleTheme} className="w-full text-left px-3 py-1.5 hover:bg-indigo-600 hover:text-white flex items-center justify-between">
+                    <span>Temayı Değiştir</span>
+                    <span className="text-zinc-400 text-[10px]">{isDark ? "Açık" : "Koyu"}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Run Menu */}
+            <div className="relative">
+              <button 
+                onClick={() => setActiveMenu(activeMenu === "run" ? null : "run")}
+                className={`px-2.5 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer ${activeMenu === "run" ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white" : ""}`}
+              >
+                Çalıştır
+              </button>
+              {activeMenu === "run" && (
+                <div className="absolute top-7 left-0 w-48 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md shadow-lg py-1 z-50 text-[11px]" onMouseLeave={() => setActiveMenu(null)}>
+                  <button onClick={handleRunCode} disabled={isRunning} className="w-full text-left px-3 py-1.5 hover:bg-indigo-600 hover:text-white flex items-center justify-between">
+                    <span>Hata Ayıklamadan Çalıştır</span>
+                    <span className="text-zinc-400 text-[10px]">Ctrl+Enter</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Help Menu */}
+            <div className="relative">
+              <button 
+                onClick={() => setActiveMenu(activeMenu === "help" ? null : "help")}
+                className={`px-2.5 py-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer ${activeMenu === "help" ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white" : ""}`}
+              >
+                Yardım
+              </button>
+              {activeMenu === "help" && (
+                <div className="absolute top-7 left-0 w-52 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md shadow-lg py-1 z-50 text-[11px]" onMouseLeave={() => setActiveMenu(null)}>
+                  <button onClick={() => { openFileTab("BENI_OKU.md"); setActiveMenu(null); }} className="w-full text-left px-3 py-1.5 hover:bg-indigo-600 hover:text-white">
+                    <span>ÖzDil Rehberini Görüntüle</span>
+                  </button>
+                  <button onClick={() => { toggleSidebarTab("docs"); setActiveMenu(null); }} className="w-full text-left px-3 py-1.5 hover:bg-indigo-600 hover:text-white">
+                    <span>Sözlüğü Yan Panelde Aç</span>
+                  </button>
+                  <hr className="my-1 border-zinc-150 dark:border-zinc-850" />
+                  <div className="px-3 py-1 text-[10px] text-zinc-400 dark:text-zinc-500">
+                    Sürüm: ÖzDil Web v1.0.0
+                  </div>
+                </div>
+              )}
+            </div>
+          </nav>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Center: File Name breadcrumb */}
+        <div className="text-[11px] font-mono font-medium text-zinc-500 dark:text-zinc-400 select-none hidden lg:block">
+          {activeFile} — ÖzDil Web Studio
+        </div>
+
+        {/* Right side: Quick Action Buttons */}
+        <div className="flex items-center gap-1.5">
           <button
-            onClick={handleExportZip}
-            disabled={isExporting}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-sm border border-zinc-200 dark:border-zinc-800 ${
-              isExporting
-                ? "bg-zinc-100 text-zinc-400 dark:bg-zinc-850 cursor-not-allowed"
-                : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 dark:text-indigo-300"
-            }`}
-            id="export-zip-btn"
-            title="Dili ve Kodları Çevrimdışı/Termux için Dışa Aktar (.zip)"
+            onClick={handleRunCode}
+            disabled={isRunning}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded text-[11px] font-bold transition shadow-sm bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer disabled:opacity-50`}
+            id="top-run-btn"
+            title="Kodu Çalıştır (Ctrl + Enter)"
           >
-            <Download className={`w-3.5 h-3.5 ${isExporting ? "animate-bounce" : ""}`} />
-            <span className="hidden sm:inline">Dışa Aktar (.zip)</span>
-            <span className="sm:hidden">Dışa Aktar</span>
+            <Play className={`w-3 h-3 ${isRunning ? "animate-spin" : "fill-current"}`} />
+            <span>{isRunning ? "Çalışıyor..." : "Çalıştır"}</span>
           </button>
 
           <button
-            onClick={toggleTheme}
-            className="p-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition"
-            title={isDark ? "Açık Tema" : "Karanlık Tema"}
-            id="theme-toggle"
+            onClick={handleExportZip}
+            disabled={isExporting}
+            className="flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium border border-zinc-300 dark:border-zinc-800 bg-white hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-850 cursor-pointer"
+            id="top-export-btn"
+            title="Çevrimdışı ve Termux İçin Projeyi İndir"
           >
-            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            <Download className="w-3 h-3 text-zinc-500 dark:text-zinc-400" />
+            <span className="hidden sm:inline">Projeyi İndir</span>
+          </button>
+
+          <span className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1"></span>
+
+          {/* Quick theme toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-850 transition cursor-pointer"
+            title={isDark ? "Açık Tema" : "Karanlık Tema"}
+          >
+            {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
           </button>
         </div>
       </header>
 
-      {/* Main Workspace Frame */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-6 flex flex-col gap-5 overflow-hidden" id="workspace-layout">
+      {/* VS CODE WORKSPACE CONTAINER (Activity Bar + Sidebar + Main Editor + Bottom Panel) */}
+      <div className="flex-1 flex overflow-hidden relative" id="workspace-container">
         
-        {/* Welcome Info Card */}
-        {showWelcome && (
-          <div className="relative bg-gradient-to-r from-indigo-50 via-white to-indigo-50/50 dark:from-indigo-950/20 dark:via-zinc-900 dark:to-indigo-950/10 border border-indigo-100 dark:border-indigo-900/30 rounded-xl p-4 md:p-5 flex gap-4 items-start shadow-sm transition" id="welcome-card">
-            <div className="p-2.5 bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-lg shrink-0">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-sm font-bold text-indigo-950 dark:text-indigo-200">
-                Kendi Türkçe Kodlama Dilinizi Keşfedin!
-              </h3>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1.5 leading-relaxed max-w-4xl">
-                ÖzDil, standart Türkçe anahtar kelimeleri doğrudan Python AST (Abstract Syntax Tree) modülüne taşıyan benzersiz bir tasarımdır. Sol kısımdaki editörde kodunuzu yazarken <strong>gelişmiş hayalet tamamlama (ghost suggestions)</strong> desteğinden yararlanabilir, Tab tuşuyla kodunuzu hızlıca tamamlayabilirsiniz. Çalıştırdığınızda kodunuz anında Python AST yapısına ayrıştırılır ve güvenli bir izole alanda çalıştırılır.
-              </p>
-              
-              {/* Keywords summary badges preview */}
-              <div className="flex flex-wrap gap-1.5 mt-3.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mr-1 self-center">Temel Dönüşümler:</span>
-                <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-400 rounded-md font-mono">yazdir → print</span>
-                <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-400 rounded-md font-mono">eger → if</span>
-                <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-400 rounded-md font-mono">dongu → for</span>
-                <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-400 rounded-md font-mono">fonksiyon → def</span>
-                <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-400 rounded-md font-mono">dene → try</span>
-              </div>
-            </div>
+        {/* ACTIVITY BAR (Leftmost strip) */}
+        <aside className="w-12 bg-zinc-100 dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-900 flex flex-col justify-between py-1 shrink-0 z-10 select-none" id="activity-bar">
+          
+          {/* Top Icons group */}
+          <div className="flex flex-col items-center gap-0.5">
+            {/* File Explorer icon */}
             <button
-              onClick={() => setShowWelcome(false)}
-              className="absolute top-3 right-3 p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-full transition"
-              id="close-welcome"
+              onClick={() => toggleSidebarTab("explorer")}
+              className={`w-11 h-11 flex items-center justify-center relative cursor-pointer group transition-colors ${
+                sidebarTab === "explorer"
+                  ? "text-indigo-600 dark:text-indigo-400"
+                  : "text-zinc-400 dark:text-zinc-650 hover:text-zinc-700 dark:hover:text-zinc-300"
+              }`}
+              title="Gezgin / Dosya Yapısı"
             >
-              <X className="w-4 h-4" />
+              <div className={`absolute left-0 w-0.5 h-7 bg-indigo-600 dark:bg-indigo-400 rounded-r transition-all ${sidebarTab === "explorer" ? "opacity-100" : "opacity-0"}`} />
+              <FolderOpen className="w-5 h-5" />
             </button>
+
+            {/* Quick Keyword Dictionary Search */}
+            <button
+              onClick={() => toggleSidebarTab("search")}
+              className={`w-11 h-11 flex items-center justify-center relative cursor-pointer group transition-colors ${
+                sidebarTab === "search"
+                  ? "text-indigo-600 dark:text-indigo-400"
+                  : "text-zinc-400 dark:text-zinc-650 hover:text-zinc-700 dark:hover:text-zinc-300"
+              }`}
+              title="ÖzDil Sözlük Arama"
+            >
+              <div className={`absolute left-0 w-0.5 h-7 bg-indigo-600 dark:bg-indigo-400 rounded-r transition-all ${sidebarTab === "search" ? "opacity-100" : "opacity-0"}`} />
+              <Search className="w-5 h-5" />
+            </button>
+
+            {/* Run & Debug tab */}
+            <button
+              onClick={() => toggleSidebarTab("run")}
+              className={`w-11 h-11 flex items-center justify-center relative cursor-pointer group transition-colors ${
+                sidebarTab === "run"
+                  ? "text-indigo-600 dark:text-indigo-400"
+                  : "text-zinc-400 dark:text-zinc-650 hover:text-zinc-700 dark:hover:text-zinc-300"
+              }`}
+              title="Çalıştır ve Kılavuz"
+            >
+              <div className={`absolute left-0 w-0.5 h-7 bg-indigo-600 dark:bg-indigo-400 rounded-r transition-all ${sidebarTab === "run" ? "opacity-100" : "opacity-0"}`} />
+              <Bug className="w-5 h-5" />
+            </button>
+
+            {/* Words dictionary cheat sheet */}
+            <button
+              onClick={() => toggleSidebarTab("docs")}
+              className={`w-11 h-11 flex items-center justify-center relative cursor-pointer group transition-colors ${
+                sidebarTab === "docs"
+                  ? "text-indigo-600 dark:text-indigo-400"
+                  : "text-zinc-400 dark:text-zinc-650 hover:text-zinc-700 dark:hover:text-zinc-300"
+              }`}
+              title="Tüm Deyimler Listesi"
+            >
+              <div className={`absolute left-0 w-0.5 h-7 bg-indigo-600 dark:bg-indigo-400 rounded-r transition-all ${sidebarTab === "docs" ? "opacity-100" : "opacity-0"}`} />
+              <BookOpen className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Bottom Settings group */}
+          <div className="flex flex-col items-center gap-1 mb-2">
+            <button
+              onClick={toggleTheme}
+              className="w-10 h-10 flex items-center justify-center text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 transition cursor-pointer"
+              title="Tema Değiştir"
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={() => { setCode(EXAMPLES[0].code); openFileTab("kod_alani.oz"); showToast("Sıfırlandı ve ana kod şablonu yüklendi.", "info"); }}
+              className="w-10 h-10 flex items-center justify-center text-zinc-400 dark:text-zinc-600 hover:text-red-500 transition cursor-pointer"
+              title="Tüm Kodları Sıfırla"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          </div>
+        </aside>
+
+        {/* COLLAPSIBLE SIDEBAR PANEL */}
+        {sidebarTab && (
+          <div 
+            className="w-64 bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-900 flex flex-col shrink-0 overflow-hidden select-none z-10" 
+            id="sidebar-panel"
+          >
+            {/* Sidebar Title Header */}
+            <div className="h-10 px-4 border-b border-zinc-200 dark:border-zinc-850 flex items-center justify-between" id="sidebar-header">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                {sidebarTab === "explorer" && "GEZGİN: ÖZDİL"}
+                {sidebarTab === "search" && "SÖZLÜK ARA"}
+                {sidebarTab === "run" && "HATA AYIKLAMA"}
+                {sidebarTab === "docs" && "ÖZDİL SÖZLÜĞÜ"}
+              </span>
+              <button 
+                onClick={() => setSidebarTab(null)} 
+                className="p-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded transition cursor-pointer"
+                title="Paneli Kapat"
+              >
+                <X className="w-3.5 h-3.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+              </button>
+            </div>
+
+            {/* Sidebar Content area */}
+            <div className="flex-1 overflow-y-auto" id="sidebar-content">
+              
+              {/* 1. EXPLORER SECTION */}
+              {sidebarTab === "explorer" && (
+                <div className="flex flex-col text-xs" id="explorer-panel-content">
+                  
+                  {/* Collapsible Section: AÇIK EDİTÖRLER */}
+                  <div className="border-b border-zinc-200 dark:border-zinc-850/60">
+                    <button 
+                      onClick={() => setFolderRootExpanded(!folderRootExpanded)}
+                      className="w-full px-3 py-1.5 flex items-center gap-1 bg-zinc-100/50 dark:bg-zinc-900/50 text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide hover:bg-zinc-200/40 dark:hover:bg-zinc-800/40"
+                    >
+                      {folderRootExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                      Açık Editörler
+                    </button>
+                    {folderRootExpanded && (
+                      <div className="py-1 flex flex-col gap-0.5">
+                        {openTabs.map((fileName) => (
+                          <button
+                            key={fileName}
+                            onClick={() => openFileTab(fileName)}
+                            className={`w-full px-5 py-1.5 flex items-center justify-between text-left ${
+                              activeFile === fileName 
+                                ? "bg-zinc-200/60 dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 font-semibold" 
+                                : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/30 dark:hover:bg-zinc-850/50"
+                            }`}
+                          >
+                            <span className="flex items-center gap-1.5 truncate">
+                              {fileName.endsWith(".oz") && <FileCode2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />}
+                              {fileName.endsWith(".py") && <Code className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
+                              {fileName.endsWith(".md") && <Info className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
+                              <span className="truncate">{fileName}</span>
+                            </span>
+                            {fileName !== "kod_alani.oz" && (
+                              <X 
+                                onClick={(e) => closeFileTab(e, fileName)}
+                                className="w-3 h-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded p-px" 
+                              />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Collapsible Section: PROJE DOSYALARI */}
+                  <div className="border-b border-zinc-200 dark:border-zinc-850/60">
+                    <div className="px-3 py-1.5 flex items-center justify-between bg-zinc-100/50 dark:bg-zinc-900/50 text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                      <span className="flex items-center gap-1">
+                        <Folder className="w-3 h-3 text-indigo-500" /> ÖZDİL_PROJESİ
+                      </span>
+                    </div>
+                    
+                    {/* Workspace Files hierarchy list */}
+                    <div className="py-1.5 flex flex-col gap-0.5">
+                      
+                      {/* Sub-folder: Şablonlar / Örnekler */}
+                      <div>
+                        <button 
+                          onClick={() => setFolderExamplesExpanded(!folderExamplesExpanded)}
+                          className="w-full px-5 py-1 flex items-center gap-1 hover:bg-zinc-200/30 dark:hover:bg-zinc-850/50 text-zinc-600 dark:text-zinc-400 text-left"
+                        >
+                          {folderExamplesExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                          <Folder className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span>örnekler</span>
+                        </button>
+                        
+                        {folderExamplesExpanded && (
+                          <div className="pl-8 pr-1 py-0.5 flex flex-col gap-0.5 border-l border-zinc-200 dark:border-zinc-800 ml-6">
+                            {EXAMPLES.map((ex) => (
+                              <button
+                                key={ex.title}
+                                onClick={() => handleLoadExample(ex.title, ex.code)}
+                                className="w-full text-left px-2 py-1 text-[11px] text-zinc-500 hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400 hover:bg-zinc-200/20 dark:hover:bg-zinc-850/20 truncate flex items-center gap-1"
+                                title={ex.description}
+                              >
+                                <FileCode2 className="w-3 h-3 text-indigo-400 shrink-0" />
+                                <span className="truncate">{ex.title.replace(/\s+/g, "")}.oz</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Main workspace files */}
+                      <button
+                        onClick={() => openFileTab("kod_alani.oz")}
+                        className={`w-full px-5 py-1 flex items-center gap-1.5 text-left ${
+                          activeFile === "kod_alani.oz" 
+                            ? "bg-zinc-200/60 dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 font-semibold" 
+                            : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/30 dark:hover:bg-zinc-850/50"
+                        }`}
+                      >
+                        <FileCode2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                        <span className="truncate font-medium">kod_alani.oz</span>
+                      </button>
+
+                      <button
+                        onClick={() => openFileTab("ozdil.py")}
+                        className={`w-full px-5 py-1 flex items-center gap-1.5 text-left ${
+                          activeFile === "ozdil.py" 
+                            ? "bg-zinc-200/60 dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 font-semibold" 
+                            : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/30 dark:hover:bg-zinc-850/50"
+                        }`}
+                      >
+                        <Code className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                        <span className="truncate">ozdil.py</span>
+                      </button>
+
+                      <button
+                        onClick={() => openFileTab("BENI_OKU.md")}
+                        className={`w-full px-5 py-1 flex items-center gap-1.5 text-left ${
+                          activeFile === "BENI_OKU.md" 
+                            ? "bg-zinc-200/60 dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 font-semibold" 
+                            : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/30 dark:hover:bg-zinc-850/50"
+                        }`}
+                      >
+                        <Info className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        <span className="truncate">BENI_OKU.md</span>
+                      </button>
+
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* 2. SEARCH / DICTIONARY PANEL */}
+              {sidebarTab === "search" && (
+                <div className="p-3 flex flex-col gap-3" id="search-panel-content">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Deyim veya karşılık ara..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-850 rounded focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 placeholder-zinc-400 font-mono"
+                    />
+                    {searchQuery && (
+                      <button 
+                        onClick={() => setSearchQuery("")} 
+                        className="absolute right-2 top-2 p-0.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded"
+                      >
+                        <X className="w-3 h-3 text-zinc-400" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                      Sonuçlar ({filteredKeywords.length})
+                    </span>
+
+                    <div className="flex flex-col gap-2 max-h-[calc(h-screen-220px)] overflow-y-auto pr-1">
+                      {filteredKeywords.map((item) => (
+                        <div 
+                          key={item.keyword}
+                          className="p-2 bg-white dark:bg-zinc-950 border border-zinc-150 dark:border-zinc-850/60 rounded flex flex-col gap-1 text-[11px]"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20 px-1.5 py-0.5 rounded">
+                              {item.keyword}
+                            </span>
+                            <span className="font-mono text-[10px] text-zinc-400">
+                              → {item.pythonEquivalent}
+                            </span>
+                          </div>
+                          <p className="text-zinc-600 dark:text-zinc-400 text-[11px] leading-relaxed">
+                            {item.description}
+                          </p>
+                          <code className="text-[10px] bg-zinc-50 dark:bg-zinc-900 px-1 py-0.5 rounded font-mono border border-zinc-100 dark:border-zinc-850 text-zinc-500 overflow-hidden text-ellipsis">
+                            {item.usage}
+                          </code>
+                          <button
+                            onClick={() => handleCopyKeyword(item.keyword)}
+                            className="text-left text-[10px] text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 font-bold self-start mt-1 cursor-pointer"
+                          >
+                            Panoya Kopyala
+                          </button>
+                        </div>
+                      ))}
+                      {filteredKeywords.length === 0 && (
+                        <span className="text-zinc-400 italic text-center text-xs py-4">Sonuç bulunamadı.</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 3. RUN & DEBUG / CONFIG PANEL */}
+              {sidebarTab === "run" && (
+                <div className="p-4 flex flex-col gap-4 text-xs" id="run-panel-content">
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                      Çalıştırma Yapılandırması
+                    </span>
+                    <div className="p-2 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-850 rounded flex items-center justify-between font-mono text-[11px]">
+                      <span className="text-zinc-600 dark:text-zinc-300">Python: Current File</span>
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={handleRunCode}
+                      disabled={isRunning}
+                      className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold rounded shadow-sm text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>{isRunning ? "Çalışıyor..." : "Hata Ayıklamayı Başlat"}</span>
+                    </button>
+
+                    <button
+                      onClick={handleExportZip}
+                      disabled={isExporting}
+                      className="w-full py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-850 border border-zinc-200 dark:border-zinc-750 text-zinc-700 dark:text-zinc-300 font-semibold rounded text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Projeyi İndir (.zip)</span>
+                    </button>
+                  </div>
+
+                  <hr className="border-zinc-200 dark:border-zinc-800/80" />
+
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                      Klavye Kısayolları
+                    </span>
+                    <div className="flex flex-col gap-1.5 font-mono text-[10px] text-zinc-500">
+                      <div className="flex justify-between">
+                        <span>Kodu Çalıştır:</span>
+                        <kbd className="bg-zinc-200 dark:bg-zinc-800 px-1 rounded">Ctrl+Enter</kbd>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Tamamlama:</span>
+                        <kbd className="bg-zinc-200 dark:bg-zinc-800 px-1 rounded">Tab / Enter</kbd>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Pencereyi Kapat:</span>
+                        <kbd className="bg-zinc-200 dark:bg-zinc-800 px-1 rounded">Esc</kbd>
+                      </div>
+                    </div>
+                  </div>
+
+                  <hr className="border-zinc-200 dark:border-zinc-800/80" />
+
+                  <div className="p-3 bg-zinc-100/50 dark:bg-zinc-900/50 border border-zinc-150 dark:border-zinc-800/60 rounded-lg flex flex-col gap-1.5">
+                    <span className="font-bold flex items-center gap-1 text-[11px] text-indigo-600 dark:text-indigo-400">
+                      <Cpu className="w-3.5 h-3.5" /> ÖzDil Runtime
+                    </span>
+                    <p className="text-[10px] text-zinc-500 leading-relaxed">
+                      Sistem, yazdığınız kodu Python'a çevirip izole bir alt işlem (child_process) kullanarak güvenli bir kum havuzunda yürütür.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* 4. REFERENCE LIST PANEL */}
+              {sidebarTab === "docs" && (
+                <div className="p-3 flex flex-col gap-2" id="reference-panel-content">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
+                    Hızlı Başvuru Sözlüğü
+                  </span>
+                  <div className="flex flex-col gap-1 max-h-[calc(h-screen-160px)] overflow-y-auto">
+                    {KEYWORDS.map((item) => (
+                      <button
+                        key={item.keyword}
+                        onClick={() => handleCopyKeyword(item.keyword)}
+                        className="w-full text-left p-2 bg-white dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-850/50 border border-zinc-150 dark:border-zinc-850/60 rounded transition flex justify-between items-center text-[11px] group font-mono"
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-bold text-indigo-600 dark:text-indigo-400">{item.keyword}</span>
+                          <span className="text-[9px] text-zinc-400">py: {item.pythonEquivalent}</span>
+                        </div>
+                        <span className="text-[9px] bg-zinc-100 dark:bg-zinc-900 text-zinc-400 px-1 py-0.5 rounded group-hover:bg-indigo-600 group-hover:text-white transition">Kopyala</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            </div>
           </div>
         )}
 
-        {/* Templates selector list */}
-        <div className="flex flex-col gap-2" id="examples-block">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1">
-              <Layers className="w-3.5 h-3.5 text-indigo-500" /> Şablon Kütüphanesi
-            </span>
-            <span className="text-[10px] text-zinc-400">(Tıklayarak editöre yükleyin)</span>
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin select-none" id="examples-list">
-            {EXAMPLES.map((ex) => (
-              <button
-                key={ex.title}
-                onClick={() => handleLoadExample(ex.code)}
-                className="shrink-0 px-3.5 py-2 bg-white hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-850 border border-zinc-200 dark:border-zinc-800 rounded-xl text-left transition group cursor-pointer shadow-sm"
-              >
-                <div className="font-semibold text-xs text-zinc-850 dark:text-zinc-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex items-center gap-1.5">
-                  <Code className="w-3 h-3 text-zinc-400" /> {ex.title}
-                </div>
-                <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5 max-w-[200px] line-clamp-1">
-                  {ex.description}
-                </p>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Mobile View Navigation Buttons (Only visible on screens &lt; 1024px) */}
-        <div className="flex lg:hidden bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-1 rounded-xl shadow-sm" id="mobile-navigation">
-          <button
-            onClick={() => setMobileTab("editor")}
-            className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex items-center justify-center gap-2 ${
-              mobileTab === "editor"
-                ? "bg-indigo-600 text-white dark:bg-indigo-500 shadow-sm"
-                : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-            }`}
-          >
-            <Code className="w-4 h-4" /> Editör
-          </button>
-          <button
-            onClick={() => setMobileTab("results")}
-            className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex items-center justify-center gap-2 ${
-              mobileTab === "results"
-                ? "bg-indigo-600 text-white dark:bg-indigo-500 shadow-sm"
-                : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-            }`}
-          >
-            <Terminal className="w-4 h-4" /> Çıktı & AST
-          </button>
-          <button
-            onClick={() => setMobileTab("docs")}
-            className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex items-center justify-center gap-2 ${
-              mobileTab === "docs"
-                ? "bg-indigo-600 text-white dark:bg-indigo-500 shadow-sm"
-                : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-            }`}
-          >
-            <BookOpen className="w-4 h-4" /> Kılavuz ({KEYWORDS.length})
-          </button>
-        </div>
-
-        {/* Layout Workspace Grid */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5 min-h-[500px] items-stretch overflow-hidden" id="workspace-grid">
+        {/* MAIN WORKSPACE WRAPPER (Editor Tabs + Active Canvas + Terminal bottom panel) */}
+        <main className="flex-1 flex flex-col overflow-hidden min-w-0" id="main-editor-pane">
           
-          {/* Left Block: Editor (Always visible on desktop, tabbed on mobile) */}
-          <div className={`lg:col-span-7 flex flex-col h-full ${mobileTab === "editor" ? "flex" : "hidden lg:flex"}`} id="editor-left-block">
-            <CodeEditor
-              value={code}
-              onChange={setCode}
-              onRun={handleRunCode}
-              isRunning={isRunning}
-            />
-          </div>
-
-          {/* Right Block: Outputs & Compile analysis (Always visible on desktop, tabbed on mobile) */}
-          <div className={`lg:col-span-5 flex flex-col h-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm ${
-            mobileTab === "results" ? "flex" : "hidden lg:flex"
-          }`} id="results-right-block">
+          {/* EDITOR TABS BAR */}
+          <div className="h-10 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-900 flex items-center justify-between overflow-hidden shrink-0 select-none" id="editor-tabs-bar">
             
-            {/* Tab Switches */}
-            <div className="flex border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-1" id="tab-switches">
-              <button
-                onClick={() => setActiveTab("console")}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5 ${
-                  activeTab === "console"
-                    ? "bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                    : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                }`}
-                id="console-tab-btn"
-              >
-                <Terminal className="w-3.5 h-3.5" /> Konsol Çıktısı
-              </button>
-              
-              <button
-                onClick={() => setActiveTab("ast")}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5 ${
-                  activeTab === "ast"
-                    ? "bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                    : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                }`}
-                id="ast-tab-btn"
-              >
-                <Layers className="w-3.5 h-3.5" /> Python AST Ağacı
-              </button>
-
-              <button
-                onClick={() => setActiveTab("python")}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5 ${
-                  activeTab === "python"
-                    ? "bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                    : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                }`}
-                id="python-tab-btn"
-              >
-                <Globe className="w-3.5 h-3.5" /> Python Karşılığı
-              </button>
+            {/* Left side tabs loop */}
+            <div className="flex items-end h-full overflow-x-auto overflow-y-hidden scrollbar-none" id="tabs-scroll-container">
+              {openTabs.map((fileName) => {
+                const isActive = activeFile === fileName;
+                return (
+                  <button
+                    key={fileName}
+                    onClick={() => openFileTab(fileName)}
+                    className={`h-9 px-4 flex items-center gap-2 border-r border-zinc-200 dark:border-zinc-950 text-xs font-medium cursor-pointer transition-all ${
+                      isActive
+                        ? "bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white border-t-2 border-indigo-600 dark:border-indigo-500 font-semibold shadow-inner-top"
+                        : "bg-zinc-100/60 hover:bg-zinc-200/50 dark:bg-zinc-900/60 dark:hover:bg-zinc-850 text-zinc-500 dark:text-zinc-500"
+                    }`}
+                  >
+                    {fileName.endsWith(".oz") && <FileCode2 className={`w-3.5 h-3.5 ${isActive ? "text-indigo-500" : "text-zinc-400"}`} />}
+                    {fileName.endsWith(".py") && <Code className={`w-3.5 h-3.5 ${isActive ? "text-amber-500" : "text-zinc-400"}`} />}
+                    {fileName.endsWith(".md") && <Info className={`w-3.5 h-3.5 ${isActive ? "text-emerald-500" : "text-zinc-400"}`} />}
+                    
+                    <span>{fileName}</span>
+                    
+                    {fileName !== "kod_alani.oz" && (
+                      <X
+                        onClick={(e) => closeFileTab(e, fileName)}
+                        className="w-3 h-3 text-zinc-400 hover:text-red-500 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-850 p-px"
+                      />
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Tab Contents Frame */}
-            <div className="flex-1 p-4 overflow-y-auto" id="tab-contents-frame">
-              {activeTab === "console" && (
-                <div className="flex flex-col h-full gap-3" id="console-tab-content">
-                  {/* Status header */}
-                  <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400" id="console-header-status">
-                    <span className="font-semibold flex items-center gap-1.5 uppercase font-mono tracking-wider">
-                      <Terminal className="w-3.5 h-3.5 text-indigo-500" /> terminal_konsolu
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {results.error ? (
-                        <span className="px-2 py-0.5 rounded bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 border border-red-200/20 font-bold">
-                          Hata Oluştu
-                        </span>
-                      ) : results.output || results.translated ? (
-                        <span className="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200/20 font-bold">
-                          Derleme Başarılı
-                        </span>
-                      ) : (
-                        <span className="text-zinc-400 italic">Hazır</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Terminal Display Screen */}
-                  <div className="flex-1 bg-zinc-950 text-zinc-200 rounded-xl p-4 font-mono text-xs overflow-auto border border-zinc-900 shadow-inner min-h-[300px] flex flex-col" id="terminal-screen">
-                    {isRunning ? (
-                      <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 gap-3">
-                        <RefreshCw className="w-6 h-6 animate-spin text-indigo-500" />
-                        <span>Kod güvenli sunucuda çalıştırılıyor...</span>
-                      </div>
-                    ) : results.error ? (
-                      <div className="text-red-400 whitespace-pre-wrap flex-1" id="terminal-error-display">
-                        <span className="text-red-500 font-bold">🚨 DERLEME VEYA ÇALIŞMA HATASI:</span>
-                        {"\n\n"}{results.error}
-                      </div>
-                    ) : results.output ? (
-                      <div className="whitespace-pre-wrap flex-1 text-emerald-400 selection:bg-emerald-900 selection:text-white" id="terminal-output-display">
-                        {results.output}
-                        {"\n"}
-                        <span className="text-zinc-500 italic text-[10px] select-none block mt-2 border-t border-zinc-900 pt-2">
-                          👉 İşlem sıfır hata ile tamamlandı.
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 text-center px-4" id="terminal-prompt">
-                        <Terminal className="w-8 h-8 text-zinc-700 mb-2" />
-                        <span className="font-bold text-zinc-400">Konsol Boş</span>
-                        <span className="text-[11px] text-zinc-600 mt-1 max-w-xs">
-                          Kodunuzun çıktılarını görmek için yukarıdaki "Çalıştır" düğmesine tıklayın ya da <kbd className="bg-zinc-800 text-zinc-400 px-1 rounded font-mono">Ctrl + Enter</kbd> kısayolunu kullanın.
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "ast" && (
-                <div className="h-full" id="ast-tab-content">
-                  <ASTViewer ast={results.ast} isLoading={isRunning} />
-                </div>
-              )}
-
-              {activeTab === "python" && (
-                <div className="flex flex-col h-full gap-3" id="python-tab-content">
-                  <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-                    <span className="font-semibold uppercase tracking-wider font-mono">
-                      python_kod_esdegeri.py
-                    </span>
-                    <span className="text-[10px] text-zinc-400">Derlenen gerçek Python kodu</span>
-                  </div>
-
-                  <div className="flex-1 bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-300 rounded-xl p-4 font-mono text-xs overflow-auto border border-zinc-200 dark:border-zinc-900 min-h-[300px]" id="python-code-display">
-                    {results.translated ? (
-                      <pre className="whitespace-pre-wrap selection:bg-indigo-100 dark:selection:bg-indigo-950">
-                        {results.translated}
-                      </pre>
-                    ) : (
-                      <div className="h-full flex flex-col items-center justify-center text-zinc-400 text-center px-4">
-                        <Code className="w-8 h-8 text-zinc-300 dark:text-zinc-700 mb-2" />
-                        <span className="font-semibold text-zinc-500">Çeviri Bekleniyor</span>
-                        <p className="text-[11px] text-zinc-400 mt-1 max-w-xs">
-                          Kodunuzu çalıştırdığınızda, Türkçe kelimelerin Python karşılıklarına birebir nasıl dönüştüğünü burada görebilirsiniz.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+            {/* Right side editor layout helper buttons (minimize sidebar, run button preview) */}
+            <div className="flex items-center gap-2 px-3 shrink-0">
+              <button
+                onClick={handleRunCode}
+                disabled={isRunning}
+                className="p-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded text-zinc-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400 cursor-pointer"
+                title="Kodu Çalıştır"
+              >
+                <Play className={`w-4 h-4 ${isRunning ? "animate-spin" : "fill-current"}`} />
+              </button>
             </div>
           </div>
 
-          {/* Right Block Sidebar - Documentation (Only visible on desktop by default, tabbed on mobile) */}
-          <div className={`lg:col-span-12 flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm p-4 ${
-            mobileTab === "docs" ? "flex" : "hidden lg:flex"
-          }`} id="docs-sidebar-block">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800" id="docs-header">
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-indigo-500" />
-                <h3 className="font-bold text-sm text-zinc-850 dark:text-zinc-100">
-                  ÖzDil Türkçe Sözlük & Kod Kılavuzu
-                </h3>
-              </div>
-              <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-[10px] font-bold rounded-md font-mono text-zinc-500">
-                {KEYWORDS.length} Anahtar Kelime
-              </span>
-            </div>
+          {/* BREADCRUMB STRIP */}
+          <div className="h-6 bg-white dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-900/40 px-4 flex items-center gap-1 text-[10px] text-zinc-400 select-none uppercase font-mono shrink-0" id="breadcrumbs">
+            <span>projemiz</span>
+            <ChevronRight className="w-2.5 h-2.5" />
+            <span>src</span>
+            <ChevronRight className="w-2.5 h-2.5" />
+            <span className="text-zinc-600 dark:text-zinc-300 font-bold">{activeFile}</span>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 mt-4 overflow-y-auto max-h-[400px]" id="docs-keywords-grid">
-              {KEYWORDS.map((item) => (
-                <div
-                  key={item.keyword}
-                  className="p-3 bg-zinc-50 hover:bg-zinc-100/50 dark:bg-zinc-950/40 dark:hover:bg-zinc-950/80 border border-zinc-150 dark:border-zinc-800/60 rounded-xl transition flex flex-col justify-between group"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-mono font-bold text-xs text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 px-2 py-0.5 rounded">
-                        {item.keyword}
-                      </span>
-                      <span className="text-[10px] font-mono text-zinc-400 italic">
-                        python: <strong className="text-zinc-500 dark:text-zinc-300 font-semibold">{item.pythonEquivalent}</strong>
-                      </span>
+          {/* CODE WORKSPACE CANVAS */}
+          <div className="flex-1 relative overflow-hidden bg-white dark:bg-zinc-950" id="active-file-canvas">
+            
+            {/* FILE 1: main user code edit space */}
+            {activeFile === "kod_alani.oz" && (
+              <CodeEditor
+                value={code}
+                onChange={setCode}
+                onRun={handleRunCode}
+                isRunning={isRunning}
+                flat={true}
+                onCursorChange={(line, col) => setCursorPos({ line, col })}
+              />
+            )}
+
+            {/* FILE 2: read-only translator source code */}
+            {activeFile === "ozdil.py" && (
+              <div className="w-full h-full flex flex-col font-mono text-xs overflow-hidden bg-zinc-50 dark:bg-zinc-950" id="ozdil-py-view">
+                <div className="p-3.5 bg-zinc-100/50 dark:bg-zinc-900/30 border-b border-zinc-200 dark:border-zinc-900 flex items-center justify-between text-zinc-500">
+                  <span className="flex items-center gap-1.5"><Code className="w-4 h-4 text-amber-500" /> ozdil.py (Salt Okunur Çekirdek Kodları)</span>
+                  <span className="text-[10px] tracking-wider uppercase font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded">Python Motoru</span>
+                </div>
+                <div className="flex-1 overflow-auto p-4 select-text">
+                  <pre className="text-zinc-800 dark:text-zinc-300 whitespace-pre-wrap">{ozdilPyContent}</pre>
+                </div>
+              </div>
+            )}
+
+            {/* FILE 3: read-only rich BENI_OKU.md document */}
+            {activeFile === "BENI_OKU.md" && (
+              <div className="w-full h-full flex flex-col overflow-auto bg-white dark:bg-zinc-950 p-6 lg:p-8" id="readme-view">
+                <div className="max-w-3xl mx-auto flex flex-col gap-5 text-sm select-text" id="readme-content">
+                  
+                  {/* Markdown header */}
+                  <div className="border-b border-zinc-200 dark:border-zinc-850 pb-4">
+                    <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold uppercase text-[10px] tracking-widest font-mono">
+                      <Sparkle className="w-4 h-4 animate-pulse" /> ÖZDİL TÜRKÇE PROGRAMLAMA DİLİ
                     </div>
-                    <p className="text-xs text-zinc-650 dark:text-zinc-400 mt-1.5 leading-relaxed">
-                      {item.description}
+                    <h2 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-white mt-1">
+                      ÖzDil - Türkçe Kodlama & AST Derleyici
+                    </h2>
+                    <p className="text-zinc-500 dark:text-zinc-400 text-xs mt-2 leading-relaxed">
+                      ÖzDil, yabancı dildeki kod bloklarını Türkçe doğal kod yapısına dönüştüren, Python Abstract Syntax Tree (AST) modülünü temel alan yerel bir derleme simülatörüdür.
                     </p>
                   </div>
 
-                  <div className="mt-3 pt-2.5 border-t border-zinc-200/40 dark:border-zinc-800/40 flex items-center justify-between gap-2">
-                    <code className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-850 px-1.5 py-0.5 rounded flex-1 truncate">
-                      {item.usage}
-                    </code>
+                  {/* Section 1: Nasıl Çalışır */}
+                  <section className="flex flex-col gap-2">
+                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                      <CornerDownRight className="w-3.5 h-3.5 text-indigo-500" /> 1. Çalışma Mantığı Nedir?
+                    </h3>
+                    <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed text-xs">
+                      Editöre yazdığınız Türkçe kodlar, sunucudaki token-çözümleyici (lexer) tarafından taranır. Yorumlar, sayılar ve string ifadeler dışındaki Türkçe anahtar kelimeler, Python'daki muadillerine birebir çevrilir. Ardından Python <code>ast.parse()</code> ile Soyut Sözdizimi Ağacı'na ayrıştırılır ve güvenli bir izole alanda koşturulur.
+                    </p>
+                  </section>
+
+                  {/* Section 2: Temel Kelimeler */}
+                  <section className="flex flex-col gap-2">
+                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                      <CornerDownRight className="w-3.5 h-3.5 text-indigo-500" /> 2. En Sık Kullanılan Deyimler
+                    </h3>
                     
-                    <button
-                      onClick={() => handleCopyKeyword(item.keyword)}
-                      className="p-1 text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-zinc-900 border border-transparent hover:border-zinc-200 dark:hover:border-zinc-850 rounded transition shrink-0 cursor-pointer"
-                      title="Kodu Kopyala"
-                    >
-                      {copiedKeyword === item.keyword ? (
-                        <Check className="w-3 h-3 text-emerald-500" />
-                      ) : (
-                        <Copy className="w-3 h-3" />
-                      )}
-                    </button>
-                  </div>
+                    {/* Small comparison grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mt-1 font-mono text-[11px]">
+                      <div className="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-850 rounded flex flex-col">
+                        <span className="font-bold text-indigo-600 dark:text-indigo-400">yazdir(...)</span>
+                        <span className="text-[10px] text-zinc-400">print(...)</span>
+                      </div>
+                      <div className="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-850 rounded flex flex-col">
+                        <span className="font-bold text-indigo-600 dark:text-indigo-400">eger ...:</span>
+                        <span className="text-[10px] text-zinc-400">if ...:</span>
+                      </div>
+                      <div className="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-850 rounded flex flex-col">
+                        <span className="font-bold text-indigo-600 dark:text-indigo-400">dongu i ...:</span>
+                        <span className="text-[10px] text-zinc-400">for i ...:</span>
+                      </div>
+                      <div className="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-850 rounded flex flex-col">
+                        <span className="font-bold text-indigo-600 dark:text-indigo-400">fonksiyon ...:</span>
+                        <span className="text-[10px] text-zinc-400">def ...:</span>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Section 3: Offline zip explanation */}
+                  <section className="p-4 bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 rounded-xl flex gap-3.5 items-start">
+                    <Download className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-bold text-zinc-900 dark:text-indigo-300 text-xs">
+                        Bu Projeyi Bilgisayarınızda veya Telefonunuzda Çalıştırın!
+                      </h4>
+                      <p className="text-zinc-600 dark:text-zinc-400 text-xs mt-1.5 leading-relaxed">
+                        Sağ üst köşedeki <strong>"Projeyi İndir"</strong> butonunu kullanarak ÖzDil interpreter paketini yerel bilgisayarınıza alabilirsiniz. Zip dosyası içerisinde Türkçe kod motorunu çalıştıran <code>ozdil.py</code>, kendi yazdığınız <code>kodumuz.oz</code> ve detaylı offline çalıştırma kılavuzu (README) yer almaktadır.
+                      </p>
+                    </div>
+                  </section>
+
+                  {/* Section 4: Mobile instructions */}
+                  <section className="flex flex-col gap-2">
+                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                      <CornerDownRight className="w-3.5 h-3.5 text-indigo-500" /> 3. Mobilde Çalıştırma (Android Termux)
+                    </h3>
+                    <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed text-xs">
+                      ÖzDil yerel kod motoru tamamen bağımsızdır ve ek bir kütüphaneye ihtiyaç duymaz. Android telefonunuzda çalıştırmak için:
+                    </p>
+                    <ol className="list-decimal list-inside pl-2 py-1 text-xs text-zinc-500 dark:text-zinc-400 flex flex-col gap-1.5 font-mono">
+                      <li>Google Play veya F-Droid üzerinden <strong>Termux</strong> kurun.</li>
+                      <li>Python'u yükleyin: <code>pkg install python</code></li>
+                      <li>Projeyi Download dizinine çıkarıp gidin: <code>cd /sdcard/Download</code></li>
+                      <li>Kodunuzu çalıştırın: <code>python3 ozdil.py kodumuz.oz</code></li>
+                    </ol>
+                  </section>
+
+                  {/* Action row to go to editor directly */}
+                  <button
+                    onClick={() => openFileTab("kod_alani.oz")}
+                    className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg self-start cursor-pointer shadow-sm flex items-center gap-1.5"
+                  >
+                    <Code className="w-4 h-4" />
+                    <span>Hemen Kodlamaya Başla!</span>
+                  </button>
+
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
+
           </div>
 
-        </div>
-      </main>
+          {/* BOTTOM TERMINAL PANEL (Console output, Python output, AST tree) */}
+          <div 
+            className={`bg-zinc-950 text-zinc-200 border-t border-zinc-200 dark:border-zinc-900 flex flex-col overflow-hidden transition-all duration-300 relative shrink-0 z-10 select-none ${
+              panelHeight === "collapsed" 
+                ? "h-9" 
+                : panelHeight === "maximized" 
+                  ? "flex-1" 
+                  : "h-64"
+            }`} 
+            id="terminal-bottom-panel"
+          >
+            
+            {/* Panel Tabs Header Bar */}
+            <div className="h-9 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-3 shrink-0" id="panel-tab-headers">
+              <div className="flex items-center gap-1 h-full">
+                {/* Console Terminal Tab */}
+                <button
+                  onClick={() => { setPanelTab("terminal"); setPanelHeight("normal"); }}
+                  className={`h-full px-3.5 text-[11px] font-bold tracking-wide uppercase transition-all flex items-center gap-1.5 cursor-pointer ${
+                    panelTab === "terminal" && panelHeight !== "collapsed"
+                      ? "text-indigo-400 border-b-2 border-indigo-500 bg-zinc-950"
+                      : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  <Terminal className="w-3.5 h-3.5" />
+                  <span>Uçbirim (Terminal)</span>
+                </button>
 
-      {/* Footer */}
-      <footer className="bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-900 px-4 py-3 text-center text-xs text-zinc-450 dark:text-zinc-500 select-none mt-auto" id="main-footer">
-        <p>
-          © 2026 Türkçe Programlama Dili • <strong>ÖzDil</strong> Projesi. Python 3.10 AST derleyicisi ile yerel olarak çalışmaktadır.
-        </p>
+                {/* Python Equivalents Tab */}
+                <button
+                  onClick={() => { setPanelTab("python"); setPanelHeight("normal"); }}
+                  className={`h-full px-3.5 text-[11px] font-bold tracking-wide uppercase transition-all flex items-center gap-1.5 cursor-pointer ${
+                    panelTab === "python" && panelHeight !== "collapsed"
+                      ? "text-indigo-400 border-b-2 border-indigo-500 bg-zinc-950"
+                      : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>Python Karşılığı</span>
+                </button>
+
+                {/* Python AST Tree Tab */}
+                <button
+                  onClick={() => { setPanelTab("ast"); setPanelHeight("normal"); }}
+                  className={`h-full px-3.5 text-[11px] font-bold tracking-wide uppercase transition-all flex items-center gap-1.5 cursor-pointer ${
+                    panelTab === "ast" && panelHeight !== "collapsed"
+                      ? "text-indigo-400 border-b-2 border-indigo-500 bg-zinc-950"
+                      : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>ÖzDil AST Ağacı</span>
+                </button>
+              </div>
+
+              {/* Panel Layout/Action Controls */}
+              <div className="flex items-center gap-2 text-zinc-500">
+                {/* Clear terminal logs */}
+                <button
+                  onClick={() => {
+                    setResults({ ...results, output: "", error: null });
+                    showToast("Terminal konsol çıktısı temizlendi.", "info");
+                  }}
+                  className="p-1 hover:text-zinc-300 rounded hover:bg-zinc-800 cursor-pointer"
+                  title="Konsolu Temizle"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+                
+                {/* Collapse / Normal height */}
+                {panelHeight === "collapsed" ? (
+                  <button
+                    onClick={() => setPanelHeight("normal")}
+                    className="p-1 hover:text-zinc-300 rounded hover:bg-zinc-800 cursor-pointer"
+                    title="Paneli Genişlet"
+                  >
+                    <ChevronDown className="w-3.5 h-3.5 rotate-180" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setPanelHeight("collapsed")}
+                    className="p-1 hover:text-zinc-300 rounded hover:bg-zinc-800 cursor-pointer"
+                    title="Paneli Gizle"
+                  >
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </button>
+                )}
+
+                {/* Maximize / Normal toggle */}
+                {panelHeight === "maximized" ? (
+                  <button
+                    onClick={() => setPanelHeight("normal")}
+                    className="p-1 hover:text-zinc-300 rounded hover:bg-zinc-800 cursor-pointer"
+                    title="Normal Boyut"
+                  >
+                    <Minimize2 className="w-3.5 h-3.5" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setPanelHeight("maximized")}
+                    className="p-1 hover:text-zinc-300 rounded hover:bg-zinc-800 cursor-pointer"
+                    title="Ekranı Kapla"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Panel Tab Content screen */}
+            {panelHeight !== "collapsed" && (
+              <div className="flex-1 p-4 overflow-auto font-mono text-[11px]" id="panel-tab-content-container">
+                
+                {/* 1. Terminal screen output */}
+                {panelTab === "terminal" && (
+                  <div className="h-full flex flex-col justify-between" id="terminal-screen-block">
+                    <div className="flex-1 overflow-auto select-text selection:bg-zinc-800">
+                      
+                      {/* Virtual system intro */}
+                      <div className="text-zinc-500 mb-2 leading-relaxed">
+                        ÖzDil Web Term [Sürüm 1.0.0]<br />
+                        Sistem Bağımlılıkları: Python 3.10.12 • GCC 11.4.0<br />
+                        surmert@ozdil-web:~$ # Projenizi yerel ortamda çalıştırmak için yukarıdaki 'Çalıştır' butonuna tıklayabilir ya da Ctrl + Enter kombinasyonunu kullanabilirsiniz.
+                      </div>
+
+                      {/* Execution feedback log */}
+                      {isRunning ? (
+                        <div className="flex items-center gap-2 text-indigo-400 py-2">
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>surmert@ozdil-web:~$ python3 ozdil.py kod_alani.oz</span>
+                        </div>
+                      ) : (results.output || results.error || results.translated) ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="text-zinc-500">surmert@ozdil-web:~$ python3 ozdil.py kod_alani.oz</span>
+                          
+                          {results.error ? (
+                            <pre className="text-red-400 font-bold whitespace-pre-wrap mt-1 leading-relaxed bg-red-950/20 p-3 rounded border border-red-900/30">
+                              {results.error}
+                            </pre>
+                          ) : (
+                            <pre className="text-emerald-400 whitespace-pre-wrap mt-1 leading-relaxed bg-emerald-950/10 p-3 rounded border border-emerald-900/20">
+                              {results.output || ">>> [Çıktı Boş: Kod yazdır fonksiyonu içermiyor veya sessiz sonlandı]"}
+                            </pre>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-zinc-600 italic py-3">Uçbirim boş. Kodunuzu koşturmak için yukarıdaki 'Çalıştır' butonunu kullanın.</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Python Equivalent screen */}
+                {panelTab === "python" && (
+                  <div className="h-full flex flex-col select-text" id="python-screen-block">
+                    <div className="text-zinc-500 mb-2 text-[10px] font-sans font-semibold uppercase tracking-wider">
+                      # Türkçe Kodun Python AST Tarafından Çevrilen Birebir Karşılığı
+                    </div>
+                    {results.translated ? (
+                      <pre className="text-zinc-300 whitespace-pre-wrap bg-zinc-950/40 p-3 rounded border border-zinc-900 leading-relaxed">
+                        {results.translated}
+                      </pre>
+                    ) : (
+                      <div className="text-zinc-600 italic py-2">Henüz çevrilmiş kod yok. Lütfen önce kodunuzu koşturun.</div>
+                    )}
+                  </div>
+                )}
+
+                {/* 3. AST viewer block */}
+                {panelTab === "ast" && (
+                  <div className="h-full overflow-auto" id="ast-screen-block">
+                    <ASTViewer ast={results.ast} isLoading={isRunning} />
+                  </div>
+                )}
+
+              </div>
+            )}
+          </div>
+
+        </main>
+      </div>
+
+      {/* MOBILE COMPACT NAVIGATION TAB BAR (Only shown on < 1024px screens) */}
+      <nav className="flex lg:hidden bg-zinc-100 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-850 p-1 shrink-0 z-20 select-none" id="mobile-nav-bar">
+        <button
+          onClick={() => { openFileTab("kod_alani.oz"); setSidebarTab(null); }}
+          className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex flex-col items-center gap-1 ${
+            activeFile === "kod_alani.oz" && !sidebarTab
+              ? "bg-indigo-600 text-white dark:bg-indigo-500 shadow-sm"
+              : "text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-850"
+          }`}
+        >
+          <Code className="w-4 h-4" />
+          <span>Editör</span>
+        </button>
+
+        <button
+          onClick={() => toggleSidebarTab("explorer")}
+          className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex flex-col items-center gap-1 ${
+            sidebarTab === "explorer"
+              ? "bg-indigo-600 text-white dark:bg-indigo-500 shadow-sm"
+              : "text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-850"
+          }`}
+        >
+          <Folder className="w-4 h-4" />
+          <span>Gezgin</span>
+        </button>
+
+        <button
+          onClick={() => toggleSidebarTab("search")}
+          className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex flex-col items-center gap-1 ${
+            sidebarTab === "search"
+              ? "bg-indigo-600 text-white dark:bg-indigo-500 shadow-sm"
+              : "text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-850"
+          }`}
+        >
+          <Search className="w-4 h-4" />
+          <span>Sözlük</span>
+        </button>
+
+        <button
+          onClick={() => { setPanelHeight("normal"); setPanelTab("terminal"); }}
+          className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex flex-col items-center gap-1 ${
+            panelHeight !== "collapsed" && !sidebarTab
+              ? "bg-indigo-600 text-white dark:bg-indigo-500 shadow-sm"
+              : "text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-850"
+          }`}
+        >
+          <Terminal className="w-4 h-4" />
+          <span>Konsol</span>
+        </button>
+
+        <button
+          onClick={handleRunCode}
+          disabled={isRunning}
+          className="flex-1 py-2.5 text-xs font-bold rounded-lg transition flex flex-col items-center gap-1 bg-emerald-600 text-white hover:bg-emerald-500 active:bg-emerald-700 disabled:opacity-50"
+        >
+          <Play className="w-4 h-4 fill-current" />
+          <span>Çalıştır</span>
+        </button>
+      </nav>
+
+      {/* VS CODE BOTTOM STATUS BAR */}
+      <footer className="h-6 bg-indigo-600 text-white dark:bg-zinc-950 dark:text-zinc-400 text-[11px] px-3 flex items-center justify-between border-t border-indigo-700 dark:border-zinc-900 shrink-0 select-none" id="status-bar">
+        
+        {/* Left indicators */}
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1 hover:bg-indigo-700 dark:hover:bg-zinc-850 px-1.5 h-full transition duration-150 cursor-pointer font-bold">
+            <svg className="w-3 h-3 inline" viewBox="0 0 16 16" fill="currentColor">
+              <path fillRule="evenodd" d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06l-3.04-3.04z" />
+            </svg>
+            <span>main</span>
+          </span>
+          <span className="hidden sm:inline font-mono">
+            {isRunning ? "⚡ Çalıştırılıyor..." : "✓ Hazır"}
+          </span>
+        </div>
+
+        {/* Center: System status notifications */}
+        <div className="text-[10px] tracking-wide select-none hidden md:block">
+          ÖzDil Web Studio v1.0.0
+        </div>
+
+        {/* Right formatting status */}
+        <div className="flex items-center gap-3">
+          <span className="hover:bg-indigo-700 dark:hover:bg-zinc-850 px-1.5 h-full flex items-center transition duration-150 cursor-pointer">
+            Satır {cursorPos.line}, Sütun {cursorPos.col}
+          </span>
+          <span className="hidden sm:inline hover:bg-indigo-700 dark:hover:bg-zinc-850 px-1.5 h-full flex items-center transition duration-150 cursor-pointer">
+            Girinti: 4 Boşluk
+          </span>
+          <span className="hidden md:inline hover:bg-indigo-700 dark:hover:bg-zinc-850 px-1.5 h-full flex items-center transition duration-150 cursor-pointer">
+            UTF-8
+          </span>
+          <span className="hover:bg-indigo-700 dark:hover:bg-zinc-850 px-1.5 h-full flex items-center transition duration-150 cursor-pointer font-bold text-indigo-100 dark:text-indigo-400">
+            ÖzDil
+          </span>
+        </div>
       </footer>
+
     </div>
   );
 }

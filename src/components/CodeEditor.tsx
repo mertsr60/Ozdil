@@ -8,9 +8,11 @@ interface CodeEditorProps {
   onChange: (val: string) => void;
   onRun: () => void;
   isRunning: boolean;
+  flat?: boolean;
+  onCursorChange?: (line: number, col: number) => void;
 }
 
-export default function CodeEditor({ value, onChange, onRun, isRunning }: CodeEditorProps) {
+export default function CodeEditor({ value, onChange, onRun, isRunning, flat = false, onCursorChange }: CodeEditorProps) {
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
   const [selectionStart, setSelectionStart] = useState(0);
   const [suggestions, setSuggestions] = useState<KeywordInfo[]>([]);
@@ -41,13 +43,18 @@ export default function CodeEditor({ value, onChange, onRun, isRunning }: CodeEd
     // Track line/col for info bar
     const textBeforeCursor = value.slice(0, start);
     const lines = textBeforeCursor.split("\n");
-    setCursorPos({
+    const currentLine = lines[lines.length - 1];
+    const newPos = {
       line: lines.length,
-      col: lines[lines.length - 1].length + 1
-    });
+      col: currentLine.length + 1
+    };
+    
+    setCursorPos(newPos);
+    if (onCursorChange) {
+      onCursorChange(newPos.line, newPos.col);
+    }
 
     // Extract word being typed
-    const currentLine = lines[lines.length - 1];
     const wordMatch = currentLine.match(/[a-zA-Z0-9_ğüşöçİĞÜŞÖÇ]+$/);
     const word = wordMatch ? wordMatch[0] : "";
 
@@ -248,50 +255,61 @@ export default function CodeEditor({ value, onChange, onRun, isRunning }: CodeEd
   const lineCount = value.split("\n").length;
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden" id="editor-container">
-      {/* Editor Toolbar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800" id="editor-toolbar">
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-red-400"></span>
-            <span className="w-3 h-3 rounded-full bg-amber-400"></span>
-            <span className="w-3 h-3 rounded-full bg-green-400"></span>
+    <div className={`flex flex-col h-full overflow-hidden ${
+      flat 
+        ? "bg-white dark:bg-zinc-950 w-full" 
+        : "bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm"
+    }`} id="editor-container">
+      
+      {/* Editor Toolbar (hidden in flat/VS Code mode) */}
+      {!flat && (
+        <div className="flex items-center justify-between px-4 py-3 bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800" id="editor-toolbar">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-red-400"></span>
+              <span className="w-3 h-3 rounded-full bg-amber-400"></span>
+              <span className="w-3 h-3 rounded-full bg-green-400"></span>
+            </div>
+            <span className="text-xs font-semibold tracking-wider text-zinc-500 dark:text-zinc-400 ml-2 flex items-center gap-1.5 uppercase font-mono">
+              <FileCode2 className="w-3.5 h-3.5" /> kod_alani.oz
+            </span>
           </div>
-          <span className="text-xs font-semibold tracking-wider text-zinc-500 dark:text-zinc-400 ml-2 flex items-center gap-1.5 uppercase font-mono">
-            <FileCode2 className="w-3.5 h-3.5" /> kod_alani.oz
-          </span>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onChange("")}
-            className="p-1.5 text-zinc-500 hover:text-red-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition"
-            title="Temizle"
-            id="clear-btn"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
-          
-          <button
-            onClick={onRun}
-            disabled={isRunning}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm ${
-              isRunning
-                ? "bg-zinc-100 text-zinc-400 dark:bg-zinc-800 cursor-not-allowed"
-                : "bg-indigo-600 hover:bg-indigo-500 text-white dark:bg-indigo-500 dark:hover:bg-indigo-400"
-            }`}
-            id="run-btn"
-          >
-            <Play className={`w-4 h-4 ${isRunning ? "animate-spin" : "fill-current"}`} />
-            {isRunning ? "Çalışıyor..." : "Çalıştır"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onChange("")}
+              className="p-1.5 text-zinc-500 hover:text-red-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition"
+              title="Temizle"
+              id="clear-btn"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+            
+            <button
+              onClick={onRun}
+              disabled={isRunning}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm ${
+                isRunning
+                  ? "bg-zinc-100 text-zinc-400 dark:bg-zinc-800 cursor-not-allowed"
+                  : "bg-indigo-600 hover:bg-indigo-500 text-white dark:bg-indigo-50 dark:hover:bg-indigo-400"
+              }`}
+              id="run-btn"
+            >
+              <Play className={`w-4 h-4 ${isRunning ? "animate-spin" : "fill-current"}`} />
+              {isRunning ? "Çalışıyor..." : "Çalıştır"}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Code Editor Workspace */}
       <div className="flex-1 flex relative overflow-hidden font-mono text-sm leading-relaxed" id="editor-workspace">
         {/* Line Numbers */}
-        <div className="w-12 py-4 select-none bg-zinc-50 dark:bg-zinc-900/40 text-right pr-3 text-zinc-400 border-r border-zinc-100 dark:border-zinc-800/40 font-mono text-xs leading-relaxed" id="line-numbers">
+        <div className={`w-12 py-4 select-none text-right pr-3 text-zinc-400 border-r font-mono text-xs leading-relaxed ${
+          flat
+            ? "bg-zinc-50/50 dark:bg-zinc-900/20 border-zinc-100 dark:border-zinc-800/30"
+            : "bg-zinc-50 dark:bg-zinc-900/40 border-zinc-100 dark:border-zinc-800/40"
+        }`} id="line-numbers">
           {Array.from({ length: lineCount }).map((_, i) => (
             <div key={i} className="h-6">
               {i + 1}
@@ -380,20 +398,22 @@ export default function CodeEditor({ value, onChange, onRun, isRunning }: CodeEd
         </div>
       </div>
 
-      {/* Editor Info Bar / Metadata footer */}
-      <div className="flex items-center justify-between px-4 py-1.5 bg-zinc-50 dark:bg-zinc-900/30 border-t border-zinc-100 dark:border-zinc-800 text-xs text-zinc-500 dark:text-zinc-400" id="editor-infobar">
-        <div className="flex items-center gap-4">
-          <span>Satır: <strong>{cursorPos.line}</strong>, Sütun: <strong>{cursorPos.col}</strong></span>
-          {ghostText && (
-            <span className="hidden md:inline text-indigo-500 animate-pulse text-[11px] font-medium bg-indigo-50 dark:bg-indigo-950/30 px-2 py-0.5 rounded">
-              Tab / Sağ Yön Tuşu ile Tamamla ({ghostText})
-            </span>
-          )}
+      {/* Editor Info Bar / Metadata footer (hidden in flat/VS Code mode) */}
+      {!flat && (
+        <div className="flex items-center justify-between px-4 py-1.5 bg-zinc-50 dark:bg-zinc-900/30 border-t border-zinc-100 dark:border-zinc-800 text-xs text-zinc-500 dark:text-zinc-400" id="editor-infobar">
+          <div className="flex items-center gap-4">
+            <span>Satır: <strong>{cursorPos.line}</strong>, Sütun: <strong>{cursorPos.col}</strong></span>
+            {ghostText && (
+              <span className="hidden md:inline text-indigo-500 animate-pulse text-[11px] font-medium bg-indigo-50 dark:bg-indigo-950/30 px-2 py-0.5 rounded">
+                Tab / Sağ Yön Tuşu ile Tamamla ({ghostText})
+              </span>
+            )}
+          </div>
+          <div className="text-[10px] tracking-wider uppercase font-semibold text-zinc-400">
+            ÖzDil v1.0 • Python Çalışma Ortamı
+          </div>
         </div>
-        <div className="text-[10px] tracking-wider uppercase font-semibold text-zinc-400">
-          ÖzDil v1.0 • Python Çalışma Ortamı
-        </div>
-      </div>
+      )}
     </div>
   );
 }
