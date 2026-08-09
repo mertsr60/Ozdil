@@ -1,0 +1,6 @@
+{
+  "name": "Turkce Programlama Dili",
+  "description": "Kendi özel Türkçe programlama dilinizi yazabileceğiniz, Python AST dönüşümünü inceleyebileceğiniz ve kodlarınızı canlı olarak çalıştırabileceğiniz etkileşimli oyun alanı.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
