@@ -138,16 +138,16 @@ class SandboxChecker(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_Name(self, node):
-        if node.id.startswith("__") and node.id != "__init__":
-            self.errors.append(f"Güvenlik İhlali: Sistem seviyesi nesnelere erişim yasaktır ('{node.id}').")
-        elif node.id in ("eval", "exec", "compile"):
+        if node.id.startswith("_") and node.id != "_" and node.id != "__init__":
+            self.errors.append(f"Güvenlik İhlali: Gizli veya sistem seviyesi nesnelere erişim yasaktır ('{node.id}').")
+        elif node.id in ("eval", "exec", "compile", "globals", "locals", "vars", "dir"):
             self.errors.append(f"Güvenlik İhlali: Güvensiz '{node.id}' kelimesinin kullanımı yasaktır.")
         self.generic_visit(node)
 
     def visit_Attribute(self, node):
-        if node.attr.startswith("__") and node.attr != "__init__":
-            self.errors.append(f"Güvenlik İhlali: Sistem seviyesi özniteliklere erişim yasaktır ('{node.attr}').")
-        elif node.attr in ("eval", "exec", "compile"):
+        if node.attr.startswith("_") and node.attr != "__init__":
+            self.errors.append(f"Güvenlik İhlali: Gizli veya sistem seviyesi özniteliklere erişim yasaktır ('{node.attr}').")
+        elif node.attr in ("eval", "exec", "compile", "globals", "locals", "vars", "dir"):
             self.errors.append(f"Güvenlik İhlali: Güvensiz '{node.attr}' özniteliğine erişim yasaktır.")
         self.generic_visit(node)
 

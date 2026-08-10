@@ -16,8 +16,9 @@ def rastgele_karistir(liste):
     return copied
 
 def sifre_olustur(uzunluk):
+    import secrets
     characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
-    res = [random.choice(characters) for _ in range(int(uzunluk))]
+    res = [secrets.choice(characters) for _ in range(int(uzunluk))]
     return "".join(res)
 
 def rastgele_renk():

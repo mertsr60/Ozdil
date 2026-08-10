@@ -48,7 +48,20 @@ class TestSandbox(unittest.TestCase):
         code = "x = ().__class__"
         ok, errors = verify_python_code(code, "test_introspection")
         self.assertFalse(ok)
-        self.assertTrue(any("sistem seviyesi" in err.lower() or "__class__" in err.lower() for err in errors))
+        self.assertTrue(any("gizli" in err.lower() or "sistem" in err.lower() or "__class__" in err.lower() for err in errors))
+
+    def test_single_underscore_blocking(self):
+        code = "x = obj._some_private_var"
+        ok, errors = verify_python_code(code, "test_private")
+        self.assertFalse(ok)
+        self.assertTrue(any("gizli" in err.lower() or "sistem" in err.lower() for err in errors))
+
+    def test_reflection_blocking(self):
+        for func in ("globals", "locals", "vars", "dir"):
+            code = f"x = {func}()"
+            ok, errors = verify_python_code(code, "test_reflection")
+            self.assertFalse(ok)
+            self.assertTrue(any(func in err.lower() for err in errors))
 
 if __name__ == "__main__":
     unittest.main()

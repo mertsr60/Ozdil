@@ -63,16 +63,22 @@ def tokenize_line(line_str, lineno):
             
         # 6. Numbers (Float / Int)
         if c.isdigit():
-            m = _NUM_FLOAT_RE.match(line_str, i)
-            if m:
-                tokens.append(Token('NUM_FLOAT', m.group(0), lineno, i + 1))
-                i = m.end()
-                continue
-            m = _NUM_INT_RE.match(line_str, i)
-            if m:
-                tokens.append(Token('NUM_INT', m.group(0), lineno, i + 1))
-                i = m.end()
-                continue
+            # Match the entire numeric-like run to prevent partial tokenization of malformed numbers
+            m_run = re.match(r'[0-9][a-zA-Z0-9._]*', line_str[i:])
+            if m_run:
+                run_str = m_run.group(0)
+                # Check if it is a valid integer
+                if re.match(r'^[0-9]+$', run_str):
+                    tokens.append(Token('NUM_INT', run_str, lineno, i + 1))
+                    i += len(run_str)
+                    continue
+                # Check if it is a valid float
+                elif re.match(r'^[0-9]+\.[0-9]+$|^[0-9]+\.$', run_str):
+                    tokens.append(Token('NUM_FLOAT', run_str, lineno, i + 1))
+                    i += len(run_str)
+                    continue
+                else:
+                    raise SyntaxError(f"Geçersiz sayı literal'ı: '{run_str}'")
                 
         # 7. Strings with escape support
         if c == '"':
@@ -115,16 +121,19 @@ def lex_ozdil(code_str):
             continue
             
         # Efficiently calculate indentation
+        physical_indent_chars = 0
         indent_level = 0
         for char in line:
             if char == ' ':
+                physical_indent_chars += 1
                 indent_level += 1
             elif char == '\t':
+                physical_indent_chars += 1
                 indent_level += 4
             else:
                 break
                 
-        line_tokens = tokenize_line(stripped[indent_level:], lineno)
+        line_tokens = tokenize_line(stripped[physical_indent_chars:], lineno)
         if not line_tokens:
             continue
             

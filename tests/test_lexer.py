@@ -44,5 +44,18 @@ class TestLexer(unittest.TestCase):
         ops = [t.value for t in tokens]
         self.assertEqual(ops, ["==", "!=", "<=", ">=", "+", "-", "*", "/"])
 
+    def test_malformed_float(self):
+        with self.assertRaises(SyntaxError):
+            tokenize_line("1.2.3", 1)
+        with self.assertRaises(SyntaxError):
+            tokenize_line("12abc", 1)
+
+    def test_tab_indentation_columns(self):
+        code = "\tx\n\t\ty\n\tx"
+        tokens = lex_ozdil(code)
+        types = [t.type for t in tokens]
+        self.assertIn('INDENT', types)
+        self.assertIn('DEDENT', types)
+
 if __name__ == "__main__":
     unittest.main()
