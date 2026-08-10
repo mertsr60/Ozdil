@@ -84,15 +84,19 @@ class Environment:
         if modifier == 'sabit':
             return # Sabit can contain any type initially
         
+        from .runtime_types import OzValue
+        native_value = value.to_native() if isinstance(value, OzValue) else value
+        
         expected_type = _TYPE_MAPPING.get(modifier)
         if expected_type:
             # Special case for ints and floats
-            if expected_type is float and isinstance(value, int):
+            if expected_type is float and isinstance(native_value, int):
                 return # Implicitly allow int to float assignment
-            if not isinstance(value, expected_type):
+            if not isinstance(native_value, expected_type):
+                type_name = getattr(value, 'get_type_name', lambda: type(native_value).__name__)()
                 raise OzdilError(
                     "Tip Hatası (TypeError)",
-                    f"Beklenen veri türü '{modifier}', fakat '{type(value).__name__}' türünde değer verildi.",
+                    f"Beklenen veri türü '{modifier}', fakat '{type_name}' türünde değer verildi.",
                     lineno
                 )
 

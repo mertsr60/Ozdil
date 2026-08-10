@@ -80,15 +80,25 @@ def run_code(custom_code, inputs_list=None, trigger_event=None):
         ozdil.plugin_api.plugin.trigger_event("program_basladi")
         
         # Interpreter VM
-        interpreter = Interpreter(inputs_list=inputs_list)
-        interpreter.eval(ast_root, interpreter.global_env)
+        from ozdil_core.vm import VirtualMachine
         
+        use_legacy = os.environ.get("OZDIL_USE_LEGACY_INTERPRETER") == "1"
+        
+        if use_legacy:
+            interpreter = Interpreter(inputs_list=inputs_list)
+            interpreter.eval(ast_root, interpreter.global_env)
+        else:
+            vm = VirtualMachine(inputs_list=inputs_list)
+            vm.eval(ast_root, vm.global_env)
+            interpreter = vm
+            
         # Olay tetikle: custom_event
         if trigger_event:
             ozdil.plugin_api.plugin.trigger_event(trigger_event)
             
         # Olay tetikle: program_bitti
-        ozdil.plugin_api.plugin.trigger_event("program_bitti")
+        if hasattr(ozdil.plugin_api.plugin, "trigger_event"):
+            ozdil.plugin_api.plugin.trigger_event("program_bitti")
         
         output = "".join(interpreter.stdout)
         
