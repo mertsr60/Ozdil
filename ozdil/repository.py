@@ -858,25 +858,52 @@ def plugin():
 }
 
 import hashlib
+import os
+import sys
 
-RSA_N = 1000000000000000000000000000000000000000010330000000000000000000000000000000000000000092889
+# 1024-bit RSA Public Key
+RSA_N = 131869317293702309841552762712251746919494094597659741157495659622634729285218513465697541530679097013689567260341373183132862975885657361980250503060699818453974315755595888928004082339480555986396058724985887669654995936400724289959367139038363430191002142550275704958761657952655646721269560238302518773703
 RSA_E = 65537
-RSA_D = 487297251934022002838091459786075041579570774295558234279872438469871980713184918443057153
+
+# Private key management: Load private key from environment variable if available, else use fallback
+_ENV_KEY = os.environ.get("OZPAKET_PRIVATE_KEY")
+if _ENV_KEY:
+    try:
+        RSA_D = int(_ENV_KEY)
+    except ValueError:
+        sys.stderr.write("UYARI: OZPAKET_PRIVATE_KEY çevre değişkeni geçersiz bir tam sayı!\n")
+        RSA_D = 93938552987988251480274231044817203361208192324737822538090580361358087361486053979577268167619578607215941180040242129297051145035595153904053816712571992175078123642258989724668394151125180703607862519124809434470623668480551915902524795404471847667258571538274913168643509098659044555951719233962928798577
+else:
+    RSA_D = 93938552987988251480274231044817203361208192324737822538090580361358087361486053979577268167619578607215941180040242129297051145035595153904053816712571992175078123642258989724668394151125180703607862519124809434470623668480551915902524795404471847667258571538274913168643509098659044555951719233962928798577
+
+def pkcs1_v1_5_pad(hash_bytes, key_size=128):
+    if len(hash_bytes) != 32:
+        raise ValueError("Hash size must be 32 bytes for SHA-256.")
+    der_prefix = b"\x30\x31\x30\x0d\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x01\x05\x00\x04\x20"
+    t = der_prefix + hash_bytes
+    ps_len = key_size - len(t) - 3
+    if ps_len < 8:
+        raise ValueError("Key size is too small for PKCS#1 v1.5 padding with SHA-256.")
+    ps = b"\xff" * ps_len
+    return b"\x00\x01" + ps + b"\x00" + t
 
 def generate_sha256(content_dict):
     """
     Paket içeriğindeki tüm dosyaları birleştirerek SHA256 hash'i oluşturur,
-    ardından asimetrik geliştirici özel anahtarı (RSA Private Key) ile kriptografik olarak imzalar.
+    ardından asimetrik geliştirici özel anahtarı (RSA Private Key) ile PKCS#1 v1.5 standardında kriptografik olarak imzalar.
     """
     m = hashlib.sha256()
     for filename in sorted(content_dict.keys()):
         m.update(filename.encode('utf-8'))
         m.update(content_dict[filename].encode('utf-8'))
-    h_hex = m.hexdigest()
-    h_int = int(h_hex, 16)
+    hash_bytes = m.digest()
     
-    # Asimetrik imzalama: s = h^d mod n
-    s_int = pow(h_int, RSA_D, RSA_N)
+    # PKCS#1 v1.5 padding uygulayarak 128 byte'lık blok elde et
+    padded_block = pkcs1_v1_5_pad(hash_bytes, key_size=128)
+    block_int = int.from_bytes(padded_block, byteorder='big')
+    
+    # Asimetrik imzalama: s = block^d mod n
+    s_int = pow(block_int, RSA_D, RSA_N)
     
     # İmzayı hex formatında döndür
     return hex(s_int)[2:]

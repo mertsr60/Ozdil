@@ -158,3 +158,47 @@ def lex_ozdil(code_str):
         all_tokens.append(Token('DEDENT', '', len(lines), 1))
         
     return all_tokens
+
+def decode_string_literal(literal_str):
+    """
+    Decodes escape sequences in string literals in a standardized, secure manner.
+    """
+    if len(literal_str) < 2:
+        return ""
+    # Strip enclosing quotes
+    quote_char = literal_str[0]
+    if literal_str.endswith(quote_char):
+        content = literal_str[1:-1]
+    else:
+        content = literal_str[1:]
+        
+    # Standardize escape decode logic
+    escape_re = re.compile(r'\\(x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}|.)')
+    
+    def replace_escape(match):
+        esc = match.group(1)
+        if esc.startswith('x'):
+            try:
+                return chr(int(esc[1:], 16))
+            except ValueError:
+                return match.group(0)
+        elif esc.startswith('u') or esc.startswith('U'):
+            try:
+                return chr(int(esc[1:], 16))
+            except ValueError:
+                return match.group(0)
+        mapping = {
+            'n': '\n',
+            'r': '\r',
+            't': '\t',
+            'b': '\b',
+            'f': '\f',
+            'v': '\v',
+            '\\': '\\',
+            '"': '"',
+            "'": "'",
+        }
+        return mapping.get(esc, esc)
+        
+    return escape_re.sub(replace_escape, content)
+

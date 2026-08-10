@@ -77,12 +77,74 @@ class TestSandbox(unittest.TestCase):
 
     def test_package_asymmetric_verification(self):
         from ozdil.package_manager import verify_package_signature
-        from ozdil.repository import REPOSITORY_PACKAGES
-        # Standard repository packages should be signed correctly and pass
-        for pkg in REPOSITORY_PACKAGES.keys():
-            # Standard package check (if installed, check signature)
-            # We can also mock verify_package_signature with a dummy metadata
-            pass
+        from ozdil.repository import REPOSITORY_PACKAGES, generate_sha256
+        import tempfile
+        import json
+        import shutil
+
+        # Create a temporary directory structure for testing package signature
+        with tempfile.TemporaryDirectory() as tmpdir:
+            pkg_dir = os.path.join(tmpdir, "testpaket")
+            os.makedirs(pkg_dir)
+            
+            # 1. Create files in the package (hashing skips ozpaket.json)
+            content = {
+                "testpaket.py": "def plugin(): return {}"
+            }
+            for filename, filecontent in content.items():
+                with open(os.path.join(pkg_dir, filename), "w", encoding="utf-8") as f:
+                    f.write(filecontent)
+                    
+            # 2. Sign the package
+            expected_imza = generate_sha256(content)
+            
+            # Let's save the metadata with the signature
+            meta_content = {
+                "isim": "testpaket",
+                "versiyon": "1.0.0",
+                "imza": expected_imza
+            }
+            with open(os.path.join(pkg_dir, "ozpaket.json"), "w", encoding="utf-8") as f:
+                json.dump(meta_content, f)
+                
+            # Now let's mock verify_package_signature's directory lookup to search in our temp directory
+            import ozdil.package_manager
+            original_dirs = ozdil.package_manager.LOCAL_PACKAGES_DIR
+            
+            try:
+                # Point package manager's local directory to our temp directory
+                ozdil.package_manager.LOCAL_PACKAGES_DIR = tmpdir
+                
+                # Check signature passes
+                ok, msg = verify_package_signature("testpaket")
+                self.assertTrue(ok, f"Verification failed: {msg}")
+                
+                # 3. Modify testpaket.py to simulate tampering
+                with open(os.path.join(pkg_dir, "testpaket.py"), "w", encoding="utf-8") as f:
+                    f.write("def plugin(): return {'tampered': True}")
+                    
+                # Check signature fails!
+                ok, msg = verify_package_signature("testpaket")
+                self.assertFalse(ok)
+                self.assertIn("Asimetrik imza doğrulaması başarısız oldu", msg)
+                
+            finally:
+                ozdil.package_manager.LOCAL_PACKAGES_DIR = original_dirs
+
+    def test_subprocess_sandbox_success(self):
+        from ozdil.sandbox import run_in_subprocess_sandbox
+        code = "print('Hello from isolated subprocess!')"
+        ok, out = run_in_subprocess_sandbox(code)
+        self.assertTrue(ok)
+        self.assertIn("Hello", out)
+
+    def test_subprocess_sandbox_security_blocking(self):
+        from ozdil.sandbox import run_in_subprocess_sandbox
+        # AST blocks import of os
+        code = "import os\nos.system('echo test')"
+        ok, err = run_in_subprocess_sandbox(code)
+        self.assertFalse(ok)
+        self.assertIn("AST Süzgeç Hatası", err)
 
 if __name__ == "__main__":
     unittest.main()

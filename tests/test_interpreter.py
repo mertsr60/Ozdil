@@ -57,5 +57,25 @@ class TestInterpreter(unittest.TestCase):
         interpreter.eval(ast_tree, interpreter.global_env)
         self.assertEqual(interpreter.stdout[0], "buyuk\n")
 
+    def test_lexical_scoping_and_closure(self):
+        code = (
+            "değişken x = 100\n"
+            "islem dis_fonk():\n"
+            "    değişken x = 50\n"
+            "    islem ic_fonk():\n"
+            "        yazdır(x)\n"
+            "    ic_fonk()\n"
+            "dis_fonk()\n"
+            "yazdır(x)\n"
+        )
+        tokens = lex_ozdil(code)
+        parser = Parser(tokens)
+        ast_tree = parser.parse_program()
+        
+        interpreter = Interpreter()
+        interpreter.eval(ast_tree, interpreter.global_env)
+        self.assertEqual(interpreter.stdout[0], "50\n")
+        self.assertEqual(interpreter.stdout[1], "100\n")
+
 if __name__ == "__main__":
     unittest.main()

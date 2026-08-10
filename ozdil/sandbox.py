@@ -180,3 +180,105 @@ def verify_python_code(code_content, package_name="bilinmeyen", allowed_permissi
     if errors:
         return False, errors
     return True, []
+
+def run_in_subprocess_sandbox(code_content, timeout_sec=2, max_mem_mb=128, allowed_permissions=None):
+    """
+    Python kodunu tamamen izole edilmiş bir alt süreçte (subprocess) çalıştırır.
+    Süreç seviyesinde CPU, bellek, dosya tanımlayıcı (FD) ve süreç oluşturma sınırları koyar.
+    """
+    import subprocess
+    import sys
+    import json
+    
+    # Python code wrapper to run the target code under restricted globals/builtins
+    # We serialize the execution and retrieve stdout/stderr
+    wrapper_code = f"""
+import sys
+import json
+import resource
+
+def set_limits():
+    # CPU Sınırı (saniye)
+    resource.setrlimit(resource.RLIMIT_CPU, ({timeout_sec}, {timeout_sec} + 1))
+    # Bellek Sınırı (Byte)
+    mem_bytes = {max_mem_mb} * 1024 * 1024
+    resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
+    # Süreç oluşturma sınırı (0 -> yeni process oluşturamaz, fork/exec engellenir)
+    if "sistem" not in {allowed_permissions or []}:
+        try:
+            resource.setrlimit(resource.RLIMIT_NPROC, (0, 0))
+        except Exception:
+            pass
+    # Açık dosya sayısı sınırı (örn: 20)
+    if "dosya_sistemi" not in {allowed_permissions or []}:
+        try:
+            resource.setrlimit(resource.RLIMIT_NOFILE, (20, 20))
+        except Exception:
+            pass
+
+try:
+    set_limits()
+except Exception as e:
+    # Bazı ortamlarda bazı limitler kısıtlanamayabilir, hata vermeden devam et
+    pass
+
+# Hedef kodu güvenli şekilde çalıştır
+try:
+    # AST kontrolü
+    from ozdil.sandbox import verify_python_code
+    code_to_run = {repr(code_content)}
+    ok, errors = verify_python_code(code_to_run, "subprocess_sandbox", {allowed_permissions})
+    if not ok:
+        print(json.dumps({{"success": False, "error": "AST Süzgeç Hatası: " + ", ".join(errors)}}))
+        sys.exit(0)
+        
+    # Restricted builtins ve global alan oluştur
+    from ozdil_core.interpreter import make_restricted_builtins
+    import math, random, time
+    stdout_ref = []
+    restricted_builtins = make_restricted_builtins({allowed_permissions or []}, stdout_ref)
+    
+    exec_globals = {{
+        "__builtins__": restricted_builtins,
+        "math": math,
+        "random": random,
+        "time": time
+    }}
+    
+    exec(code_to_run, exec_globals, exec_globals)
+    print(json.dumps({{"success": True, "output": "".join(stdout_ref), "error": None}}))
+except Exception as e:
+    print(json.dumps({{"success": False, "error": str(e)}}))
+"""
+
+    try:
+        proc = subprocess.Popen(
+            [sys.executable, "-c", wrapper_code],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        try:
+            stdout, stderr = proc.communicate(timeout=timeout_sec + 1)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            stdout, stderr = proc.communicate()
+            return False, "Süre Aşımı: Kod çalışması belirlenen süreyi aştı."
+            
+        if proc.returncode != 0:
+            # Process crashed (e.g. killed by SIGSEGV or RLIMIT_AS exceeded)
+            if proc.returncode == -9 or proc.returncode == -15:
+                return False, "Süreç Aşımı veya Bellek Sınırı: Kod işletilirken sistem tarafından sonlandırıldı."
+            return False, f"Alt Süreç Hatası (Exit Code: {proc.returncode}): {stderr.strip() or 'Bellek veya kaynak sınırları aşıldı.'}"
+            
+        try:
+            res = json.loads(stdout.strip())
+            if res.get("success"):
+                return True, res.get("output")
+            else:
+                return False, res.get("error")
+        except Exception:
+            return False, f"Çıktı çözümlenemedi. StdOut: {stdout.strip()} StdErr: {stderr.strip()}"
+    except Exception as e:
+        return False, f"Sandbox başlatılamadı: {str(e)}"
+

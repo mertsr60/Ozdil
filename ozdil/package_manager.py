@@ -190,24 +190,44 @@ def verify_package_signature(pkg_name):
     for filename in sorted(current_files.keys()):
         m.update(filename.encode('utf-8'))
         m.update(current_files[filename].encode('utf-8'))
-    local_hash_hex = m.hexdigest()
-    local_hash_int = int(local_hash_hex, 16)
+    local_hash_bytes = m.digest()
     
-    # 2. Paketteki imzayı RSA Public Key ile deşifre et (h = s^e mod n)
-    RSA_N = 1000000000000000000000000000000000000000010330000000000000000000000000000000000000000092889
+    # 2. Paketteki imzayı RSA Public Key ile deşifre et ve doğrula (PKCS#1 v1.5)
+    RSA_N = 131869317293702309841552762712251746919494094597659741157495659622634729285218513465697541530679097013689567260341373183132862975885657361980250503060699818453974315755595888928004082339480555986396058724985887669654995936400724289959367139038363430191002142550275704958761657952655646721269560238302518773703
     RSA_E = 65537
+    key_size = 128
     
     try:
         signature_int = int(expected_imza, 16)
-        decrypted_hash_int = pow(signature_int, RSA_E, RSA_N)
+        # s^e mod n
+        decrypted_int = pow(signature_int, RSA_E, RSA_N)
+        decrypted_bytes = decrypted_int.to_bytes(key_size, byteorder='big')
     except Exception as e:
         return False, f"Geçersiz imza formatı veya doğrulama hatası: {str(e)}"
         
-    # 3. İmzadan çözülen hash ile yerel hash değerini karşılaştır
-    if decrypted_hash_int != local_hash_int:
-        return False, f"Bozuk veya yetkisiz paket algılandı! Asimetrik imza doğrulaması başarısız oldu.\nAsli hash: {hex(decrypted_hash_int)}\nHesaplanan hash: {hex(local_hash_int)}"
+    # PKCS#1 v1.5 padding kontrolü ve hash karşılaştırması
+    if decrypted_bytes[0] != 0 or decrypted_bytes[1] != 1:
+        return False, "Hata: PKCS#1 v1.5 imza yapısı geçersiz (başlangıç marker'ları uyuşmuyor)."
         
-    return True, "İmza doğrulandı (RSA Asymmetric Signature). Paket tamamen güvenli."
+    try:
+        sep_idx = decrypted_bytes.index(b"\x00", 2)
+    except ValueError:
+        return False, "Hata: PKCS#1 v1.5 imza yapısı geçersiz (seperator byte bulunamadı)."
+        
+    ps = decrypted_bytes[2:sep_idx]
+    if len(ps) < 8 or any(b != 0xff for b in ps):
+        return False, "Hata: PKCS#1 v1.5 imza yapısı geçersiz (padding bytes bozuk)."
+        
+    t = decrypted_bytes[sep_idx + 1:]
+    der_prefix = b"\x30\x31\x30\x0d\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x01\x05\x00\x04\x20"
+    if not t.startswith(der_prefix):
+        return False, "Hata: PKCS#1 v1.5 imza yapısı geçersiz (SHA-256 OID / DigestInfo uyuşmuyor)."
+        
+    decrypted_hash = t[len(der_prefix):]
+    if decrypted_hash != local_hash_bytes:
+        return False, f"Bozuk veya yetkisiz paket algılandı! Asimetrik imza doğrulaması başarısız oldu.\nBeklenen hash: {local_hash_bytes.hex()}\nÇözülen hash: {decrypted_hash.hex()}"
+        
+    return True, "İmza doğrulandı (RSA PKCS#1 v1.5 Asymmetric Signature). Paket tamamen güvenli."
 
 def install_package(pkg_name, target="local", installing_set=None):
     """
