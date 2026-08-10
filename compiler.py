@@ -4,10 +4,10 @@ import os
 import json
 import traceback
 
-from ozdil_core import (
-    OzdilError, ReturnException, BreakException, ContinueException, InputRequestException,
-    Token, OZDIL_KEYWORDS,
-    tokenize_line, lex_ozdil,
+from varyn_core import (
+    VarynError, ReturnException, BreakException, ContinueException, InputRequestException,
+    Token, VARYN_KEYWORDS,
+    tokenize_line, lex_varyn,
     ASTNode, Program, Atama, Eger, Iken, Dongu, Islem, Dondur, Getir,
     IkiliIslem, TekliIslem, Degisken, Deger, Cagir, Nitelik,
     Endeks, Liste, Sozluk, Ifade, DurNode, DevamEtNode,
@@ -49,9 +49,9 @@ def run_code(custom_code, inputs_list=None, trigger_event=None):
     awaiting_input = False
     prompt = ""
     
-    import ozdil.plugin_api
+    import varyn.plugin_api
     # Temizle ve sıfırla
-    ozdil.plugin_api.plugin.clear()
+    varyn.plugin_api.plugin.clear()
     
     try:
         # Check Compilation Cache
@@ -60,7 +60,7 @@ def run_code(custom_code, inputs_list=None, trigger_event=None):
             tokens, ast_root, ast_dict, translated_tokens_str = cached
         else:
             # Lexer
-            tokens = lex_ozdil(custom_code)
+            tokens = lex_varyn(custom_code)
             
             # Build friendly Lexer output for the "Sözcükler (Lexer)" tab
             token_lines = []
@@ -77,12 +77,12 @@ def run_code(custom_code, inputs_list=None, trigger_event=None):
             _COMPILATION_CACHE.set(custom_code, (tokens, ast_root, ast_dict, translated_tokens_str))
         
         # Olay tetikle: program_basladi
-        ozdil.plugin_api.plugin.trigger_event("program_basladi")
+        varyn.plugin_api.plugin.trigger_event("program_basladi")
         
         # Interpreter VM
-        from ozdil_core.vm import VirtualMachine
+        from varyn_core.vm import VirtualMachine
         
-        use_legacy = os.environ.get("OZDIL_USE_LEGACY_INTERPRETER") == "1"
+        use_legacy = os.environ.get("VARYN_USE_LEGACY_INTERPRETER") == "1"
         
         if use_legacy:
             interpreter = Interpreter(inputs_list=inputs_list)
@@ -94,11 +94,11 @@ def run_code(custom_code, inputs_list=None, trigger_event=None):
             
         # Olay tetikle: custom_event
         if trigger_event:
-            ozdil.plugin_api.plugin.trigger_event(trigger_event)
+            varyn.plugin_api.plugin.trigger_event(trigger_event)
             
         # Olay tetikle: program_bitti
-        if hasattr(ozdil.plugin_api.plugin, "trigger_event"):
-            ozdil.plugin_api.plugin.trigger_event("program_bitti")
+        if hasattr(varyn.plugin_api.plugin, "trigger_event"):
+            varyn.plugin_api.plugin.trigger_event("program_bitti")
         
         output = "".join(interpreter.stdout)
         
@@ -116,7 +116,7 @@ def run_code(custom_code, inputs_list=None, trigger_event=None):
                 lineno = frame.lineno
         err_line = lines[lineno - 1].strip() if 1 <= lineno <= len(lines) else "Bilinmiyor"
         error = (
-            f"ÖzDil Çalışma Hatası (Girinti Hatası - IndentationError) 🚨\n"
+            f"Varyn Çalışma Hatası (Girinti Hatası - IndentationError) 🚨\n"
             f"--------------------------------------------------\n"
             f"Açıklama  : Kod bloklarının hizalaması (girintisi) uyuşmuyor.\n"
             f"Satır     : {lineno}\n"
@@ -132,7 +132,7 @@ def run_code(custom_code, inputs_list=None, trigger_event=None):
             "line_code": err_line,
             "suggested_fix": "Eğer ('eger'), döngü ('dongu') veya işlem ('islem') bloklarının altındaki satırların başına aynı sayıda boşluk/sekme bıraktığınızdan emin olun."
         }
-        ozdil.plugin_api.plugin.trigger_event("hata_olustu", error)
+        varyn.plugin_api.plugin.trigger_event("hata_olustu", error)
     except SyntaxError as syn_err:
         lines = custom_code.splitlines()
         # Retrieve actual or estimated lineno and col
@@ -153,7 +153,7 @@ def run_code(custom_code, inputs_list=None, trigger_event=None):
                 
         err_line = lines[lineno - 1].strip() if 1 <= lineno <= len(lines) else "Bilinmiyor"
         error = (
-            f"ÖzDil Çalışma Hatası (Yazım Hatası - SyntaxError) 🚨\n"
+            f"Varyn Çalışma Hatası (Yazım Hatası - SyntaxError) 🚨\n"
             f"--------------------------------------------------\n"
             f"Açıklama  : {msg}\n"
             f"Satır     : {lineno}\n"
@@ -170,23 +170,23 @@ def run_code(custom_code, inputs_list=None, trigger_event=None):
             "line_code": err_line,
             "suggested_fix": "Yazım kurallarını kontrol edin. Parantezlerin kapandığından, iki nokta üst üste (:) işaretinin doğru yerleştirildiğinden ve anahtar kelimelerin doğru yazıldığından emin olun."
         }
-        ozdil.plugin_api.plugin.trigger_event("hata_olustu", error)
-    except OzdilError as oz_err:
+        varyn.plugin_api.plugin.trigger_event("hata_olustu", error)
+    except VarynError as var_err:
         lines = custom_code.splitlines()
-        err_line = lines[oz_err.lineno - 1].strip() if 1 <= oz_err.lineno <= len(lines) else "Bilinmiyor"
+        err_line = lines[var_err.lineno - 1].strip() if 1 <= var_err.lineno <= len(lines) else "Bilinmiyor"
         error = (
-            f"ÖzDil Çalışma Hatası ({oz_err.friendly_type}) 🚨\n"
+            f"Varyn Çalışma Hatası ({var_err.friendly_type}) 🚨\n"
             f"--------------------------------------------------\n"
-            f"Açıklama  : {oz_err.message}\n"
-            f"Satır     : {oz_err.lineno}\n"
+            f"Açıklama  : {var_err.message}\n"
+            f"Satır     : {var_err.lineno}\n"
             f"--------------------------------------------------\n"
             f"Teknik Hata Detayı:\n"
-            f"{oz_err.friendly_type}: {oz_err.message}\n"
+            f"{var_err.friendly_type}: {var_err.message}\n"
             f"Hatalı Kod: {err_line}"
         )
         
         suggested_fix = "Kod mantığını ve değişkenlerin değerlerini kontrol edin."
-        ft_lower = oz_err.friendly_type.lower()
+        ft_lower = var_err.friendly_type.lower()
         if "tanımlanmamış" in ft_lower or "nameerror" in ft_lower:
             suggested_fix = "Kullanılan değişken veya fonksiyon adını kontrol edin. Doğru tanımlandığından veya büyük-küçük harf hatası olmadığından emin olun."
         elif "sıfıra bölme" in ft_lower or "zerodivisionerror" in ft_lower:
@@ -196,7 +196,7 @@ def run_code(custom_code, inputs_list=None, trigger_event=None):
         elif "dizin hatası" in ft_lower or "indexerror" in ft_lower:
             suggested_fix = "Liste sınırlarının dışına çıkıldı veya geçersiz sözlük anahtarı kullanıldı. Eleman sayısını kontrol etmek için 'uzunluk(...)' fonksiyonundan yararlanabilirsiniz."
         elif "kütüphane" in ft_lower or "importerror" in ft_lower:
-            suggested_fix = "İçe aktarılmak istenen kütüphane bulunamadı. ozpip sekmesinden paketin kurulu olduğundan veya adının doğru yazıldığından emin olun."
+            suggested_fix = "İçe aktarılmak istenen kütüphane bulunamadı. varynpip sekmesinden paketin kurulu olduğundan veya adının doğru yazıldığından emin olun."
         elif "sabit" in ft_lower or "constanterror" in ft_lower:
             suggested_fix = "Sabit değişkenlerin (BÜYÜK harfle başlayanlar veya özel tanımlı sabitler) değerleri tanımlandıktan sonra değiştirilemez."
         elif "öznitelik" in ft_lower or "attributeerror" in ft_lower:
@@ -206,21 +206,21 @@ def run_code(custom_code, inputs_list=None, trigger_event=None):
 
         error_details = {
             "type": "RuntimeError",
-            "friendly_type": oz_err.friendly_type,
-            "message": oz_err.message,
-            "lineno": oz_err.lineno,
+            "friendly_type": var_err.friendly_type,
+            "message": var_err.message,
+            "lineno": var_err.lineno,
             "col": 1,
             "line_code": err_line,
             "suggested_fix": suggested_fix
         }
-        ozdil.plugin_api.plugin.trigger_event("hata_olustu", error)
+        varyn.plugin_api.plugin.trigger_event("hata_olustu", error)
     except Exception as e:
         tb = traceback.extract_tb(sys.exc_info()[2])
         lineno = tb[-1].lineno if tb else 1
         lines = custom_code.splitlines()
         err_line = lines[lineno - 1].strip() if 1 <= lineno <= len(lines) else "Bilinmiyor"
         error = (
-            f"ÖzDil Çalışma Hatası (Beklenmeyen Hata) 🚨\n"
+            f"Varyn Çalışma Hatası (Beklenmeyen Hata) 🚨\n"
             f"--------------------------------------------------\n"
             f"Açıklama  : {str(e)}\n"
             f"Satır     : {lineno}\n"
@@ -236,10 +236,10 @@ def run_code(custom_code, inputs_list=None, trigger_event=None):
             "line_code": err_line,
             "suggested_fix": "İşlem yapılırken beklenmeyen bir sistem hatası oluştu. Kodun doğru formatta olduğundan emin olun."
         }
-        ozdil.plugin_api.plugin.trigger_event("hata_olustu", error)
+        varyn.plugin_api.plugin.trigger_event("hata_olustu", error)
         
-    import ozdil.plugin_api
-    gui_elements = list(ozdil.plugin_api.plugin.gui_elements)
+    import varyn.plugin_api
+    gui_elements = list(varyn.plugin_api.plugin.gui_elements)
     
     return {
         "translated": translated_tokens_str,

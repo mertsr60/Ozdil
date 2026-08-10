@@ -1,0 +1,10 @@
+{
+  "isim": "rastgele",
+  "surum": "1.1.0",
+  "yazar": "varyn_toplulugu",
+  "tur": "python",
+  "aciklama": "Rastgele sayı üretimi, liste elemanı seçimi ve güvenli şifre oluşturucu.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "a371dabcbc66d0ae53bc666c6bfd3e615144d7d6c7e237ba64b06c5b61d0b184"
+}

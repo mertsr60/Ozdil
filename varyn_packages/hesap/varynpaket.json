@@ -1,0 +1,12 @@
+{
+  "isim": "hesap",
+  "surum": "2.0.0",
+  "yazar": "hesap_uzmani",
+  "tur": "python",
+  "aciklama": "İstatistiksel hesaplamalar yapan ve renkler paketini kullanan kütüphane.",
+  "izinler": [],
+  "bagimliliklar": [
+    "renkler>=1.2.0"
+  ],
+  "imza": "49a0f2ea3b9b3d8204d6e31fb64bef75e6984db3cf67f360d90cd4d680905847"
+}

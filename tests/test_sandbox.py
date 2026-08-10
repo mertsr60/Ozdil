@@ -5,7 +5,7 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from ozdil.sandbox import verify_python_code
+from varyn.sandbox import verify_python_code
 
 class TestSandbox(unittest.TestCase):
     def test_safe_code(self):
@@ -76,8 +76,8 @@ class TestSandbox(unittest.TestCase):
                 s.connect((bad_ip, 80))
 
     def test_package_asymmetric_verification(self):
-        from ozdil.package_manager import verify_package_signature
-        from ozdil.repository import REPOSITORY_PACKAGES, generate_sha256
+        from varyn.package_manager import verify_package_signature
+        from varyn.repository import REPOSITORY_PACKAGES, generate_sha256
         import tempfile
         import json
         import shutil
@@ -87,7 +87,7 @@ class TestSandbox(unittest.TestCase):
             pkg_dir = os.path.join(tmpdir, "testpaket")
             os.makedirs(pkg_dir)
             
-            # 1. Create files in the package (hashing skips ozpaket.json)
+            # 1. Create files in the package (hashing skips varynpaket.json)
             content = {
                 "testpaket.py": "def plugin(): return {}"
             }
@@ -104,16 +104,16 @@ class TestSandbox(unittest.TestCase):
                 "versiyon": "1.0.0",
                 "imza": expected_imza
             }
-            with open(os.path.join(pkg_dir, "ozpaket.json"), "w", encoding="utf-8") as f:
+            with open(os.path.join(pkg_dir, "varynpaket.json"), "w", encoding="utf-8") as f:
                 json.dump(meta_content, f)
                 
             # Now let's mock verify_package_signature's directory lookup to search in our temp directory
-            import ozdil.package_manager
-            original_dirs = ozdil.package_manager.LOCAL_PACKAGES_DIR
+            import varyn.package_manager
+            original_dirs = varyn.package_manager.LOCAL_PACKAGES_DIR
             
             try:
                 # Point package manager's local directory to our temp directory
-                ozdil.package_manager.LOCAL_PACKAGES_DIR = tmpdir
+                varyn.package_manager.LOCAL_PACKAGES_DIR = tmpdir
                 
                 # Check signature passes
                 ok, msg = verify_package_signature("testpaket")
@@ -129,17 +129,17 @@ class TestSandbox(unittest.TestCase):
                 self.assertIn("Asimetrik imza doğrulaması başarısız oldu", msg)
                 
             finally:
-                ozdil.package_manager.LOCAL_PACKAGES_DIR = original_dirs
+                varyn.package_manager.LOCAL_PACKAGES_DIR = original_dirs
 
     def test_subprocess_sandbox_success(self):
-        from ozdil.sandbox import run_in_subprocess_sandbox
+        from varyn.sandbox import run_in_subprocess_sandbox
         code = "print('Hello from isolated subprocess!')"
         ok, out = run_in_subprocess_sandbox(code)
         self.assertTrue(ok)
         self.assertIn("Hello", out)
 
     def test_subprocess_sandbox_security_blocking(self):
-        from ozdil.sandbox import run_in_subprocess_sandbox
+        from varyn.sandbox import run_in_subprocess_sandbox
         # AST blocks import of os
         code = "import os\nos.system('echo test')"
         ok, err = run_in_subprocess_sandbox(code)

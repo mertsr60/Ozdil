@@ -1,40 +1,40 @@
-# 📚 ÖzDil Kütüphane ve Eklenti Geliştirme Kılavuzu
+# 📚 Varyn Kütüphane ve Eklenti Geliştirme Kılavuzu
 
-ÖzDil, hem saf **ÖzDil (`.oz`)** kodlarıyla yazılmış modülleri hem de arkada güvenli bir sandbox ortamında çalışan güçlü **Python (`.py`)** eklentilerini (plugin) destekleyen genişletilebilir bir dil ekosistemine sahiptir.
+Varyn, hem saf **Varyn (`.varyn`)** kodlarıyla yazılmış modülleri hem de arkada güvenli bir sandbox ortamında çalışan güçlü **Python (`.py`)** eklentilerini (plugin) destekleyen genişletilebilir bir dil ekosistemine sahiptir.
 
-Bu kılavuz, kendi ÖzDil kütüphanelerinizi nasıl sıfırdan oluşturacağınızı, paket yapılandırmasını nasıl tanımlayacağınızı ve **basit yapay zekâ (AI) modellerini** (gerek yerel algoritmalar gerekse dış API'ler ile) ÖzDil'e nasıl kütüphane olarak entegre edeceğinizi **adım adım, eksiksiz ve en ince ayrıntılarıyla** açıklamaktadır.
+Bu kılavuz, kendi Varyn kütüphanelerinizi nasıl sıfırdan oluşturacağınızı, paket yapılandırmasını nasıl tanımlayacağınızı ve **basit yapay zekâ (AI) modellerini** (gerek yerel algoritmalar gerekse dış API'ler ile) Varyn'e nasıl kütüphane olarak entegre edeceğinizi **adım adım, eksiksiz ve en ince ayrıntılarıyla** açıklamaktadır.
 
 ---
 
-## 📂 1. ÖzDil Kütüphane Yapısı ve Anatomisi
+## 📂 1. Varyn Kütüphane Yapısı ve Anatomisi
 
-ÖzDil kütüphaneleri, sistemdeki iki ana dizinden birinde barındırılır:
-1. **Yerel Proje Paketleri:** Projenizin kök dizinindeki `./oz_packages/` klasörünün altında.
-2. **Global Kullanıcı Paketleri:** Kullanıcı ev dizinindeki `~/.ozdil/packages/` klasörünün altında.
+Varyn kütüphaneleri, sistemdeki iki ana dizinden birinde barındırılır:
+1. **Yerel Proje Paketleri:** Projenizin kök dizinindeki `./varyn_packages/` klasörünün altında.
+2. **Global Kullanıcı Paketleri:** Kullanıcı ev dizinindeki `~/.varyn/packages/` klasörünün altında.
 
 Her kütüphane kendi adını taşıyan müstakil bir klasör içerisinde yer almalıdır.
 
 ### Örnek Klasör Ağacı:
 ```text
-oz_packages/
+varyn_packages/
 └── yapay_zeka/
-    ├── ozpaket.json     # Paket metaverileri ve izin tanımları (Zorunlu)
-    └── main.py          # Python eklentisi için ana giriş dosyası (veya main.oz)
+    ├── varynpaket.json     # Paket metaverileri ve izin tanımları (Zorunlu)
+    └── main.py          # Python eklentisi için ana giriş dosyası (veya main.varyn)
 ```
 
 ---
 
-## ⚙️ 2. Paket Yapılandırma Dosyası: `ozpaket.json`
+## ⚙️ 2. Paket Yapılandırma Dosyası: `varynpaket.json`
 
-Kütüphanenizin ÖzDil Çalışma Zamanı (Runtime) tarafından tanınması ve güvenlik kontrollerinden geçmesi için her paket klasöründe bir `ozpaket.json` bulunmalıdır.
+Kütüphanenizin Varyn Çalışma Zamanı (Runtime) tarafından tanınması ve güvenlik kontrollerinden geçmesi için her paket klasöründe bir `varynpaket.json` bulunmalıdır.
 
 ```json
 {
   "isim": "yapay_zeka",
   "surum": "1.0.0",
-  "yazar": "ozdil_gelistirici",
+  "yazar": "varyn_gelistirici",
   "tur": "python",
-  "aciklama": "ÖzDil için duygu analizi ve akıllı metin üretimi sağlayan basit bir yapay zekâ kütüphanesi.",
+  "aciklama": "Varyn için duygu analizi ve akıllı metin üretimi sağlayan basit bir yapay zekâ kütüphanesi.",
   "izinler": ["ag", "dosya_sistemi"],
   "bagimliliklar": [],
   "imza": "c0af7e0543a3304afdac1d99bbfad50bd06c5a6ceb91ec0052db0b7b690e8148"
@@ -42,41 +42,41 @@ Kütüphanenizin ÖzDil Çalışma Zamanı (Runtime) tarafından tanınması ve 
 ```
 
 ### Parametre Açıklamaları:
-*   **`isim`**: Kütüphanenizin çağrılacağı isim. ÖzDil kodunda `getir yapay_zeka` ifadesindeki isimle birebir eşleşmelidir.
+*   **`isim`**: Kütüphanenizin çağrılacağı isim. Varyn kodunda `getir yapay_zeka` ifadesindeki isimle birebir eşleşmelidir.
 *   **`surum`**: Semantik versiyonlama formatında kütüphane sürümü (örn: `"1.0.0"`).
 *   **`tur`**: Kütüphanenin yazıldığı dil. İki değer alabilir:
-    *   `"ozdil"`: Saf ÖzDil kodlarından oluşan modüller.
-    *   `"python"`: Python ile yazılmış, ÖzDil fonksiyonları üreten güçlü eklentiler.
+    *   `"varyn"`: Saf Varyn kodlarından oluşan modüller.
+    *   `"python"`: Python ile yazılmış, Varyn fonksiyonları üreten güçlü eklentiler.
 *   **`izinler`**: Python eklentilerinin Sandbox güvenlik duvarını aşabilmesi için talep ettiği ayrıcalıklar. Boş bırakılırsa kütüphane en sıkı kısıtlamalarla çalışır:
     *   `"ag"`: İnternet istekleri (`urllib`, `requests`, `socket` vb.) yapabilme izni. (API tabanlı AI modelleri için gereklidir).
     *   `"dosya_sistemi"`: Dosya okuma ve yazma (`open`, `os`, `shutil` vb.) izni. (Yerel yapay zeka ağırlıklarını veya veri kümelerini yüklemek için gereklidir).
     *   `"sistem"`: Alt süreç çalıştırma, işletim sistemi detaylarına erişim izni (`subprocess`, `sys`, `platform`).
-*   **`bagimliliklar`**: Bu paket yüklenmeden önce otomatik olarak yüklenmesi gereken diğer ÖzDil kütüphanelerinin listesi.
-*   **`imza`**: Güvenlik doğrulama imzası. Yerel geliştirme ortamında veya `./oz_packages` dizininde çalışırken imza kontrolü geliştiriciyi engellememek için esnek tutulabilir, ancak paket yayınlanırken `ozpip` paketi doğrulamak için SHA256 imzasını kullanır.
+*   **`bagimliliklar`**: Bu paket yüklenmeden önce otomatik olarak yüklenmesi gereken diğer Varyn kütüphanelerinin listesi.
+*   **`imza`**: Güvenlik doğrulama imzası. Yerel geliştirme ortamında veya `./varyn_packages` dizininde çalışırken imza kontrolü geliştiriciyi engellememek için esnek tutulabilir, ancak paket yayınlanırken `varynpip` paketi doğrulamak için SHA256 imzasını kullanır.
 
 ---
 
-## 🛠️ 3. Saf ÖzDil ile Kütüphane Yazmak (`tur: "ozdil"`)
+## 🛠️ 3. Saf Varyn ile Kütüphane Yazmak (`tur: "varyn"`)
 
-Eğer yapay zeka algoritmanızı doğrudan ÖzDil sözdizimi ile yazmak isterseniz kütüphane türünü `"ozdil"` olarak seçmelisiniz.
+Eğer yapay zeka algoritmanızı doğrudan Varyn sözdizimi ile yazmak isterseniz kütüphane türünü `"varyn"` olarak seçmelisiniz.
 
-### Adım 1: `oz_packages/tahminci/ozpaket.json`
+### Adım 1: `varyn_packages/tahminci/varynpaket.json`
 ```json
 {
   "isim": "tahminci",
   "surum": "1.0.0",
   "yazar": "akademik_kod",
-  "tur": "ozdil",
-  "aciklama": "Saf ÖzDil dilinde yazılmış doğrusal regresyon tahmincisi.",
+  "tur": "varyn",
+  "aciklama": "Saf Varyn dilinde yazılmış doğrusal regresyon tahmincisi.",
   "izinler": [],
   "bagimliliklar": []
 }
 ```
 
-### Adım 2: `oz_packages/tahminci/main.oz`
-ÖzDil dosyasında tanımlanan tüm global değişkenler ve fonksiyonlar, kütüphane içe aktarıldığında bir nesne özniteliği olarak sunulur.
+### Adım 2: `varyn_packages/tahminci/main.varyn`
+Varyn dosyasında tanımlanan tüm global değişkenler ve fonksiyonlar, kütüphane içe aktarıldığında bir nesne özniteliği olarak sunulur.
 
-```ozdil
+```varyn
 # Basit Doğrusal Regresyon Tahmin Fonksiyonu (y = ax + b)
 fonksiyon tahmin_et(x, a, b):
     dondur a * x + b
@@ -93,8 +93,8 @@ fonksiyon hata_hesapla(gercekler, tahminler):
     dondur toplam_hata / n
 ```
 
-### Adım 3: Ana Kodda Kullanımı (`kod.oz`)
-```ozdil
+### Adım 3: Ana Kodda Kullanımı (`kod.varyn`)
+```varyn
 getir tahminci
 
 # Girdi verilerimiz
@@ -113,13 +113,13 @@ yazdir("Girdi 4 için Yapay Zeka Tahmini: " + metin(sonuc)) # Çıktı: 20.0
 Python'ın sunduğu zengin veri yapıları, matematiksel operasyonlar ve ağ erişimi sayesinde çok daha gelişmiş ve akıllı yapay zeka kütüphaneleri yazabilirsiniz. Python eklentileri yazarken bilmeniz gereken en kritik bileşenler şunlardır:
 
 ### 🔒 AST Tabanlı Python Sandbox Kuralları
-ÖzDil çalışma zamanı, eklentinin Python kodunu **AST (Abstract Syntax Tree)** seviyesinde inceler ve kısıtlar.
+Varyn çalışma zamanı, eklentinin Python kodunu **AST (Abstract Syntax Tree)** seviyesinde inceler ve kısıtlar.
 *   `eval()` ve `exec()` kullanımı kesinlikle **yasaktır**.
-*   Ağ istekleri (`urllib`, `requests`) için `ozpaket.json` içinde `"ag"` izni belirtilmelidir.
+*   Ağ istekleri (`urllib`, `requests`) için `varynpaket.json` içinde `"ag"` izni belirtilmelidir.
 *   Yerel dosya okuma (`open`) işlemleri için `"dosya_sistemi"` izni belirtilmelidir.
 
 ### 🔌 Eklenti API Kayıt Mekanizması (`plugin_api`)
-Her Python eklentisi, ÖzDil interpreter'ına kendi fonksiyonlarını kaydetmek için yerleşik `plugin_api` modülünü kullanır ve bir `plugin()` fonksiyonu tanımlar. Bu fonksiyon, dışa aktarılacak metodları içeren bir Python sözlüğü (`dict`) döndürmelidir.
+Her Python eklentisi, Varyn interpreter'ına kendi fonksiyonlarını kaydetmek için yerleşik `plugin_api` modülünü kullanır ve bir `plugin()` fonksiyonu tanımlar. Bu fonksiyon, dışa aktarılacak metodları içeren bir Python sözlüğü (`dict`) döndürmelidir.
 
 ---
 
@@ -127,7 +127,7 @@ Her Python eklentisi, ÖzDil interpreter'ına kendi fonksiyonlarını kaydetmek 
 
 Dışarıdan hiçbir kütüphaneye bağımlı olmadan, kelime frekansları ve duygu sözlüğü tabanlı çalışan, tamamen yerel bir **Duygu Analizi (Sentiment Analysis) AI** modeli inşa edelim. Bu yöntem, sunucu maliyeti veya ağ bağlantısı gerektirmeden hızlıca kararlar alabilir.
 
-### Adım 1: `oz_packages/akilli_analiz/ozpaket.json`
+### Adım 1: `varyn_packages/akilli_analiz/varynpaket.json`
 ```json
 {
   "isim": "akilli_analiz",
@@ -140,7 +140,7 @@ Dışarıdan hiçbir kütüphaneye bağımlı olmadan, kelime frekansları ve du
 }
 ```
 
-### Adım 2: `oz_packages/akilli_analiz/main.py`
+### Adım 2: `varyn_packages/akilli_analiz/main.py`
 ```python
 # -*- coding: utf-8 -*-
 import plugin_api
@@ -213,9 +213,9 @@ def akilli_cevap_uret(kullanici_mesaji):
     else:
         return "Geri bildiriminiz sistemimize kaydedildi. Size daha iyi hizmet verebilmek için çalışıyoruz. 👍"
 
-# ÖzDil Entegrasyonu için Giriş Fonksiyonu
+# Varyn Entegrasyonu için Giriş Fonksiyonu
 def plugin():
-    # Fonksiyonları global ÖzDil çalışma alanına kaydet
+    # Fonksiyonları global Varyn çalışma alanına kaydet
     plugin_api.plugin.fonksiyon_ekle("duygu_analizi", duygu_analizi_yap)
     plugin_api.plugin.fonksiyon_ekle("akilli_cevap", akilli_cevap_uret)
     
@@ -226,8 +226,8 @@ def plugin():
     }
 ```
 
-### Adım 3: ÖzDil'de Kullanımı
-```ozdil
+### Adım 3: Varyn'de Kullanımı
+```varyn
 getir akilli_analiz
 
 değişken yorum_1 = "Bu program gerçekten harika ve çok başarılı bir çalışma olmuş, bayıldım!"
@@ -249,25 +249,25 @@ yazdir(yanit)
 
 ## 🌐 6. Senaryo B: Gemini API Destekli Büyük Dil Modeli (LLM) Kütüphanesi
 
-Eğer gerçek, üretken bir yapay zekâ modelinin (LLM) zekasından yararlanmak istiyorsanız, ÖzDil içinden güvenli bir API proxy'si kurabilirsiniz.
+Eğer gerçek, üretken bir yapay zekâ modelinin (LLM) zekasından yararlanmak istiyorsanız, Varyn içinden güvenli bir API proxy'si kurabilirsiniz.
 
 Bu senaryoda, Python eklentisinde **`urllib.request`** kullanarak Gemini API'sine bir `POST` isteği göndereceğiz.
 *Güvenlik Uyarısı: API anahtarı doğrudan koda yazılmamalı, çevre değişkenlerinden (Environment Variables) güvenli bir şekilde okunmalıdır.*
 
-### Adım 1: `oz_packages/oz_gemini/ozpaket.json`
+### Adım 1: `varyn_packages/oz_gemini/varynpaket.json`
 ```json
 {
   "isim": "oz_gemini",
   "surum": "1.1.0",
   "yazar": "yapay_zeka_merkezi",
   "tur": "python",
-  "aciklama": "Gemini 1.5 Flash API entegrasyonu sağlayan ÖzDil Yapay Zekâ eklentisi.",
+  "aciklama": "Gemini 1.5 Flash API entegrasyonu sağlayan Varyn Yapay Zekâ eklentisi.",
   "izinler": ["ag"],
   "bagimliliklar": []
 }
 ```
 
-### Adım 2: `oz_packages/oz_gemini/main.py`
+### Adım 2: `varyn_packages/oz_gemini/main.py`
 ```python
 # -*- coding: utf-8 -*-
 import os
@@ -305,7 +305,7 @@ def gemini_soru_sor(istem_metni):
     # 4. Request nesnesini hazırlama
     headers = {
         "Content-Type": "application/json",
-        "User-Agent": "OzdilInterpreter/1.0"
+        "User-Agent": "VarynInterpreter/1.0"
     }
     
     req = urllib.request.Request(url, data=data_bytes, headers=headers, method="POST")
@@ -323,26 +323,26 @@ def gemini_soru_sor(istem_metni):
     except Exception as e:
         return f"Bağlantı Hatası: Gemini API isteği başarısız oldu. Detay: {str(e)}"
 
-def kod_acikla(ozdil_kodu):
-    """ÖzDil kodlarını açıklamak için önceden yapılandırılmış özel bir sistem istemi."""
+def kod_acikla(varyn_kodu):
+    """Varyn kodlarını açıklamak için önceden yapılandırılmış özel bir sistem istemi."""
     sistem_istemi = (
-        "Sen ÖzDil programlama dili asistanısın. Aşağıda verilen ÖzDil kodunu incele, "
+        "Sen Varyn programlama dili asistanısın. Aşağıda verilen Varyn kodunu incele, "
         "ne yaptığını satır satır ve anlaşılır bir Türkçe ile açıkla:\n\n"
     )
-    return gemini_soru_sor(sistem_istemi + ozdil_kodu)
+    return gemini_soru_sor(sistem_istemi + varyn_kodu)
 
 # Eklentiyi Kaydetme
 def plugin():
     plugin_api.plugin.fonksiyon_ekle("yapay_zeka_sor", gemini_soru_sor)
-    plugin_api.plugin.fonksiyon_ekle("ozdil_acikla", kod_acikla)
+    plugin_api.plugin.fonksiyon_ekle("varyn_acikla", kod_acikla)
     return {
         "sor": gemini_soru_sor,
         "acikla": kod_acikla
     }
 ```
 
-### Adım 3: ÖzDil'de Kullanımı
-```ozdil
+### Adım 3: Varyn'de Kullanımı
+```varyn
 getir oz_gemini
 
 yazdir("Gemini API'ye bağlanılıyor...")
@@ -365,7 +365,7 @@ yazdir(analiz)
 
 Özellikle ağ istekleri içeren AI kütüphaneleri kullanırken internet kopmaları veya hatalı API parametreleri nedeniyle programın çökmesini engellemek için **`dene-hata_yakala`** yapısını kullanmalısınız:
 
-```ozdil
+```varyn
 getir oz_gemini
 
 dene:
@@ -380,9 +380,9 @@ hata_yakala Exception olarak hata:
 
 ## 🏁 Sonuç ve Paket Dağıtımı
 
-Kendi yazdığınız yerel kütüphaneyi test etmek için tek yapmanız gereken kütüphane klasörünü `./oz_packages/` altına yerleştirmektir. 
+Kendi yazdığınız yerel kütüphaneyi test etmek için tek yapmanız gereken kütüphane klasörünü `./varyn_packages/` altına yerleştirmektir. 
 
-Eğer kütüphanenizi global ÖzDil topluluğu ile paylaşmak isterseniz:
-1. Paket klasörünüzün SHA256 imzasını oluşturup `ozpaket.json` dosyasındaki `"imza"` alanına ekleyin.
-2. Paketi ZIP formatına sıkıştırıp ÖzDil Paket Deposu (Repository) sunucusuna gönderin.
-3. Artık tüm dünyadaki ÖzDil kullanıcıları terminale `python3 ozpip.py yukle <paket_adi>` yazarak kütüphanenizi tek tıkla yükleyip kullanabilir! 🎉
+Eğer kütüphanenizi global Varyn topluluğu ile paylaşmak isterseniz:
+1. Paket klasörünüzün SHA256 imzasını oluşturup `varynpaket.json` dosyasındaki `"imza"` alanına ekleyin.
+2. Paketi ZIP formatına sıkıştırıp Varyn Paket Deposu (Repository) sunucusuna gönderin.
+3. Artık tüm dünyadaki Varyn kullanıcıları terminale `python3 varynpip.py yukle <paket_adi>` yazarak kütüphanenizi tek tıkla yükleyip kullanabilir! 🎉

@@ -1,0 +1,10 @@
+{
+  "isim": "telefon",
+  "surum": "1.1.0",
+  "yazar": "mobil_tasarimci",
+  "tur": "python",
+  "aciklama": "Mobil telefonlar için etkileşimli, görsel ve zengin arayüz elemanları tasarlamayı sağlayan GUI kütüphanesi.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "42a03450c4419d9d05a8cf4f4809379ecb63f2c42e2e28caa5b9f0895c096134"
+}

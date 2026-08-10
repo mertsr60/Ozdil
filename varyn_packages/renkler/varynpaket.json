@@ -1,0 +1,10 @@
+{
+  "isim": "renkler",
+  "surum": "1.2.0",
+  "yazar": "tasarim_merkezi",
+  "tur": "python",
+  "aciklama": "Konsol çıktılarını renklendirmek için kullanılan ANSI renk kütüphanesi.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "c0af7e0543a3304afdac1d99bbfad50bd06c5a6ceb91ec0052db0b7b690e8148"
+}

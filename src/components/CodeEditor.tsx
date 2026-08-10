@@ -449,7 +449,7 @@ export default function CodeEditor({ value, onChange, onRun, isRunning, flat = f
               <span className="w-3 h-3 rounded-full bg-green-400"></span>
             </div>
             <span className="text-xs font-semibold tracking-wider text-zinc-500 dark:text-zinc-400 ml-2 flex items-center gap-1.5 uppercase font-mono">
-              <FileCode2 className="w-3.5 h-3.5" /> kod_alani.oz
+              <FileCode2 className="w-3.5 h-3.5" /> kod_alani.varyn
             </span>
           </div>
 

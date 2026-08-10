@@ -6,8 +6,8 @@ import os
 # Add root folder to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from ozdil_core.lexer import tokenize_line, lex_ozdil, decode_string_literal
-from ozdil_core.tokens import Token
+from varyn_core.lexer import tokenize_line, lex_varyn, decode_string_literal
+from varyn_core.tokens import Token
 
 class TestLexer(unittest.TestCase):
     def test_decode_string_literal(self):
@@ -57,7 +57,7 @@ class TestLexer(unittest.TestCase):
 
     def test_tab_indentation_columns(self):
         code = "\tx\n\t\ty\n\tx"
-        tokens = lex_ozdil(code)
+        tokens = lex_varyn(code)
         types = [t.type for t in tokens]
         self.assertIn('INDENT', types)
         self.assertIn('DEDENT', types)

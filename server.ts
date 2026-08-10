@@ -117,7 +117,7 @@ async function startServer() {
   // API endpoint to list packages
   app.get("/api/packages", (req, res) => {
     try {
-      const repoPath = path.join(process.cwd(), "ozdil", "repository.json");
+      const repoPath = path.join(process.cwd(), "varyn", "repository.json");
       let registryPackages: any[] = [];
       if (fs.existsSync(repoPath)) {
         try {
@@ -128,13 +128,13 @@ async function startServer() {
         }
       }
 
-      const packagesDir = path.join(process.cwd(), "oz_packages");
+      const packagesDir = path.join(process.cwd(), "varyn_packages");
       const list = registryPackages.map((pkg: any) => {
         const isInstalled = fs.existsSync(path.join(packagesDir, pkg.isim));
         let installedVersion = "";
         if (isInstalled) {
           try {
-            const metaPath = path.join(packagesDir, pkg.isim, "ozpaket.json");
+            const metaPath = path.join(packagesDir, pkg.isim, "varynpaket.json");
             if (fs.existsSync(metaPath)) {
               const meta = JSON.parse(fs.readFileSync(metaPath, "utf-8"));
               installedVersion = meta.surum || pkg.surum;
@@ -171,7 +171,7 @@ async function startServer() {
       return;
     }
 
-    const child = spawn("python3", ["ozpip.py", "install", name]);
+    const child = spawn("python3", ["varynpip.py", "install", name]);
     let stdoutData = "";
     let stderrData = "";
 
@@ -213,7 +213,7 @@ async function startServer() {
       return;
     }
 
-    const child = spawn("python3", ["ozpip.py", "uninstall", name]);
+    const child = spawn("python3", ["varynpip.py", "uninstall", name]);
     let stdoutData = "";
     let stderrData = "";
 
@@ -274,7 +274,7 @@ async function startServer() {
           
           if (fs.existsSync(zipPath)) {
             // Send file to client
-            res.download(zipPath, "ozdil_projesi.zip", (err) => {
+            res.download(zipPath, "varyn_projesi.zip", (err) => {
               // Delete zip file after download completed or failed
               try {
                 fs.unlinkSync(zipPath);

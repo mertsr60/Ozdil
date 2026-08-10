@@ -1,0 +1,113 @@
+# Algoritma Kütüphanesi - 100% ÖzDil ile yazılmış ilk paket!
+
+işlem sirala(dizi):
+    değişken n = uzunluk(dizi)
+    döngü i içinde aralık(n):
+        değişken sinir = n - i - 1
+        döngü j içinde aralık(sinir):
+            eğer dizi[j] > dizi[j + 1]:
+                değişken gecici = dizi[j]
+                dizi[j] = dizi[j + 1]
+                dizi[j + 1] = gecici
+    döndür dizi
+
+işlem ikili_ara(dizi, hedef):
+    değişken sol = 0
+    değişken sag = uzunluk(dizi) - 1
+    iken sol <= sag:
+        değişken orta = tam_sayi((sol + sag) / 2)
+        eğer dizi[orta] == hedef:
+            döndür orta
+        değilse:
+            eğer dizi[orta] < hedef:
+                sol = orta + 1
+            değilse:
+                sag = orta - 1
+    döndür -1
+
+işlem en_buyuk(dizi):
+    eğer uzunluk(dizi) == 0:
+        döndür boş
+    değişken eb = dizi[0]
+    döngü eleman içinde dizi:
+        eğer eleman > eb:
+            eb = eleman
+    döndür eb
+
+işlem en_kucuk(dizi):
+    eğer uzunluk(dizi) == 0:
+        döndür boş
+    değişken ek = dizi[0]
+    döngü eleman içinde dizi:
+        eğer eleman < ek:
+            ek = eleman
+    döndür ek
+
+işlem toplam(dizi):
+    değişken t = 0
+    döngü eleman içinde dizi:
+        t = t + eleman
+    döndür t
+
+işlem ortalama(dizi):
+    değişken n = uzunluk(dizi)
+    eğer n == 0:
+        döndür 0
+    değişken t = toplam(dizi)
+    döndür t / n
+
+işlem tersine_cevir(dizi):
+    değişken n = uzunluk(dizi)
+    değişken yeni_dizi = []
+    döngü i içinde aralık(n):
+        yeni_dizi.ekle(dizi[n - i - 1])
+    döndür yeni_dizi
+
+işlem asal_mi(sayi):
+    eğer sayi <= 1:
+        döndür yanlış
+    değişken bolen = 2
+    iken bolen * bolen <= sayi:
+        eğer sayi % bolen == 0:
+            döndür yanlış
+        bolen = bolen + 1
+    döndür doğru
+
+işlem ebob(a, b):
+    iken b != 0:
+        değişken gecici = b
+        b = a % b
+        a = gecici
+    döndür a
+
+işlem ekok(a, b):
+    eğer a == 0 veya b == 0:
+        döndür 0
+    değişken carpim = a * b
+    eğer carpim < 0:
+        carpim = carpim * -1
+    döndür carpim / ebob(a, b)
+
+işlem benzersizler(dizi):
+    değişken sonuc = []
+    döngü eleman içinde dizi:
+        değişken var_mi = yanlış
+        döngü x içinde sonuc:
+            eğer x == eleman:
+                var_mi = doğru
+        eğer değil var_mi:
+            sonuc.ekle(eleman)
+    döndür sonuc
+
+işlem fibonacci(n):
+    eğer n <= 0:
+        döndür []
+    eğer n == 1:
+        döndür [0]
+    değişken dizi = [0, 1]
+    iken uzunluk(dizi) < n:
+        değişken n2 = uzunluk(dizi)
+        değişken yeni_eleman = dizi[n2 - 1] + dizi[n2 - 2]
+        dizi.ekle(yeni_eleman)
+    döndür dizi
+

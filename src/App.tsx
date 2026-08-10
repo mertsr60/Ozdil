@@ -76,7 +76,7 @@ export default function App() {
   const [panelTab, setPanelTab] = useState<"terminal" | "python" | "ast">("terminal");
   const [panelHeight, setPanelHeight] = useState<"collapsed" | "normal" | "maximized">("normal");
   
-  // ozpip package manager state
+  // varynpip package manager state
   const [packages, setPackages] = useState<any[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(false);
   const [packageOutput, setPackageOutput] = useState<string>("");
@@ -84,14 +84,14 @@ export default function App() {
   const [activePackageTab, setActivePackageTab] = useState<"all" | "installed">("all");
   
   // File System State (Open tabs in the editor)
-  const [openTabs, setOpenTabs] = useState<string[]>(["kod_alani.oz", "BENI_OKU.md"]);
-  const [activeFile, setActiveFile] = useState<string>("kod_alani.oz");
+  const [openTabs, setOpenTabs] = useState<string[]>(["kod_alani.varyn", "BENI_OKU.md"]);
+  const [activeFile, setActiveFile] = useState<string>("kod_alani.varyn");
   
   // Sidebar folders toggle
   const [folderExamplesExpanded, setFolderExamplesExpanded] = useState(true);
   const [folderRootExpanded, setFolderRootExpanded] = useState(true);
   
-  // Search state inside ÖzDil Dictionary
+  // Search state inside Varyn Dictionary
   const [searchQuery, setSearchQuery] = useState("");
   
   // Cursor position tracking
@@ -148,7 +148,7 @@ export default function App() {
 
   const handleInstallPackage = async (name: string) => {
     setLoadingPackages(true);
-    setPackageOutput(`ozpip install ${name}\nSistem kuruluyor, lütfen bekleyin...\n`);
+    setPackageOutput(`varynpip install ${name}\nSistem kuruluyor, lütfen bekleyin...\n`);
     showToast(`'${name}' kuruluyor...`, "info");
     try {
       const response = await fetch("/api/packages/install", {
@@ -175,7 +175,7 @@ export default function App() {
 
   const handleUninstallPackage = async (name: string) => {
     setLoadingPackages(true);
-    setPackageOutput(`ozpip uninstall ${name}\nPaket kaldırılıyor...\n`);
+    setPackageOutput(`varynpip uninstall ${name}\nPaket kaldırılıyor...\n`);
     showToast(`'${name}' kaldırılıyor...`, "info");
     try {
       const response = await fetch("/api/packages/uninstall", {
@@ -228,7 +228,7 @@ export default function App() {
     setIsExporting(true);
     setActiveMenu(null);
     setShowExportDropdown(false);
-    showToast("ÖzDil projesi sıkıştırılıyor...", "info");
+    showToast("Varyn projesi sıkıştırılıyor...", "info");
     try {
       const response = await fetch("/api/export", {
         method: "POST",
@@ -246,7 +246,7 @@ export default function App() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "ozdil_projesi.zip";
+      a.download = "varyn_projesi.zip";
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -267,12 +267,12 @@ export default function App() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "kodumuz.oz";
+      a.download = "kodumuz.varyn";
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      showToast("ÖzDil kod dosyası (.oz) indirildi!", "success");
+      showToast("Varyn kod dosyası (.varyn) indirildi!", "success");
     } catch (err) {
       showToast(`İndirme başarısız: ${(err as Error).message}`, "error");
     }
@@ -434,7 +434,7 @@ export default function App() {
 
   const handleLoadExample = (exampleTitle: string, exampleCode: string) => {
     setCode(exampleCode);
-    openFileTab("kod_alani.oz");
+    openFileTab("kod_alani.varyn");
     // Clear old results
     setResults({
       translated: "",
@@ -471,13 +471,13 @@ export default function App() {
 
   const closeFileTab = (e: React.MouseEvent, filename: string) => {
     e.stopPropagation();
-    if (filename === "kod_alani.oz") return; // Primary file cannot be closed
+    if (filename === "kod_alani.varyn") return; // Primary file cannot be closed
     
     const remaining = openTabs.filter(t => t !== filename);
     setOpenTabs(remaining);
     
     if (activeFile === filename) {
-      setActiveFile(remaining[remaining.length - 1] || "kod_alani.oz");
+      setActiveFile(remaining[remaining.length - 1] || "kod_alani.varyn");
     }
   };
 
@@ -515,11 +515,11 @@ export default function App() {
     );
   });
 
-  // Content for read-only runner script file "ozdil.py"
-  const ozdilPyContent = `# -*- coding: utf-8 -*-
+  // Content for read-only runner script file "varyn.py"
+  const varynPyContent = `# -*- coding: utf-8 -*-
 """
-ÖzDil Türkçe Programlama Dili - Çekirdek Çevirici Motoru (v1.0)
-Bu kod, .oz uzantılı Türkçe kodlarınızı Python AST yapısına dönüştürür.
+Varyn Türkçe Programlama Dili - Çekirdek Çevirici Motoru (v1.0)
+Bu kod, .varyn uzantılı Türkçe kodlarınızı Python AST yapısına dönüştürür.
 """
 import sys
 import os
@@ -614,7 +614,7 @@ def translate(code_str):
             translated_lines.append(temp_line)
         return '\\n'.join(translated_lines)
 
-print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
+print("✓ Varyn Modülü Başarıyla Yüklendi.")`;
 
   return (
     <div className="h-screen w-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200 overflow-hidden font-sans select-none" id="app-root">
@@ -650,11 +650,11 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
 
           {/* Premium customized badge logo */}
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-xs text-white font-extrabold shadow-md shadow-indigo-600/10 tracking-wider hover:scale-105 transition duration-150" title="ÖzDil IDE">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-xs text-white font-extrabold shadow-md shadow-indigo-600/10 tracking-wider hover:scale-105 transition duration-150" title="Varyn IDE">
               ÖD
             </div>
             <div className="flex flex-col select-none">
-              <span className="font-bold text-xs tracking-tight text-zinc-900 dark:text-zinc-50 leading-tight">ÖzDil</span>
+              <span className="font-bold text-xs tracking-tight text-zinc-900 dark:text-zinc-50 leading-tight">Varyn</span>
               <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium leading-none">Türkçe Programlama</span>
             </div>
           </div>
@@ -674,16 +674,16 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
               {activeMenu === "file" && (
                 <div className="absolute top-9 left-0 w-60 bg-white dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-850 rounded-xl shadow-xl py-1.5 z-50 text-[11px] animate-in fade-in slide-in-from-top-2 duration-150" onMouseLeave={() => setActiveMenu(null)}>
                   <div className="px-3 py-1 text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider select-none">Çalışma Sayfaları</div>
-                  <button onClick={() => { openFileTab("kod_alani.oz"); setActiveMenu(null); }} className="w-full text-left px-3 py-2 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center justify-between transition text-zinc-700 dark:text-zinc-300">
-                    <span className="font-medium">kod_alani.oz Düzenle</span>
+                  <button onClick={() => { openFileTab("kod_alani.varyn"); setActiveMenu(null); }} className="w-full text-left px-3 py-2 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center justify-between transition text-zinc-700 dark:text-zinc-300">
+                    <span className="font-medium">kod_alani.varyn Düzenle</span>
                     <span className="text-zinc-400 font-mono text-[9px]">Ctrl+1</span>
                   </button>
                   <button onClick={() => { openFileTab("BENI_OKU.md"); setActiveMenu(null); }} className="w-full text-left px-3 py-2 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center justify-between transition text-zinc-700 dark:text-zinc-300">
                     <span className="font-medium">Beni Oku Kılavuzunu Aç</span>
                     <span className="text-zinc-400 font-mono text-[9px]">Ctrl+2</span>
                   </button>
-                  <button onClick={() => { openFileTab("ozdil.py"); setActiveMenu(null); }} className="w-full text-left px-3 py-2 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center justify-between transition text-zinc-700 dark:text-zinc-300">
-                    <span className="font-medium">ozdil.py Çekirdeği İncele</span>
+                  <button onClick={() => { openFileTab("varyn.py"); setActiveMenu(null); }} className="w-full text-left px-3 py-2 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center justify-between transition text-zinc-700 dark:text-zinc-300">
+                    <span className="font-medium">varyn.py Çekirdeği İncele</span>
                     <span className="text-zinc-400 font-mono text-[9px]">Ctrl+3</span>
                   </button>
                   <hr className="my-1.5 border-zinc-100 dark:border-zinc-900" />
@@ -754,14 +754,14 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
               {activeMenu === "help" && (
                 <div className="absolute top-9 left-0 w-56 bg-white dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-850 rounded-xl shadow-xl py-1.5 z-50 text-[11px] animate-in fade-in slide-in-from-top-2 duration-150" onMouseLeave={() => setActiveMenu(null)}>
                   <button onClick={() => { openFileTab("BENI_OKU.md"); setActiveMenu(null); }} className="w-full text-left px-3 py-2 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition text-zinc-700 dark:text-zinc-300 font-medium">
-                    <span>ÖzDil Rehberini Görüntüle</span>
+                    <span>Varyn Rehberini Görüntüle</span>
                   </button>
                   <button onClick={() => { toggleSidebarTab("docs"); setActiveMenu(null); }} className="w-full text-left px-3 py-2 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition text-zinc-700 dark:text-zinc-300 font-medium">
                     <span>Sözlüğü Yan Panelde Aç</span>
                   </button>
                   <hr className="my-1.5 border-zinc-100 dark:border-zinc-900" />
                   <div className="px-3 py-1 text-[9px] text-zinc-400 dark:text-zinc-500 font-semibold select-none">
-                    Sürüm: ÖzDil Web v1.1.0
+                    Sürüm: Varyn Web v1.1.0
                   </div>
                 </div>
               )}
@@ -816,7 +816,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                 >
                   <span className="flex items-center gap-2">
                     <Download className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                    <span>ÖzDil Projesi (ZIP)</span>
+                    <span>Varyn Projesi (ZIP)</span>
                   </span>
                   <span className="text-zinc-400 dark:text-zinc-500 text-[9px] font-mono">Tümü</span>
                 </button>
@@ -826,7 +826,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                 >
                   <span className="flex items-center gap-2">
                     <FileCode2 className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    <span>Sadece ÖzDil Kodu (.oz)</span>
+                    <span>Sadece Varyn Kodu (.varyn)</span>
                   </span>
                   <span className="text-zinc-400 dark:text-zinc-500 text-[9px] font-mono">Kaynak</span>
                 </button>
@@ -886,7 +886,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                   ? "text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-950/40"
                   : "text-zinc-400 dark:text-zinc-650 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900/40"
               }`}
-              title="ÖzDil Sözlük Arama"
+              title="Varyn Sözlük Arama"
             >
               <Search className="w-5 h-5 transition-transform group-hover:scale-105" />
             </button>
@@ -917,7 +917,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
               <BookOpen className="w-5 h-5 transition-transform group-hover:scale-105" />
             </button>
 
-            {/* ozpip packages tab */}
+            {/* varynpip packages tab */}
             <button
               onClick={() => toggleSidebarTab("packages")}
               className={`w-11 h-11 flex items-center justify-center rounded-xl relative cursor-pointer group transition-all duration-200 ${
@@ -925,7 +925,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                   ? "text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-950/40"
                   : "text-zinc-400 dark:text-zinc-650 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900/40"
               }`}
-              title="ÖzDil ozpip Kütüphaneleri"
+              title="Varyn varynpip Kütüphaneleri"
             >
               <Layers className="w-5 h-5 transition-transform group-hover:scale-105" />
             </button>
@@ -941,7 +941,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
             <button
-              onClick={() => { setCode(EXAMPLES[0].code); openFileTab("kod_alani.oz"); showToast("Sıfırlandı ve ana kod şablonu yüklendi.", "info"); }}
+              onClick={() => { setCode(EXAMPLES[0].code); openFileTab("kod_alani.varyn"); showToast("Sıfırlandı ve ana kod şablonu yüklendi.", "info"); }}
               className="w-10 h-10 flex items-center justify-center rounded-lg text-zinc-400 dark:text-zinc-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition cursor-pointer"
               title="Tüm Kodları Sıfırla"
             >
@@ -971,7 +971,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                 {sidebarTab === "search" && "SÖZLÜK ARA"}
                 {sidebarTab === "run" && "HATA AYIKLAMA"}
                 {sidebarTab === "docs" && "ÖZDİL SÖZLÜĞÜ"}
-                {sidebarTab === "packages" && "OZPIP KÜTÜPHANELERİ"}
+                {sidebarTab === "packages" && "VARYNPIP KÜTÜPHANELERİ"}
               </span>
               <button 
                 onClick={() => setSidebarTab(null)} 
@@ -1011,12 +1011,12 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                             }`}
                           >
                             <span className="flex items-center gap-2 truncate">
-                              {fileName.endsWith(".oz") && <FileCode2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />}
+                              {fileName.endsWith(".varyn") && <FileCode2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />}
                               {fileName.endsWith(".py") && <Code className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
                               {fileName.endsWith(".md") && <Info className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
                               <span className="truncate">{fileName}</span>
                             </span>
-                            {fileName !== "kod_alani.oz" && (
+                            {fileName !== "kod_alani.varyn" && (
                               <X 
                                 onClick={(e) => closeFileTab(e, fileName)}
                                 className="w-3 h-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded p-px transition" 
@@ -1060,7 +1060,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                                 title={ex.description}
                               >
                                 <FileCode2 className="w-3 h-3 text-indigo-400 shrink-0" />
-                                <span className="truncate">{ex.title.replace(/\s+/g, "")}.oz</span>
+                                <span className="truncate">{ex.title.replace(/\s+/g, "")}.varyn</span>
                               </button>
                             ))}
                           </div>
@@ -1069,27 +1069,27 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
 
                       {/* Main workspace files */}
                       <button
-                        onClick={() => openFileTab("kod_alani.oz")}
+                        onClick={() => openFileTab("kod_alani.varyn")}
                         className={`w-full px-3 py-2 flex items-center gap-2 rounded-lg text-left transition duration-150 ${
-                          activeFile === "kod_alani.oz" 
+                          activeFile === "kod_alani.varyn" 
                             ? "bg-indigo-50/70 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 font-bold" 
                             : "text-zinc-600 dark:text-zinc-450 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/30"
                         }`}
                       >
                         <FileCode2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                        <span className="truncate font-medium">kod_alani.oz</span>
+                        <span className="truncate font-medium">kod_alani.varyn</span>
                       </button>
 
                       <button
-                        onClick={() => openFileTab("ozdil.py")}
+                        onClick={() => openFileTab("varyn.py")}
                         className={`w-full px-3 py-2 flex items-center gap-2 rounded-lg text-left transition duration-150 ${
-                          activeFile === "ozdil.py" 
+                          activeFile === "varyn.py" 
                             ? "bg-indigo-50/70 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 font-bold" 
                             : "text-zinc-600 dark:text-zinc-450 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/30"
                         }`}
                       >
                         <Code className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                        <span className="truncate font-medium">ozdil.py</span>
+                        <span className="truncate font-medium">varyn.py</span>
                       </button>
 
                       <button
@@ -1219,7 +1219,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                         className="w-full py-2 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold rounded-lg text-[11px] flex items-center justify-center gap-1.5 cursor-pointer transition active:scale-95 duration-100"
                       >
                         <FileCode2 className="w-3.5 h-3.5 text-amber-500" />
-                        <span>Sadece ÖzDil Kodu (.oz)</span>
+                        <span>Sadece Varyn Kodu (.varyn)</span>
                       </button>
 
                       <button
@@ -1258,7 +1258,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
 
                   <div className="p-3.5 bg-zinc-50/50 dark:bg-zinc-950/40 border border-zinc-200/80 dark:border-zinc-900/80 rounded-xl flex flex-col gap-1.5">
                     <span className="font-bold flex items-center gap-1.5 text-[11px] text-indigo-600 dark:text-indigo-400 select-none">
-                      <Cpu className="w-4 h-4" /> <span>ÖzDil Çalışma Alanı</span>
+                      <Cpu className="w-4 h-4" /> <span>Varyn Çalışma Alanı</span>
                     </span>
                     <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">
                       Yazdığınız kodlar sunucuda Türkçe token filtresinden geçirilerek güvenli bir Python alt işlemi (subprocess) ile yürütülür.
@@ -1291,12 +1291,12 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                 </div>
               )}
 
-              {/* 5. OZPIP PACKAGES PANEL */}
+              {/* 5. VARYNPIP PACKAGES PANEL */}
               {sidebarTab === "packages" && (
                 <div className="p-3.5 flex flex-col gap-3 h-full overflow-hidden" id="packages-panel-content">
                   <div className="flex flex-col gap-1.5 shrink-0">
                     <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">
-                      Eklentileri <code className="font-mono bg-zinc-100 dark:bg-zinc-950 px-1.5 py-0.5 border border-zinc-200/60 dark:border-zinc-850/60 rounded text-[9px] text-indigo-500">ozpip</code> ile tek tıkla yükleyebilirsiniz.
+                      Eklentileri <code className="font-mono bg-zinc-100 dark:bg-zinc-950 px-1.5 py-0.5 border border-zinc-200/60 dark:border-zinc-850/60 rounded text-[9px] text-indigo-500">varynpip</code> ile tek tıkla yükleyebilirsiniz.
                     </p>
                     
                     {/* Search input */}
@@ -1371,7 +1371,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                             
                             {/* Type badge */}
                             <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider shrink-0 border ${
-                              pkg.tur === "ozdil"
+                              pkg.tur === "varyn"
                                 ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 border-indigo-100/45 dark:border-indigo-900/40"
                                 : "bg-amber-50 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400 border-amber-100/45 dark:border-amber-900/40"
                             }`}>
@@ -1434,11 +1434,11 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                     )}
                   </div>
 
-                  {/* Interactive ozpip console block */}
+                  {/* Interactive varynpip console block */}
                   {packageOutput && (
                     <div className="shrink-0 border-t border-zinc-200/60 dark:border-zinc-850/80 pt-2.5 flex flex-col gap-1.5 max-h-[140px]">
                       <div className="flex justify-between items-center">
-                        <span className="text-[9px] font-extrabold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">ozpip terminal çıktısı</span>
+                        <span className="text-[9px] font-extrabold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">varynpip terminal çıktısı</span>
                         <button onClick={() => setPackageOutput("")} className="text-[9px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 font-bold">Temizle</button>
                       </div>
                       <pre className="flex-1 bg-zinc-950 dark:bg-black text-[9px] font-mono text-zinc-300 p-2.5 rounded-lg overflow-y-auto whitespace-pre-wrap leading-tight select-text max-h-[110px] border border-zinc-850">
@@ -1474,13 +1474,13 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                         : "bg-zinc-50/50 hover:bg-zinc-100/60 dark:bg-[#0a0b0d] dark:hover:bg-zinc-900/30 text-zinc-500 dark:text-zinc-500"
                     }`}
                   >
-                    {fileName.endsWith(".oz") && <FileCode2 className={`w-4 h-4 ${isActive ? "text-indigo-500" : "text-zinc-400"}`} />}
+                    {fileName.endsWith(".varyn") && <FileCode2 className={`w-4 h-4 ${isActive ? "text-indigo-500" : "text-zinc-400"}`} />}
                     {fileName.endsWith(".py") && <Code className={`w-4 h-4 ${isActive ? "text-amber-500" : "text-zinc-400"}`} />}
                     {fileName.endsWith(".md") && <Info className={`w-4 h-4 ${isActive ? "text-emerald-500" : "text-zinc-400"}`} />}
                     
                     <span>{fileName}</span>
                     
-                    {fileName !== "kod_alani.oz" && (
+                    {fileName !== "kod_alani.varyn" && (
                       <X
                         onClick={(e) => closeFileTab(e, fileName)}
                         className="w-3.5 h-3.5 text-zinc-400 hover:text-red-500 rounded-md hover:bg-zinc-150 dark:hover:bg-zinc-900/60 p-0.5 transition"
@@ -1493,7 +1493,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
 
             {/* Right side editor layout helper buttons (minimize sidebar, run button preview) */}
             <div className="flex items-center gap-2 px-4 shrink-0">
-              {activeFile === "kod_alani.oz" && (
+              {activeFile === "kod_alani.varyn" && (
                 <button
                   onClick={() => setShowPhonePreview(!showPhonePreview)}
                   className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer text-xs font-bold transition-all duration-150 ${
@@ -1531,7 +1531,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
           <div className="flex-1 relative overflow-hidden bg-white dark:bg-[#111216]" id="active-file-canvas">
             
             {/* FILE 1: main user code edit space */}
-            {activeFile === "kod_alani.oz" && (
+            {activeFile === "kod_alani.varyn" && (
               <div className="w-full h-full flex flex-col lg:flex-row overflow-hidden">
                 <div className="flex-1 min-w-0 h-full">
                   <CodeEditor
@@ -1932,14 +1932,14 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
             )}
 
             {/* FILE 2: read-only translator source code */}
-            {activeFile === "ozdil.py" && (
-              <div className="w-full h-full flex flex-col font-mono text-xs overflow-hidden bg-zinc-50 dark:bg-zinc-950" id="ozdil-py-view">
+            {activeFile === "varyn.py" && (
+              <div className="w-full h-full flex flex-col font-mono text-xs overflow-hidden bg-zinc-50 dark:bg-zinc-950" id="varyn-py-view">
                 <div className="p-3.5 bg-zinc-100/50 dark:bg-zinc-900/30 border-b border-zinc-200 dark:border-zinc-900 flex items-center justify-between text-zinc-500">
-                  <span className="flex items-center gap-1.5"><Code className="w-4 h-4 text-amber-500" /> ozdil.py (Salt Okunur Çekirdek Kodları)</span>
+                  <span className="flex items-center gap-1.5"><Code className="w-4 h-4 text-amber-500" /> varyn.py (Salt Okunur Çekirdek Kodları)</span>
                   <span className="text-[10px] tracking-wider uppercase font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded">Python Motoru</span>
                 </div>
                 <div className="flex-1 overflow-auto p-4 select-text">
-                  <pre className="text-zinc-800 dark:text-zinc-300 whitespace-pre-wrap">{ozdilPyContent}</pre>
+                  <pre className="text-zinc-800 dark:text-zinc-300 whitespace-pre-wrap">{varynPyContent}</pre>
                 </div>
               </div>
             )}
@@ -1955,10 +1955,10 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                       <Sparkle className="w-4 h-4 animate-pulse" /> ÖZDİL TÜRKÇE PROGRAMLAMA DİLİ
                     </div>
                     <h2 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-white mt-1">
-                      ÖzDil - Türkçe Kodlama & AST Derleyici
+                      Varyn - Türkçe Kodlama & AST Derleyici
                     </h2>
                     <p className="text-zinc-500 dark:text-zinc-400 text-xs mt-2 leading-relaxed">
-                      ÖzDil, yabancı dildeki kod bloklarını Türkçe doğal kod yapısına dönüştüren, Python Abstract Syntax Tree (AST) modülünü temel alan yerel bir derleme simülatörüdür.
+                      Varyn, yabancı dildeki kod bloklarını Türkçe doğal kod yapısına dönüştüren, Python Abstract Syntax Tree (AST) modülünü temel alan yerel bir derleme simülatörüdür.
                     </p>
                   </div>
 
@@ -2007,7 +2007,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                         Bu Projeyi Bilgisayarınızda veya Telefonunuzda Çalıştırın!
                       </h4>
                       <p className="text-zinc-600 dark:text-zinc-400 text-xs mt-1.5 leading-relaxed">
-                        Sağ üst köşedeki <strong>"Projeyi İndir"</strong> butonunu kullanarak ÖzDil interpreter paketini yerel bilgisayarınıza alabilirsiniz. Zip dosyası içerisinde Türkçe kod motorunu çalıştıran <code>ozdil.py</code>, kendi yazdığınız <code>kodumuz.oz</code> ve detaylı offline çalıştırma kılavuzu (README) yer almaktadır.
+                        Sağ üst köşedeki <strong>"Projeyi İndir"</strong> butonunu kullanarak Varyn interpreter paketini yerel bilgisayarınıza alabilirsiniz. Zip dosyası içerisinde Türkçe kod motorunu çalıştıran <code>varyn.py</code>, kendi yazdığınız <code>kodumuz.varyn</code> ve detaylı offline çalıştırma kılavuzu (README) yer almaktadır.
                       </p>
                     </div>
                   </section>
@@ -2018,19 +2018,19 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                       <CornerDownRight className="w-3.5 h-3.5 text-indigo-500" /> 3. Mobilde Çalıştırma (Android Termux)
                     </h3>
                     <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed text-xs">
-                      ÖzDil yerel kod motoru tamamen bağımsızdır ve ek bir kütüphaneye ihtiyaç duymaz. Android telefonunuzda çalıştırmak için:
+                      Varyn yerel kod motoru tamamen bağımsızdır ve ek bir kütüphaneye ihtiyaç duymaz. Android telefonunuzda çalıştırmak için:
                     </p>
                     <ol className="list-decimal list-inside pl-2 py-1 text-xs text-zinc-500 dark:text-zinc-400 flex flex-col gap-1.5 font-mono">
                       <li>Google Play veya F-Droid üzerinden <strong>Termux</strong> kurun.</li>
                       <li>Python'u yükleyin: <code>pkg install python</code></li>
                       <li>Projeyi Download dizinine çıkarıp gidin: <code>cd /sdcard/Download</code></li>
-                      <li>Kodunuzu çalıştırın: <code>python3 ozdil.py kodumuz.oz</code></li>
+                      <li>Kodunuzu çalıştırın: <code>python3 varyn.py kodumuz.varyn</code></li>
                     </ol>
                   </section>
 
                   {/* Action row to go to editor directly */}
                   <button
-                    onClick={() => openFileTab("kod_alani.oz")}
+                    onClick={() => openFileTab("kod_alani.varyn")}
                     className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg self-start cursor-pointer shadow-sm flex items-center gap-1.5"
                   >
                     <Code className="w-4 h-4" />
@@ -2094,7 +2094,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                   }`}
                 >
                   <Layers className="w-4 h-4" />
-                  <span>ÖzDil AST Ağacı</span>
+                  <span>Varyn AST Ağacı</span>
                 </button>
               </div>
 
@@ -2163,20 +2163,20 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                       
                       {/* Virtual system intro */}
                       <div className="text-zinc-500 mb-2 leading-relaxed">
-                        ÖzDil Web Term [Sürüm 1.0.0]<br />
+                        Varyn Web Term [Sürüm 1.0.0]<br />
                         Sistem Bağımlılıkları: Python 3.10.12 • GCC 11.4.0<br />
-                        surmert@ozdil-web:~$ # Projenizi yerel ortamda çalıştırmak için yukarıdaki 'Çalıştır' butonuna tıklayabilir ya da Ctrl + Enter kombinasyonunu kullanabilirsiniz.
+                        surmert@varyn-web:~$ # Projenizi yerel ortamda çalıştırmak için yukarıdaki 'Çalıştır' butonuna tıklayabilir ya da Ctrl + Enter kombinasyonunu kullanabilirsiniz.
                       </div>
 
                       {/* Execution feedback log */}
                       {isRunning ? (
                         <div className="flex items-center gap-2 text-indigo-400 py-2">
                           <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>surmert@ozdil-web:~$ python3 ozdil.py kod_alani.oz</span>
+                          <span>surmert@varyn-web:~$ python3 varyn.py kod_alani.varyn</span>
                         </div>
                       ) : (results.output || results.error || results.translated || results.awaiting_input) ? (
                         <div className="flex flex-col gap-1">
-                          <span className="text-zinc-500">surmert@ozdil-web:~$ python3 ozdil.py kod_alani.oz</span>
+                          <span className="text-zinc-500">surmert@varyn-web:~$ python3 varyn.py kod_alani.varyn</span>
                           
                           {results.error ? (
                             results.error_details ? (
@@ -2269,7 +2269,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                 {panelTab === "python" && (
                   <div className="h-full flex flex-col select-text" id="python-screen-block">
                     <div className="text-zinc-500 mb-2 text-[10px] font-sans font-semibold uppercase tracking-wider">
-                      # ÖzDil Sözcük Çözümleyici (Lexer) Tarafından Çözümlenen Token Listesi
+                      # Varyn Sözcük Çözümleyici (Lexer) Tarafından Çözümlenen Token Listesi
                     </div>
                     {results.translated ? (
                       <pre className="text-zinc-300 whitespace-pre-wrap bg-zinc-950/40 p-3 rounded border border-zinc-900 leading-relaxed">
@@ -2395,7 +2395,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
 
         {/* Center: System status notifications */}
         <div className="text-[10px] tracking-wide select-none hidden md:block">
-          ÖzDil Web Studio v1.0.0
+          Varyn Web Studio v1.0.0
         </div>
 
         {/* Right formatting status */}
@@ -2410,7 +2410,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
             UTF-8
           </span>
           <span className="hover:bg-indigo-700 dark:hover:bg-zinc-850 px-1.5 h-full flex items-center transition duration-150 cursor-pointer font-bold text-indigo-100 dark:text-indigo-400">
-            ÖzDil
+            Varyn
           </span>
         </div>
       </footer>
@@ -2431,7 +2431,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                 <div className="w-5 h-5 rounded bg-indigo-600 flex items-center justify-center text-[10px] text-white font-black">
                   ÖD
                 </div>
-                <span className="font-bold text-zinc-800 dark:text-white">ÖzDil Menü</span>
+                <span className="font-bold text-zinc-800 dark:text-white">Varyn Menü</span>
               </div>
               <button 
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -2452,10 +2452,10 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                 </span>
                 <div className="flex flex-col bg-zinc-50 dark:bg-zinc-900/40 rounded-lg border border-zinc-150 dark:border-zinc-850 divide-y divide-zinc-150 dark:divide-zinc-850 overflow-hidden">
                   <button 
-                    onClick={() => { openFileTab("kod_alani.oz"); setIsMobileMenuOpen(false); }} 
+                    onClick={() => { openFileTab("kod_alani.varyn"); setIsMobileMenuOpen(false); }} 
                     className="w-full text-left px-3 py-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 cursor-pointer"
                   >
-                    <span>kod_alani.oz Düzenle</span>
+                    <span>kod_alani.varyn Düzenle</span>
                     <FileCode2 className="w-3.5 h-3.5 text-indigo-500 opacity-80" />
                   </button>
                   <button 
@@ -2466,10 +2466,10 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                     <Info className="w-3.5 h-3.5 text-emerald-500 opacity-80" />
                   </button>
                   <button 
-                    onClick={() => { openFileTab("ozdil.py"); setIsMobileMenuOpen(false); }} 
+                    onClick={() => { openFileTab("varyn.py"); setIsMobileMenuOpen(false); }} 
                     className="w-full text-left px-3 py-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-700 dark:text-zinc-300 cursor-pointer"
                   >
-                    <span>ozdil.py Çekirdeği İncele</span>
+                    <span>varyn.py Çekirdeği İncele</span>
                     <Code className="w-3.5 h-3.5 text-amber-500 opacity-80" />
                   </button>
                   <button 
@@ -2504,7 +2504,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
                   >
                     <span className="flex items-center gap-1.5">
                       <FileCode2 className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Sadece ÖzDil Kodu (.oz)</span>
+                      <span>Sadece Varyn Kodu (.varyn)</span>
                     </span>
                   </button>
                   <button 
@@ -2539,7 +2539,7 @@ print("✓ ÖzDil Modülü Başarıyla Yüklendi.")`;
 
             {/* Footer */}
             <div className="p-4 border-t border-zinc-200 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-900 text-center text-[10px] text-zinc-400">
-              ÖzDil Web Studio v1.0.0 · surmert@ozdil-web
+              Varyn Web Studio v1.0.0 · surmert@varyn-web
             </div>
           </div>
         </div>

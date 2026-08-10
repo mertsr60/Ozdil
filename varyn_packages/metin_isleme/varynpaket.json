@@ -1,0 +1,10 @@
+{
+  "isim": "metin_isleme",
+  "surum": "1.1.0",
+  "yazar": "varyn_toplulugu",
+  "tur": "python",
+  "aciklama": "Gelişmiş Türkçe karakter duyarlı büyük/küçük harf dönüşümü, slug yapımı ve sesli harf analizi.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "06a117009c7cf1604d723db1623c7293dae0654399a50278fc8c751a38e2019a"
+}

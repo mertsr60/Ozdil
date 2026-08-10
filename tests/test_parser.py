@@ -5,13 +5,13 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from ozdil_core.lexer import lex_ozdil
-from ozdil_core.parser import Parser
-from ozdil_core.ast_nodes import Program, Atama, Degisken, Deger, IkiliIslem, Eger, Iken
+from varyn_core.lexer import lex_varyn
+from varyn_core.parser import Parser
+from varyn_core.ast_nodes import Program, Atama, Degisken, Deger, IkiliIslem, Eger, Iken
 
 class TestParser(unittest.TestCase):
     def test_simple_assignment(self):
-        tokens = lex_ozdil("değişken x = 5")
+        tokens = lex_varyn("değişken x = 5")
         parser = Parser(tokens)
         ast_tree = parser.parse_program()
         self.assertIsInstance(ast_tree, Program)
@@ -24,7 +24,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(stmt.value.value, 5)
 
     def test_binary_operation(self):
-        tokens = lex_ozdil("değişken y = 10 + 20")
+        tokens = lex_varyn("değişken y = 10 + 20")
         parser = Parser(tokens)
         ast_tree = parser.parse_program()
         stmt = ast_tree.body[0]
@@ -38,7 +38,7 @@ class TestParser(unittest.TestCase):
             "eger x > 2:\n"
             "    yazdır(10)\n"
         )
-        tokens = lex_ozdil(code)
+        tokens = lex_varyn(code)
         parser = Parser(tokens)
         ast_tree = parser.parse_program()
         self.assertEqual(len(ast_tree.body), 1)

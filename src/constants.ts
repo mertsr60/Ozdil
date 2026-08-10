@@ -63,11 +63,11 @@ export const KEYWORDS: KeywordInfo[] = [
   { keyword: 'getir', pythonEquivalent: 'get', description: 'Belirtilen URL adresinden GET isteği yaparak yanıtı metin olarak döner.', usage: 'web.getir("https://example.com")' },
   { keyword: 'gönder', pythonEquivalent: 'post', description: 'Belirtilen URL adresine POST isteği ile veri gönderir.', usage: 'web.gönder("https://httpbin.org/post", {"veri": "değer"})' },
   { keyword: 'sistem', pythonEquivalent: 'sys/os', description: 'İşletim sistemi ve program çalıştırma ortamı kütüphanesi.', usage: 'getir sistem' },
-  { keyword: 'dosya_var_mı', pythonEquivalent: 'exists', description: 'Belirtilen yolda bir dosyanın mevcut olup olmadığını kontrol eder.', usage: 'sistem.dosya_var_mı("kodumuz.oz")' },
+  { keyword: 'dosya_var_mı', pythonEquivalent: 'exists', description: 'Belirtilen yolda bir dosyanın mevcut olup olmadığını kontrol eder.', usage: 'sistem.dosya_var_mı("kodumuz.varyn")' },
   { keyword: 'çıkış', pythonEquivalent: 'exit', description: 'Programı belirtilen durum kodu ile anında sonlandırır.', usage: 'sistem.çıkış(0)' },
   { keyword: 'json', pythonEquivalent: 'json', description: 'JSON formatında veri işleme kütüphanesi.', usage: 'getir json' },
-  { keyword: 'çöz', pythonEquivalent: 'loads', description: 'JSON formatındaki bir metni ÖzDil sözlüğüne veya listesine dönüştürür.', usage: 'json.çöz(\'{"ad": "Mert"}\')' },
-  { keyword: 'kodla', pythonEquivalent: 'dumps', description: 'ÖzDil listesini veya sözlüğünü JSON formatında bir metne dönüştürür.', usage: 'json.kodla({"ad": "Mert"})' },
+  { keyword: 'çöz', pythonEquivalent: 'loads', description: 'JSON formatındaki bir metni Varyn sözlüğüne veya listesine dönüştürür.', usage: 'json.çöz(\'{"ad": "Mert"}\')' },
+  { keyword: 'kodla', pythonEquivalent: 'dumps', description: 'Varyn listesini veya sözlüğünü JSON formatında bir metne dönüştürür.', usage: 'json.kodla({"ad": "Mert"})' },
   { keyword: 'dosya', pythonEquivalent: 'open', description: 'Dosya okuma, yazma ve ekleme işlemleri kütüphanesi.', usage: 'getir dosya' },
   { keyword: 'oku', pythonEquivalent: 'read', description: 'Belirtilen dosyanın içeriğini metin olarak okur.', usage: 'dosya.oku("veri.txt")' },
   { keyword: 'yaz', pythonEquivalent: 'write', description: 'Belirtilen dosyaya metin yazar (öncekileri siler).', usage: 'dosya.yaz("veri.txt", "Merhaba!")' },
@@ -75,9 +75,9 @@ export const KEYWORDS: KeywordInfo[] = [
   // New Libraries
   { keyword: 'telefon', pythonEquivalent: 'telefon', description: 'Mobil telefon GUI kütüphanesini içe aktarmak veya kullanmak için anahtar kelime.', usage: 'getir telefon' },
   { keyword: 'baslik', pythonEquivalent: 'baslik', description: 'Simüle edilen telefon ekranına başlık barı ekler.', usage: 'telefon.baslik("Benim Uygulamam")' },
-  { keyword: 'yazi', pythonEquivalent: 'yazi', description: 'Telefon ekranına metin ekler (baslik, alt_baslik, uyari, basarili stilleri desteklenir).', usage: 'telefon.yazi("Merhaba ÖzDil!", "normal")' },
+  { keyword: 'yazi', pythonEquivalent: 'yazi', description: 'Telefon ekranına metin ekler (baslik, alt_baslik, uyari, basarili stilleri desteklenir).', usage: 'telefon.yazi("Merhaba Varyn!", "normal")' },
   { keyword: 'buton', pythonEquivalent: 'buton', description: 'Telefon ekranına etkileşimli bir buton ekler. Tıklandığında bildirim tetikler.', usage: 'telefon.buton("Giriş Yap", "Giriş işlemi başlatıldı!")' },
-  { keyword: 'kart', pythonEquivalent: 'kart', description: 'Telefon ekranına şık bir kart bileşeni ekler.', usage: 'telefon.kart("Haberler", "ÖzDil kütüphaneleri genişliyor!")' },
+  { keyword: 'kart', pythonEquivalent: 'kart', description: 'Telefon ekranına şık bir kart bileşeni ekler.', usage: 'telefon.kart("Haberler", "Varyn kütüphaneleri genişliyor!")' },
   { keyword: 'tarih_saat', pythonEquivalent: 'datetime', description: 'Gelişmiş Türkçe tarih, zaman ve gün farkı kütüphanesi.', usage: 'getir tarih_saat' },
   { keyword: 'simdi', pythonEquivalent: 'now', description: 'Mevcut tarih ve saat bileşenlerini içeren bir sözlük döndürür.', usage: 'tarih_saat.simdi()' },
   { keyword: 'turkce_tarih', pythonEquivalent: 'strftime (TR)', description: 'Tarihi Türkçe gün ve ay isimleriyle biçimlendirir.', usage: 'turkce_tarih(2026, 8, 4)' },
@@ -87,10 +87,10 @@ export const KEYWORDS: KeywordInfo[] = [
   { keyword: 'metin_isleme', pythonEquivalent: 'str utils', description: 'Türkçe karakter duyarlı metin dönüştürme ve analiz kütüphanesi.', usage: 'getir metin_isleme' },
   { keyword: 'turkce_kucult', pythonEquivalent: 'lower', description: 'Türkçe I/ı ve İ/i harflerini doğru şekilde küçültür.', usage: 'turkce_kucult("İSTANBUL")' },
   { keyword: 'turkce_buyut', pythonEquivalent: 'upper', description: 'Türkçe I/ı ve İ/i harflerini doğru şekilde büyütür.', usage: 'turkce_buyut("istanbul")' },
-  { keyword: 'slug_yap', pythonEquivalent: 'slugify', description: 'Metni Türkçe uyumlu URL / SEO dostu slug formatına çevirir.', usage: 'slug_yap("ÖzDil Harika Bir Dil!")' },
-  { keyword: 'sesli_say', pythonEquivalent: 'vowel count', description: 'Metindeki sesli harflerin sayısını bulur.', usage: 'sesli_say("ÖzDil")' },
-  { keyword: 'kelime_say', pythonEquivalent: 'word count', description: 'Metindeki kelime sayısını hesaplar.', usage: 'metin_isleme.kelime_say("ÖzDil Harika!")' },
-  { keyword: 'ters_cevir', pythonEquivalent: 'reverse string', description: 'Metni tersine çevirir.', usage: 'metin_isleme.ters_cevir("ÖzDil")' },
+  { keyword: 'slug_yap', pythonEquivalent: 'slugify', description: 'Metni Türkçe uyumlu URL / SEO dostu slug formatına çevirir.', usage: 'slug_yap("Varyn Harika Bir Dil!")' },
+  { keyword: 'sesli_say', pythonEquivalent: 'vowel count', description: 'Metindeki sesli harflerin sayısını bulur.', usage: 'sesli_say("Varyn")' },
+  { keyword: 'kelime_say', pythonEquivalent: 'word count', description: 'Metindeki kelime sayısını hesaplar.', usage: 'metin_isleme.kelime_say("Varyn Harika!")' },
+  { keyword: 'ters_cevir', pythonEquivalent: 'reverse string', description: 'Metni tersine çevirir.', usage: 'metin_isleme.ters_cevir("Varyn")' },
   { keyword: 'kripto', pythonEquivalent: 'hashlib/base64', description: 'Veri özetleme, kodlama/çözme ve Sezar şifreleme kütüphanesi.', usage: 'getir kripto' },
   { keyword: 'md5_uret', pythonEquivalent: 'md5', description: 'Metnin MD5 özet değerini üretir.', usage: 'kripto.md5_uret("şifre")' },
   { keyword: 'sha256_uret', pythonEquivalent: 'sha256', description: 'Metnin SHA256 özet değerini üretir.', usage: 'kripto.sha256_uret("şifre")' },
@@ -115,8 +115,8 @@ export const KEYWORDS: KeywordInfo[] = [
   { keyword: 'sayi_tahmin_et', pythonEquivalent: 'number guessing guide', description: 'Girilen tahminin hedefe göre durumunu "yukarı", "aşağı" veya "doğru" şeklinde döndürür.', usage: 'oyun.sayi_tahmin_et(42, 35)' },
   { keyword: 'zar_at', pythonEquivalent: 'roll dice', description: '1 ile 6 arasında rastgele bir zar atma simülasyonu yapar.', usage: 'oyun.zar_at()' },
   { keyword: 'skor_tablosu', pythonEquivalent: 'leaderboard formatter', description: 'Oyuncu isimleri ve puan listelerini şık bir liderlik tablosu formatında birleştirir.', usage: 'oyun.skor_tablosu(["Alper", "Buse"], [1500, 2450])' },
-  // Algoritma Kütüphanesi (%100 ÖzDil ile yazılmıştır)
-  { keyword: 'algoritma', pythonEquivalent: 'algorithms', description: 'Tamamen ÖzDil ile yazılmış ilk kütüphane. Sıralama, arama, istatistik ve sayı teorisi algoritmaları barındırır.', usage: 'getir algoritma' },
+  // Algoritma Kütüphanesi (%100 Varyn ile yazılmıştır)
+  { keyword: 'algoritma', pythonEquivalent: 'algorithms', description: 'Tamamen Varyn ile yazılmış ilk kütüphane. Sıralama, arama, istatistik ve sayı teorisi algoritmaları barındırır.', usage: 'getir algoritma' },
   { keyword: 'sirala', pythonEquivalent: 'bubble sort', description: 'Verilen listeyi sıralama algoritmasıyla küçükten büyüğe sıralar.', usage: 'algoritma.sirala([5, 2, 9, 1, 7])' },
   { keyword: 'ikili_ara', pythonEquivalent: 'binary search', description: 'Sıralı bir listede hedef değeri ikili arama algoritmasıyla arar; indisini veya -1 döndürür.', usage: 'algoritma.ikili_ara([1, 2, 5, 7, 9], 7)' },
   { keyword: 'en_buyuk', pythonEquivalent: 'find max', description: 'Verilen listenin en büyük elemanını bulur.', usage: 'algoritma.en_buyuk([5, 2, 9, 1, 7])' },
@@ -129,8 +129,8 @@ export const KEYWORDS: KeywordInfo[] = [
   { keyword: 'ekok', pythonEquivalent: 'lcm', description: 'İki tam sayının En Küçük Ortak Katını (EKOK) hesaplar.', usage: 'algoritma.ekok(12, 18)' },
   { keyword: 'benzersizler', pythonEquivalent: 'unique elements', description: 'Listedeki yinelenen elemanları temizleyerek sadece benzersiz elemanları içeren yeni bir liste döndürür.', usage: 'algoritma.benzersizler([1, 2, 2, 3, 3, 4])' },
   { keyword: 'fibonacci', pythonEquivalent: 'fibonacci sequence', description: 'N elemanlı Fibonacci sayı dizisi üretir.', usage: 'algoritma.fibonacci(10)' },
-  // Yapay Zeka Kütüphanesi (%100 ÖzDil ile yazılmıştır)
-  { keyword: 'yapay_zeka', pythonEquivalent: 'artificial intelligence / ML', description: 'Tamamen %100 ÖzDil ile yazılmış yapay zeka ve makine öğrenmesi kütüphanesi.', usage: 'getir yapay_zeka' },
+  // Yapay Zeka Kütüphanesi (%100 Varyn ile yazılmıştır)
+  { keyword: 'yapay_zeka', pythonEquivalent: 'artificial intelligence / ML', description: 'Tamamen %100 Varyn ile yazılmış yapay zeka ve makine öğrenmesi kütüphanesi.', usage: 'getir yapay_zeka' },
   { keyword: 'dogrusal_regresyon_egit', pythonEquivalent: 'train linear regression', description: 'Verilen X ve Y koordinatları için doğrusal regresyon modeli eğiterek eğim ve kesim noktasını döndürür.', usage: 'yapay_zeka.dogrusal_regresyon_egit([1, 2, 3], [2, 4, 5])' },
   { keyword: 'dogrusal_regresyon_tahmin_et', pythonEquivalent: 'predict linear regression', description: 'Eğitilmiş model üzerinden X değeri için tahminde bulunur.', usage: 'yapay_zeka.dogrusal_regresyon_tahmin_et(model, 4)' },
   { keyword: 'k_ortalama_kumele', pythonEquivalent: 'K-Means clustering', description: 'Çok boyutlu veri noktalarını K gruba kümeleyen makine öğrenmesi algoritması.', usage: 'yapay_zeka.k_ortalama_kumele([[1,1], [5,5]], 2, 5)' },
@@ -142,7 +142,7 @@ export const EXAMPLES: ExampleCode[] = [
   {
     title: "Merhaba Dünya",
     description: "Yeni dilinizdeki ilk programınız! Ekrana yazı yazdırmayı ve basit değişkenleri öğrenin.",
-    code: `# ÖzDil ile ilk programım!
+    code: `# Varyn ile ilk programım!
 ad = "Mert"
 yazdir("Merhaba, Dünya!")
 yazdir("Kodlama dilimize hoş geldin, " + ad + "!")
@@ -307,7 +307,7 @@ yazdir("Bekleme süresi doldu! Program başarıyla tamamlandı. 🎉")
     title: "Gelişmiş Kütüphaneler",
     description: "Yeni eklenen tarih_saat, metin_isleme, kripto ve rastgele paketlerini deneyin.",
     code: `# Gelişmiş Standart Kütüphanelerimizin Kullanımı
-# Not: ozpip sekmesinden bu kütüphaneleri (örn: tarih_saat) kurabilirsiniz.
+# Not: varynpip sekmesinden bu kütüphaneleri (örn: tarih_saat) kurabilirsiniz.
 
 getir tarih_saat
 getir metin_isleme
@@ -325,12 +325,12 @@ yazdir("")
 yazdir("--- Gelişmiş Türkçe Metin İşleme ---")
 yazdir("Büyük Harf Çevirisi (istanbul):", turkce_buyut("istanbul"))
 yazdir("Küçük Harf Çevirisi (İSTANBUL):", turkce_kucult("İSTANBUL"))
-yazdir("URL / Slug Oluşturma:", slug_yap("ÖzDil Harika Bir Programlama Dili!"))
-yazdir("Sesli Harf Sayısı:", sesli_say("ÖzDil Türkçe"))
+yazdir("URL / Slug Oluşturma:", slug_yap("Varyn Harika Bir Programlama Dili!"))
+yazdir("Sesli Harf Sayısı:", sesli_say("Varyn Türkçe"))
 
 yazdir("")
 yazdir("--- Kripto ve Güvenlik ---")
-metin_degeri = "ozdil_sifreleme_123"
+metin_degeri = "varyn_sifreleme_123"
 yazdir("MD5 Özeti  :", kripto.md5_uret(metin_degeri))
 yazdir("SHA256 Özeti:", kripto.sha256_uret(metin_degeri))
 b64 = kripto.base64_kodla(metin_degeri)
@@ -348,7 +348,7 @@ yazdir("Rastgele Güvenli Şifre (16 hane):", rastgele.sifre_olustur(16))
   {
     title: "Finans Analizi",
     description: "Bileşik faiz hesaplama, döviz çevirme, kredi taksitleri ve enflasyonun alım gücü etkilerini analiz edin.",
-    code: `# ÖzDil Finans Analiz Kütüphanesi Örneği
+    code: `# Varyn Finans Analiz Kütüphanesi Örneği
 getir finans
 
 yazdir("=== ÖZDİL FİNANS ANALİZ ARACI ===")
@@ -386,7 +386,7 @@ yazdir("Toplam Kredi Geri Ödemesi: " + metin(toplam_geri_odeme) + " TL")
   {
     title: "Retro Oyunlar",
     description: "Taş-kağıt-makas simülasyonu, şans zarları, sayı tahmin ipuçları ve dinamik skor tablosu.",
-    code: `# ÖzDil Retro Oyun Paketleri Örneği
+    code: `# Varyn Retro Oyun Paketleri Örneği
 getir oyun
 
 yazdir("=== ÖZDİL EĞLENCELİ RETRO OYUNLAR ===")
@@ -426,8 +426,8 @@ yazdir(tablo)
   },
   {
     title: "Mobil Profil Kartı Tasarımı",
-    description: "ÖzDil 'telefon' kütüphanesi kullanarak şık bir profil kartı arayüzü tasarlayın.",
-    code: `# ÖzDil Mobil GUI Kütüphanesi - Profil Tasarımı
+    description: "Varyn 'telefon' kütüphanesi kullanarak şık bir profil kartı arayüzü tasarlayın.",
+    code: `# Varyn Mobil GUI Kütüphanesi - Profil Tasarımı
 getir telefon
 
 # Profil şablonunu otomatik yükle
@@ -438,8 +438,8 @@ yazdir("Profil arayüzü başarıyla oluşturuldu! Sonuçları sağdaki Telefon 
   },
   {
     title: "Mobil Hava Durumu Ekranı",
-    description: "ÖzDil 'telefon' kütüphanesinin ilerleme çubukları ve özel hava durumu stillerini inceleyin.",
-    code: `# ÖzDil Mobil GUI Kütüphanesi - Hava Durumu Tasarımı
+    description: "Varyn 'telefon' kütüphanesinin ilerleme çubukları ve özel hava durumu stillerini inceleyin.",
+    code: `# Varyn Mobil GUI Kütüphanesi - Hava Durumu Tasarımı
 getir telefon
 
 # Hava durumu şablonunu otomatik yükle
@@ -451,14 +451,14 @@ yazdir("Hava durumu arayüzü başarıyla yüklendi! Sağdaki Telefon Ekranına 
   {
     title: "Özel Mobil Giriş Formu",
     description: "Girdiler, anahtarlar ve butonlar içeren etkileşimli bir giriş formu arayüzü oluşturun.",
-    code: `# ÖzDil Mobil GUI Kütüphanesi - Giriş Formu Tasarımı
+    code: `# Varyn Mobil GUI Kütüphanesi - Giriş Formu Tasarımı
 getir telefon
 
 # Arka planı kirli beyaz yapalım
 telefon.arka_plan("kirli_beyaz")
 
 # Başlık ve açıklama yazıları ekleyelim
-telefon.baslik("ÖzDil Giriş Ekranı")
+telefon.baslik("Varyn Giriş Ekranı")
 telefon.yazi("Hesabınıza Giriş Yapın", "baslik")
 telefon.yazi("Lütfen bilgilerinizi eksiksiz doldurun.", "alt_baslik")
 
@@ -483,7 +483,7 @@ telefon.buton("Giriş Yap", "Giriş talebi iletildi! Hoş geldiniz. 🎉")
   {
     title: "Sistem Hız Testi (Benchmark)",
     description: "Tüm kütüphaneleri (matematik, kripto, rastgele, veri_analizi, metin_isleme, zaman) kullanarak sistemin işlem hızını ölçün.",
-    code: `# ÖzDil Sistem Performans & Benchmark Hız Testi
+    code: `# Varyn Sistem Performans & Benchmark Hız Testi
 getir zaman
 getir telefon
 getir kripto
@@ -508,7 +508,7 @@ dongu i icinde aralik(1, 1000):
 
 # 2. TEST: KRİPTOGRAFİ HASH ÜRETİMİ
 yazdir("[2/5] Kriptografik hash fonksiyonları test ediliyor...")
-metin_ornek = "Turkce ozgundur ve OzDil ile kodlanir! 1234567890"
+metin_ornek = "Turkce ozgundur ve Varyn ile kodlanir! 1234567890"
 md5_sonuc = kripto.md5_uret(metin_ornek)
 sha256_sonuc = kripto.sha256_uret(metin_ornek)
 
@@ -565,7 +565,7 @@ yazdir("==========================================")
 # TELEFON GUI RAPORU
 # Telefon ekranında sonuçları zengin bir dashboard ile sunalım
 telefon.arka_plan("gok_mavisi")
-telefon.baslik("ÖzDil Hız Testi")
+telefon.baslik("Varyn Hız Testi")
 
 telefon.yazi("Hız Ölçüm Raporu", "baslik")
 telefon.yazi("Tüm kütüphaneler başarıyla benchmark edildi.", "alt_baslik")
@@ -593,7 +593,7 @@ telefon.buton("Testi Tekrarla", "Performans testi ve benchmark yeniden koşturul
   {
     title: "Etkileşimli Canlı Renk Paleti",
     description: "Canlı olay dinleyicileri (event listeners) kullanarak butona tıklanınca rengi ve içeriği dinamik olarak güncelleyin.",
-    code: `# ÖzDil Mobil GUI - Canlı Etkileşimli Olay Sistemi (Event Listeners)
+    code: `# Varyn Mobil GUI - Canlı Etkileşimli Olay Sistemi (Event Listeners)
 getir telefon
 
 telefon.arka_plan("kirli_beyaz")
@@ -628,9 +628,9 @@ yazdir("Etkileşimli renk paleti hazırlandı! Telefon Simülatöründe butonlar
 `
   },
   {
-    title: "ÖzDil Saf Algoritmalar (%100 ÖzDil Kütüphanesi)",
-    description: "Tamamen ÖzDil ile yazılmış ilk kütüphane olan 'algoritma' modülü ile sıralama, ikili arama, istatistik ve sayı teorisi işlemlerini gerçekleştirin.",
-    code: `# %100 ÖzDil ile kodlanmış ilk kütüphane (algoritma.oz) kullanımı!
+    title: "Varyn Saf Algoritmalar (%100 Varyn Kütüphanesi)",
+    description: "Tamamen Varyn ile yazılmış ilk kütüphane olan 'algoritma' modülü ile sıralama, ikili arama, istatistik ve sayı teorisi işlemlerini gerçekleştirin.",
+    code: `# %100 Varyn ile kodlanmış ilk kütüphane (algoritma.varyn) kullanımı!
 getir algoritma
 
 yazdir("==========================================")
@@ -683,9 +683,9 @@ yazdir("==========================================")
 `
   },
   {
-    title: "Yapay Zeka (%100 ÖzDil Makine Öğrenmesi)",
-    description: "Tamamen ÖzDil ile yazılmış 'yapay_zeka' modülü ile regresyon, K-Means kümeleme, k-NN sınıflandırma ve yapay sinir hücresi simülasyonu yapın.",
-    code: `# %100 ÖzDil ile kodlanmış Yapay Zeka kütüphanesi (yapay_zeka.oz) kullanımı!
+    title: "Yapay Zeka (%100 Varyn Makine Öğrenmesi)",
+    description: "Tamamen Varyn ile yazılmış 'yapay_zeka' modülü ile regresyon, K-Means kümeleme, k-NN sınıflandırma ve yapay sinir hücresi simülasyonu yapın.",
+    code: `# %100 Varyn ile kodlanmış Yapay Zeka kütüphanesi (yapay_zeka.varyn) kullanımı!
 getir yapay_zeka
 
 yazdir("==========================================")

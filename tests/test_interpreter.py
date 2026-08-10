@@ -5,14 +5,14 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from ozdil_core.lexer import lex_ozdil
-from ozdil_core.parser import Parser
-from ozdil_core.interpreter import Interpreter
-from ozdil_core.vm import VirtualMachine
+from varyn_core.lexer import lex_varyn
+from varyn_core.parser import Parser
+from varyn_core.interpreter import Interpreter
+from varyn_core.vm import VirtualMachine
 
 class TestInterpreter(unittest.TestCase):
     def run_and_compare(self, code, expected_outputs):
-        tokens = lex_ozdil(code)
+        tokens = lex_varyn(code)
         parser = Parser(tokens)
         ast_tree = parser.parse_program()
         
