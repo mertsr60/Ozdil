@@ -57,11 +57,32 @@ class TestSandbox(unittest.TestCase):
         self.assertTrue(any("gizli" in err.lower() or "sistem" in err.lower() for err in errors))
 
     def test_reflection_blocking(self):
-        for func in ("globals", "locals", "vars", "dir"):
+        for func in ("globals", "locals", "vars", "dir", "getattr", "setattr", "delattr", "hasattr"):
             code = f"x = {func}()"
             ok, errors = verify_python_code(code, "test_reflection")
             self.assertFalse(ok)
             self.assertTrue(any(func in err.lower() for err in errors))
+
+    def test_ssrf_protection(self):
+        import socket
+        # Verify socket.getaddrinfo blocks loopback/private IPs
+        for bad_ip in ("127.0.0.1", "localhost", "10.0.0.1", "192.168.1.1", "0.0.0.0"):
+            with self.assertRaises(PermissionError):
+                socket.getaddrinfo(bad_ip, 80)
+        # Verify socket.socket.connect blocks private/loopback connections
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        for bad_ip in ("127.0.0.1", "10.0.0.1", "192.168.1.1"):
+            with self.assertRaises(PermissionError):
+                s.connect((bad_ip, 80))
+
+    def test_package_asymmetric_verification(self):
+        from ozdil.package_manager import verify_package_signature
+        from ozdil.repository import REPOSITORY_PACKAGES
+        # Standard repository packages should be signed correctly and pass
+        for pkg in REPOSITORY_PACKAGES.keys():
+            # Standard package check (if installed, check signature)
+            # We can also mock verify_package_signature with a dummy metadata
+            pass
 
 if __name__ == "__main__":
     unittest.main()

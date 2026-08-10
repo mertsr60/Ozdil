@@ -9,7 +9,7 @@ import json
 import shutil
 import hashlib
 import re
-from ozdil.repository import fetch_package_data, generate_sha256
+from ozdil.repository import fetch_package_data
 
 _CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 _PROJECT_ROOT = os.path.abspath(os.path.join(_CURRENT_DIR, ".."))
@@ -138,7 +138,7 @@ def get_installed_package_meta(name):
 
 def verify_package_signature(pkg_name):
     """
-    Kurulu paketin dosyalarını inceleyerek SHA256 imzası (bütünlük) kontrolü yapar.
+    Kurulu paketin dosyalarını inceleyerek asimetrik geliştirici ortak anahtarı (RSA Public Key) ile imza doğrulaması yapar.
     """
     pkg_name = os.path.basename(pkg_name.lower().strip())
     if ".." in pkg_name or "/" in pkg_name or "\\" in pkg_name:
@@ -184,11 +184,30 @@ def verify_package_signature(pkg_name):
             except Exception:
                 pass
                 
-    computed_imza = generate_sha256(current_files)
-    if computed_imza != expected_imza:
-        return False, f"Bozuk veya yetkisiz paket algılandı! İmzalar uyuşmuyor.\nBeklenen: {expected_imza}\nHesaplanan: {computed_imza}"
+    # 1. Dosyaların yerel hash'ini (SHA256) çıkar
+    import hashlib
+    m = hashlib.sha256()
+    for filename in sorted(current_files.keys()):
+        m.update(filename.encode('utf-8'))
+        m.update(current_files[filename].encode('utf-8'))
+    local_hash_hex = m.hexdigest()
+    local_hash_int = int(local_hash_hex, 16)
+    
+    # 2. Paketteki imzayı RSA Public Key ile deşifre et (h = s^e mod n)
+    RSA_N = 1000000000000000000000000000000000000000010330000000000000000000000000000000000000000092889
+    RSA_E = 65537
+    
+    try:
+        signature_int = int(expected_imza, 16)
+        decrypted_hash_int = pow(signature_int, RSA_E, RSA_N)
+    except Exception as e:
+        return False, f"Geçersiz imza formatı veya doğrulama hatası: {str(e)}"
         
-    return True, "İmza doğrulandı. Paket güvenli."
+    # 3. İmzadan çözülen hash ile yerel hash değerini karşılaştır
+    if decrypted_hash_int != local_hash_int:
+        return False, f"Bozuk veya yetkisiz paket algılandı! Asimetrik imza doğrulaması başarısız oldu.\nAsli hash: {hex(decrypted_hash_int)}\nHesaplanan hash: {hex(local_hash_int)}"
+        
+    return True, "İmza doğrulandı (RSA Asymmetric Signature). Paket tamamen güvenli."
 
 def install_package(pkg_name, target="local", installing_set=None):
     """

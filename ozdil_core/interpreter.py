@@ -6,6 +6,56 @@ import math
 import random
 import time
 import re
+import socket
+import ipaddress
+
+# Global SSRF protection: Monkey-patch socket resolution and connections to block private/loopback IPs
+_original_getaddrinfo = socket.getaddrinfo
+_original_connect = socket.socket.connect
+
+def sandboxed_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    if not host:
+        return _original_getaddrinfo(host, port, family, type, proto, flags)
+    
+    host_lower = str(host).lower().strip()
+    if host_lower in ("localhost", "0.0.0.0", "::1") or "localhost" in host_lower or "127.0.0.1" in host_lower:
+        raise PermissionError("Güvenlik Hatası (SSRF): Yerel ağ adreslerine erişim engellendi.")
+        
+    res = _original_getaddrinfo(host, port, family, type, proto, flags)
+    for item in res:
+        ip_str = item[4][0]
+        try:
+            ip_obj = ipaddress.ip_address(ip_str)
+            if (ip_obj.is_loopback or 
+                ip_obj.is_private or 
+                ip_obj.is_link_local or 
+                ip_obj.is_multicast or 
+                ip_obj.is_reserved or 
+                ip_obj.is_unspecified):
+                raise PermissionError(f"Güvenlik Hatası (SSRF): '{ip_str}' özel, yerel veya geçersiz bir ağ adresidir.")
+        except ValueError:
+            pass
+    return res
+
+def sandboxed_connect(self, address):
+    if isinstance(address, tuple) and len(address) > 0:
+        host = address[0]
+        if host:
+            try:
+                ip_obj = ipaddress.ip_address(host)
+                if (ip_obj.is_loopback or 
+                    ip_obj.is_private or 
+                    ip_obj.is_link_local or 
+                    ip_obj.is_multicast or 
+                    ip_obj.is_reserved or 
+                    ip_obj.is_unspecified):
+                    raise PermissionError(f"Güvenlik Hatası (SSRF): '{host}' özel, yerel veya geçersiz bir ağ adresidir.")
+            except ValueError:
+                pass
+    return _original_connect(self, address)
+
+socket.getaddrinfo = sandboxed_getaddrinfo
+socket.socket.connect = sandboxed_connect
 
 # Absolute path resolution for packages
 _CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))

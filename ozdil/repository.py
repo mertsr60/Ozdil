@@ -857,19 +857,29 @@ def plugin():
     }
 }
 
-import hmac
+import hashlib
 
-SECRET_KEY = b"OzdilSecurePackageKey2026!"
+RSA_N = 1000000000000000000000000000000000000000010330000000000000000000000000000000000000000092889
+RSA_E = 65537
+RSA_D = 487297251934022002838091459786075041579570774295558234279872438469871980713184918443057153
 
 def generate_sha256(content_dict):
     """
-    Paket içeriğindeki tüm dosyaları birleştirerek HMAC-SHA256 ile kriptografik imza üretir.
+    Paket içeriğindeki tüm dosyaları birleştirerek SHA256 hash'i oluşturur,
+    ardından asimetrik geliştirici özel anahtarı (RSA Private Key) ile kriptografik olarak imzalar.
     """
-    h = hmac.new(SECRET_KEY, digestmod=hashlib.sha256)
+    m = hashlib.sha256()
     for filename in sorted(content_dict.keys()):
-        h.update(filename.encode('utf-8'))
-        h.update(content_dict[filename].encode('utf-8'))
-    return h.hexdigest()
+        m.update(filename.encode('utf-8'))
+        m.update(content_dict[filename].encode('utf-8'))
+    h_hex = m.hexdigest()
+    h_int = int(h_hex, 16)
+    
+    # Asimetrik imzalama: s = h^d mod n
+    s_int = pow(h_int, RSA_D, RSA_N)
+    
+    # İmzayı hex formatında döndür
+    return hex(s_int)[2:]
 
 # İmza eklemesi yapılmış repository listesini dinamik olarak hazırla
 for name, data in REPOSITORY_PACKAGES.items():
