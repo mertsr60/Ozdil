@@ -11,7 +11,34 @@ from .runtime_types import (
     wrap_value, OzValue, OzNull, OzBool, OzInt, OzFloat, OzString,
     OzList, OzMap, OzFunction, OzClass, OzBoundMethod, OzNativeCallable, OzInstance
 )
-from .interpreter import get_attribute
+from .object_model import get_attribute
+
+def check_exception_match(exc, operand):
+    if operand in ("Hata", "Error", "Exception", "Hepsi", "", None):
+        return True
+    friendly_type = getattr(exc, "friendly_type", "")
+    exc_msg = str(exc)
+    exc_class_name = type(exc).__name__
+    operand_norm = operand.lower().replace("ı", "i").replace("ğ", "g").replace("ü", "u").replace("ş", "s").replace("ö", "o").replace("ç", "c")
+    if operand_norm in ("turhatasi", "typeerror"):
+        return "tür hatası" in friendly_type.lower() or exc_class_name == "TypeError" or "typeerror" in friendly_type.lower()
+    if operand_norm in ("degerhatasi", "valueerror"):
+        return "değer hatası" in friendly_type.lower() or exc_class_name == "ValueError" or "valueerror" in friendly_type.lower()
+    if operand_norm in ("dizinhatasi", "indexerror"):
+        return "dizin hatası" in friendly_type.lower() or exc_class_name == "IndexError" or "indexerror" in friendly_type.lower()
+    if operand_norm in ("sifirabolmehatasi", "zerodivisionerror"):
+        return "bölme" in friendly_type.lower() or "bölme" in exc_msg.lower() or exc_class_name == "ZeroDivisionError" or "zerodivision" in friendly_type.lower()
+    if operand_norm in ("oznitelikhatasi", "attributeerror"):
+        return "öznitelik" in friendly_type.lower() or exc_class_name == "AttributeError" or "attributeerror" in friendly_type.lower()
+    if operand_norm in ("kutuphanehatasi", "importerror"):
+        return "kütüphane" in friendly_type.lower() or exc_class_name == "ImportError" or "importerror" in friendly_type.lower()
+    if operand_norm in ("dosyahatasi", "fileerror", "ioerror", "permissionerror", "filenotfounderror"):
+        return "dosya" in friendly_type.lower() or exc_class_name in ("FileNotFoundError", "PermissionError", "OSError")
+    if operand.lower() in exc_class_name.lower():
+        return True
+    if operand.lower() in friendly_type.lower():
+        return True
+    return False
 
 class Frame:
     def __init__(self, bytecode, env, return_ip=0, prev_frame=None):
@@ -221,30 +248,50 @@ class VirtualMachine:
         elif opcode == 'LOAD_INDEX':
             index = frame.stack.pop()
             obj = frame.stack.pop()
-            obj_native = obj.val if isinstance(obj, (OzList, OzMap)) else (obj.to_native() if isinstance(obj, OzValue) else obj)
-            idx_native = index.val if isinstance(index, (OzInt, OzFloat, OzString)) else (index.to_native() if isinstance(index, OzValue) else index)
-            try:
-                res = obj_native[idx_native]
-                frame.stack.append(wrap_value(res))
-            except Exception as e:
-                raise OzdilError("Dizin Hatası (IndexError)", f"Sınır dışı erişim veya geçersiz anahtar: {str(e)}", 1)
+            if isinstance(obj, (OzList, OzMap, OzString)):
+                try:
+                    res = obj[index]
+                    frame.stack.append(wrap_value(res))
+                except Exception as e:
+                    raise OzdilError("Dizin Hatası (IndexError)", f"Sınır dışı erişim veya geçersiz anahtar: {str(e)}", 1)
+            else:
+                obj_native = obj.to_native() if isinstance(obj, OzValue) else obj
+                idx_native = index.to_native() if isinstance(index, OzValue) else index
+                try:
+                    res = obj_native[idx_native]
+                    frame.stack.append(wrap_value(res))
+                except Exception as e:
+                    raise OzdilError("Dizin Hatası (IndexError)", f"Sınır dışı erişim veya geçersiz anahtar: {str(e)}", 1)
                 
         elif opcode == 'STORE_INDEX':
             index = frame.stack.pop()
             obj = frame.stack.pop()
             val = frame.stack.pop()
-            obj_native = obj.val if isinstance(obj, (OzList, OzMap)) else (obj.to_native() if isinstance(obj, OzValue) else obj)
-            idx_native = index.val if isinstance(index, (OzInt, OzFloat, OzString)) else (index.to_native() if isinstance(index, OzValue) else index)
-            try:
-                obj_native[idx_native] = val
-            except Exception as e:
-                raise OzdilError("Tür Hatası (TypeError)", f"Endeks ataması başarısız: {str(e)}", 1)
+            if isinstance(obj, (OzList, OzMap)):
+                try:
+                    obj[index] = val
+                except Exception as e:
+                    raise OzdilError("Tür Hatası (TypeError)", f"Endeks ataması başarısız: {str(e)}", 1)
+            else:
+                obj_native = obj.to_native() if isinstance(obj, OzValue) else obj
+                idx_native = index.to_native() if isinstance(index, OzValue) else index
+                try:
+                    obj_native[idx_native] = val.to_native() if isinstance(val, OzValue) else val
+                except Exception as e:
+                    raise OzdilError("Tür Hatası (TypeError)", f"Endeks ataması başarısız: {str(e)}", 1)
                 
         elif opcode == 'LOAD_ATTR':
             obj = frame.stack.pop()
             attr = operand
             if isinstance(obj, OzInstance):
                 frame.stack.append(wrap_value(obj.get_attr(attr)))
+            elif isinstance(obj, OzValue) and hasattr(obj, 'get_attr'):
+                try:
+                    frame.stack.append(wrap_value(obj.get_attr(attr)))
+                except AttributeError:
+                    native_obj = obj.to_native()
+                    res = get_attribute(native_obj, attr, 1)
+                    frame.stack.append(wrap_value(res))
             else:
                 native_obj = obj.to_native() if isinstance(obj, OzValue) else obj
                 res = get_attribute(native_obj, attr, 1)
@@ -256,10 +303,12 @@ class VirtualMachine:
             attr = operand
             if isinstance(obj, OzInstance):
                 obj.set_attr(attr, val)
+            elif isinstance(obj, OzValue) and hasattr(obj, 'set_attr'):
+                obj.set_attr(attr, val)
             else:
                 native_obj = obj.to_native() if isinstance(obj, OzValue) else obj
                 try:
-                    setattr(native_obj, attr, val)
+                    setattr(native_obj, attr, val.to_native() if isinstance(val, OzValue) else val)
                 except Exception as e:
                     raise OzdilError("Öznitelik Hatası (AttributeError)", f"Öznitelik ataması başarısız: {str(e)}", 1)
                     
@@ -333,9 +382,13 @@ class VirtualMachine:
                 init_method = callable_obj.methods.get('__init__')
                 if init_method:
                     local_env = Environment(init_method.env)
-                    local_env.define(init_method.args[0], instance)
-                    for arg_name, arg_val in zip(init_method.args[1:], args):
-                        local_env.define(arg_name, wrap_value(arg_val))
+                    if len(init_method.args) > 0:
+                        local_env.define(init_method.args[0], instance)
+                        for arg_name, arg_val in zip(init_method.args[1:], args):
+                            local_env.define(arg_name, wrap_value(arg_val))
+                    else:
+                        for arg_name, arg_val in zip(init_method.args, args):
+                            local_env.define(arg_name, wrap_value(arg_val))
                     new_frame = Frame(init_method.bytecode, local_env, return_ip=frame.ip, prev_frame=frame)
                     new_frame.init_return_instance = instance
                     self.current_frame = new_frame
@@ -346,9 +399,13 @@ class VirtualMachine:
                 method = callable_obj.method
                 instance = callable_obj.instance
                 local_env = Environment(method.env)
-                local_env.define(method.args[0], instance)
-                for arg_name, arg_val in zip(method.args[1:], args):
-                    local_env.define(arg_name, wrap_value(arg_val))
+                if len(method.args) > 0:
+                    local_env.define(method.args[0], instance)
+                    for arg_name, arg_val in zip(method.args[1:], args):
+                        local_env.define(arg_name, wrap_value(arg_val))
+                else:
+                    for arg_name, arg_val in zip(method.args, args):
+                        local_env.define(arg_name, wrap_value(arg_val))
                 new_frame = Frame(method.bytecode, local_env, return_ip=frame.ip, prev_frame=frame)
                 self.current_frame = new_frame
                 
@@ -375,16 +432,20 @@ class VirtualMachine:
                 frame.exception_handlers.pop()
                 
         elif opcode == 'CHECK_EXCEPTION_TYPE':
-            # Checks if top of stack (Exception) matches the target exception type name
             exc = frame.stack[-1]
-            exc_class_name = type(exc.to_native() if isinstance(exc, OzValue) else exc).__name__
-            # Compare with operand
-            is_match = exc_class_name == operand or operand in exc_class_name
+            if isinstance(exc, OzValue):
+                exc_unwrapped = exc.to_native()
+                if exc_unwrapped is None:
+                    exc_unwrapped = exc
+            else:
+                exc_unwrapped = exc
+            is_match = check_exception_match(exc_unwrapped, operand)
             frame.stack.append(OzBool(is_match))
             
         elif opcode == 'CLEAR_EXCEPTION':
-            # Pops exception object and clears handling status
-            frame.stack.pop()
+            # Pops exception object and clears handling status if still on stack
+            # Since exception was already bound or popped in handler bytecode, we just pass safely
+            pass
             
         elif opcode == 'RERAISE_EXCEPTION':
             exc = frame.stack.pop()
@@ -392,14 +453,9 @@ class VirtualMachine:
             
         elif opcode == 'IMPORT_PACKAGE':
             # Import a package dynamically!
-            # Since standard packages might be Python modules or ÖzDil code, we can delegate importing
-            # or handle it nicely. Let's make it fully compatible!
-            # We will use the existing package loading of ÖzDil.
             pkg_name = operand
-            # Ensure it is cached or imported
-            from .interpreter import load_external_package
+            from .package_loader import load_external_package
             pkg_exports = load_external_package(pkg_name, 1, self.stdout)
-            # Define loaded package exports as a dictionary/object in the environment
             frame.env.define(pkg_name, wrap_value(pkg_exports))
 
     def perform_binary_op(self, left, right, op):
