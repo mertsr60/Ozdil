@@ -49,10 +49,12 @@ import {
   Compass,
   ShoppingCart,
   Video,
-  Music
+  Music,
+  Monitor
 } from "lucide-react";
 import CodeEditor from "./components/CodeEditor";
 import ASTViewer from "./components/ASTViewer";
+import { ProgramWindow } from "./components/ProgramWindow";
 import { PhoneCameraComponent, PhoneAudioPlayer, getIconComponent } from "./components/PhonePreviewHelpers";
 import { KEYWORDS, EXAMPLES } from "./constants";
 import { CompilerResult } from "./types";
@@ -1501,10 +1503,16 @@ print("✓ Varyn Modülü Başarıyla Yüklendi.")`;
                       ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 border border-indigo-100/40 dark:border-indigo-900/30 shadow-sm"
                       : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 border border-transparent hover:bg-zinc-100 dark:hover:bg-zinc-900/40"
                   }`}
-                  title="Telefon Arayüzünü Göster/Gizle"
+                  title={results.gui_elements?.some(e => e.type === "program_pencere") ? "Program Penceresini Göster/Gizle" : "Telefon Arayüzünü Göster/Gizle"}
                 >
-                  <Smartphone className="w-4 h-4" />
-                  <span className="hidden md:inline">Telefon Ekranı</span>
+                  {results.gui_elements?.some(e => e.type === "program_pencere") ? (
+                    <Monitor className="w-4 h-4 text-indigo-500" />
+                  ) : (
+                    <Smartphone className="w-4 h-4" />
+                  )}
+                  <span className="hidden md:inline">
+                    {results.gui_elements?.some(e => e.type === "program_pencere") ? "Program Penceresi" : "Telefon Ekranı"}
+                  </span>
                 </button>
               )}
               <button
@@ -1551,12 +1559,18 @@ print("✓ Varyn Modülü Başarıyla Yüklendi.")`;
                 </div>
                 
                 {showPhonePreview && (
-                  <div className="w-full lg:w-[380px] shrink-0 h-full bg-zinc-50 dark:bg-zinc-900 border-t lg:border-t-0 lg:border-l border-zinc-200 dark:border-zinc-850 flex flex-col overflow-hidden relative">
+                  <div className={`w-full ${
+                    results.gui_elements?.some(e => e.type === "program_pencere")
+                      ? "lg:w-[480px] xl:w-[560px]"
+                      : "lg:w-[380px]"
+                  } shrink-0 h-full bg-zinc-50 dark:bg-zinc-900 border-t lg:border-t-0 lg:border-l border-zinc-200 dark:border-zinc-850 flex flex-col overflow-hidden relative transition-all duration-200`}>
                     {/* Header bar */}
                     <div className="h-9 border-b border-zinc-200 dark:border-zinc-800/80 px-3 flex items-center justify-between shrink-0 bg-white dark:bg-zinc-950">
                       <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5 font-mono">
                         <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-                        Mobil Arayüz Simülatörü
+                        {results.gui_elements?.some(e => e.type === "program_pencere")
+                          ? "Masaüstü Program Simülatörü"
+                          : "Mobil Arayüz Simülatörü"}
                       </span>
                       <button 
                         onClick={() => setShowPhonePreview(false)}
@@ -1566,10 +1580,18 @@ print("✓ Varyn Modülü Başarıyla Yüklendi.")`;
                       </button>
                     </div>
 
-                    {/* Phone Body Wrapper */}
+                    {/* Preview Body Wrapper */}
                     <div className="flex-1 overflow-auto p-4 flex justify-center items-start bg-zinc-100/50 dark:bg-zinc-950/30">
-                      {/* Virtual Phone Container */}
-                      <div className="w-[300px] h-[520px] rounded-[36px] bg-zinc-900 border-[10px] border-zinc-800 dark:border-zinc-850 shadow-2xl relative flex flex-col overflow-hidden text-zinc-800 dark:text-zinc-200 select-text font-sans">
+                      {results.gui_elements?.some(e => e.type === "program_pencere") ? (
+                        <div className="w-full">
+                          <ProgramWindow
+                            windowData={results.gui_elements.find(e => e.type === "program_pencere")}
+                            onAction={(action, payload) => handlePhoneButtonPress(action, payload?.label || action)}
+                          />
+                        </div>
+                      ) : (
+                        /* Virtual Phone Container */
+                        <div className="w-[300px] h-[520px] rounded-[36px] bg-zinc-900 border-[10px] border-zinc-800 dark:border-zinc-850 shadow-2xl relative flex flex-col overflow-hidden text-zinc-800 dark:text-zinc-200 select-text font-sans">
                         
                         {/* Dynamic Island / Notch */}
                         <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-28 h-5 rounded-full bg-black z-20 flex items-center justify-between px-3 text-white text-[8px] font-bold">
@@ -1924,6 +1946,7 @@ print("✓ Varyn Modülü Başarıyla Yüklendi.")`;
 
                         </div>
                       </div>
+                      )}
                     </div>
 
                   </div>

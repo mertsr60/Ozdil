@@ -36,14 +36,19 @@ class Parser:
 
     def consume_id(self):
         tok = self.current()
-        if tok.type == 'ID':
-            self.pos += 1
-            return tok
-        elif tok.type == 'KEYWORD' and tok.value in ('değişken', 'degisken', 'sabit', 'tam_sayı', 'tam_sayi', 'ondalık', 'ondalik', 'metin', 'liste', 'sözlük', 'sozluk'):
+        if tok.type in ('ID', 'KEYWORD'):
             self.pos += 1
             return Token('ID', tok.value, tok.lineno, tok.col)
         else:
             raise SyntaxError(f"Beklenen tanımlayıcı (ID), fakat {tok.type} ({repr(tok.value)}) alındı. Satır: {tok.lineno}")
+
+    def consume_attr(self):
+        tok = self.current()
+        if tok.type in ('ID', 'KEYWORD'):
+            self.pos += 1
+            return Token('ID', tok.value, tok.lineno, tok.col)
+        else:
+            raise SyntaxError(f"Beklenen öznitelik adı, fakat {tok.type} ({repr(tok.value)}) alındı. Satır: {tok.lineno}")
 
     def match(self, expected_type, expected_value=None):
         tok = self.current()
@@ -136,7 +141,7 @@ class Parser:
             self.match('NEWLINE')
             body = self.parse_block()
             handlers = []
-            while self.current().type != 'EOF' and self.current().value in ('except', 'hata_yakala'):
+            while self.current().type != 'EOF' and self.current().value in ('except', 'hata_yakala', 'yakala'):
                 self.pos += 1
                 err_type = None
                 err_var = None
@@ -289,7 +294,7 @@ class Parser:
                     self.consume('OP', ')')
                 node = Cagir(node, args, lineno=node.lineno)
             elif self.match('OP', '.'):
-                attr_name = self.consume_id().value
+                attr_name = self.consume_attr().value
                 node = Nitelik(node, attr_name, lineno=node.lineno)
             elif self.match('OP', '['):
                 index_expr = self.parse_expression()

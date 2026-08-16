@@ -203,6 +203,7 @@ def decode_string_literal(literal_str):
             except ValueError:
                 return match.group(0)
         mapping = {
+            '0': '\0',
             'n': '\n',
             'r': '\r',
             't': '\t',

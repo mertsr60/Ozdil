@@ -24,6 +24,7 @@ class PluginAPI:
         # Telefon GUI Elementleri
         self.gui_elements = []
         self.current_page = None
+        self.current_program = None
 
     def fonksiyon_ekle(self, name, func):
         """
@@ -64,6 +65,7 @@ class PluginAPI:
             self.events[k] = []
         self.gui_elements.clear()
         self.current_page = None
+        self.current_program = None
 
 class PluginAPIProxy:
     _local = threading.local()

@@ -41,7 +41,7 @@ class CompilationCache:
 
 _COMPILATION_CACHE = CompilationCache(max_size=100)
 
-def run_code(custom_code, inputs_list=None, trigger_event=None):
+def run_code(custom_code, inputs_list=None, trigger_event=None, capabilities=None, limits=None, guest_env=None):
     output = ""
     error = None
     ast_dict = None
@@ -85,10 +85,20 @@ def run_code(custom_code, inputs_list=None, trigger_event=None):
         use_legacy = os.environ.get("VARYN_USE_LEGACY_INTERPRETER") == "1"
         
         if use_legacy:
-            interpreter = Interpreter(inputs_list=inputs_list)
+            interpreter = Interpreter(
+                inputs_list=inputs_list,
+                capabilities=capabilities,
+                limits=limits,
+                guest_env=guest_env
+            )
             interpreter.eval(ast_root, interpreter.global_env)
         else:
-            vm = VirtualMachine(inputs_list=inputs_list)
+            vm = VirtualMachine(
+                inputs_list=inputs_list,
+                capabilities=capabilities,
+                limits=limits,
+                guest_env=guest_env
+            )
             vm.eval(ast_root, vm.global_env)
             interpreter = vm
             

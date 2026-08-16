@@ -3,6 +3,7 @@ import math
 import random
 import time
 import sys
+import os
 
 from .bytecode import Bytecode
 from .environment import Environment
@@ -11,7 +12,15 @@ from .runtime_types import (
     wrap_value, OzValue, OzNull, OzBool, OzInt, OzFloat, OzString,
     OzList, OzMap, OzFunction, OzClass, OzBoundMethod, OzNativeCallable, OzInstance
 )
-from .object_model import get_attribute
+from .object_model import get_attribute, is_dangerous_attribute
+from .capabilities import SecurityContext, Capability, ResourceLimits
+
+def sanitize_error_message(msg):
+    if not isinstance(msg, str):
+        msg = str(msg)
+    # Strip host internal paths
+    msg = msg.replace(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")), "")
+    return msg
 
 def check_exception_match(exc, operand):
     if operand in ("Hata", "Error", "Exception", "Hepsi", "", None):
@@ -34,6 +43,10 @@ def check_exception_match(exc, operand):
         return "kütüphane" in friendly_type.lower() or exc_class_name == "ImportError" or "importerror" in friendly_type.lower()
     if operand_norm in ("dosyahatasi", "fileerror", "ioerror", "permissionerror", "filenotfounderror"):
         return "dosya" in friendly_type.lower() or exc_class_name in ("FileNotFoundError", "PermissionError", "OSError")
+    if operand_norm in ("yetkihatasi", "permissionerror", "securityerror", "guvenlikhatasi"):
+        return "yetki" in friendly_type.lower() or "güvenlik" in friendly_type.lower() or exc_class_name in ("PermissionError", "SecurityError")
+    if operand_norm in ("kaynakasimihatasi", "resourceexhaustionerror", "recursionerror", "timeouterror", "zamanasimihatasi"):
+        return "kaynak" in friendly_type.lower() or "zaman" in friendly_type.lower() or "özyineleme" in friendly_type.lower() or exc_class_name in ("RecursionError", "TimeoutError")
     if operand.lower() in exc_class_name.lower():
         return True
     if operand.lower() in friendly_type.lower():
@@ -53,11 +66,15 @@ class Frame:
         self.init_return_instance = None
 
 class VirtualMachine:
-    def __init__(self, inputs_list=None):
+    def __init__(self, inputs_list=None, capabilities=None, limits=None, guest_env=None):
         self.stdout = []
         self.inputs_list = list(inputs_list) if inputs_list is not None else []
+        self.security_context = SecurityContext(capabilities, limits, guest_env)
+        self.package_cache = {}
         self.global_env = Environment()
         self.current_frame = None
+        self.instruction_count = 0
+        self.start_time = 0.0
         self.init_builtins()
 
     def init_builtins(self):
@@ -82,14 +99,22 @@ class VirtualMachine:
         self.global_env.define('input', wrap_value(varyn_girdi))
         
         # Native safe mappings
-        self.global_env.define('uzunluk', wrap_value(lambda x: len(x.val if isinstance(x, (OzList, OzMap)) else x)))
+        self.global_env.define('uzunluk', wrap_value(lambda x: OzInt(len(x.val if isinstance(x, (OzList, OzMap, OzString)) else (x if isinstance(x, (list, dict, str)) else str(x))))))
         self.global_env.define('tam_sayı', wrap_value(lambda x: OzInt(int(x.val if isinstance(x, OzValue) else x))))
         self.global_env.define('tam_sayi', wrap_value(lambda x: OzInt(int(x.val if isinstance(x, OzValue) else x))))
         self.global_env.define('ondalık', wrap_value(lambda x: OzFloat(float(x.val if isinstance(x, OzValue) else x))))
         self.global_env.define('ondalik', wrap_value(lambda x: OzFloat(float(x.val if isinstance(x, OzValue) else x))))
-        self.global_env.define('metin', wrap_value(lambda x: OzString(str(x))))
-        self.global_env.define('aralık', wrap_value(lambda *args: OzList(list(range(*(a.val if isinstance(a, OzValue) else a for a in args))))))
-        self.global_env.define('aralik', wrap_value(lambda *args: OzList(list(range(*(a.val if isinstance(a, OzValue) else a for a in args))))))
+        self.global_env.define('metin', wrap_value(lambda x: OzString(str(x.val if isinstance(x, OzValue) else x))))
+        
+        def _aralik(*args):
+            raw_args = [int(a.val if isinstance(a, OzValue) else a) for a in args]
+            r = range(*raw_args)
+            if len(r) > self.security_context.limits.max_collection_size:
+                raise VarynError("Kaynak Aşımı Hatası (ResourceExhaustionError)", "Maksimum aralık/liste boyutu aşıldı.", 1)
+            return OzList(list(r))
+            
+        self.global_env.define('aralık', wrap_value(_aralik))
+        self.global_env.define('aralik', wrap_value(_aralik))
 
         # Math direct calls
         self.global_env.define('karekök', wrap_value(lambda x: OzFloat(math.sqrt(x.val if isinstance(x, OzValue) else x))))
@@ -130,6 +155,8 @@ class VirtualMachine:
         saved_last_return = getattr(self, 'last_return_value', OzNull())
         self.last_return_value = OzNull()
         self.current_frame = Frame(bytecode, env if env is not None else self.global_env)
+        self.instruction_count = 0
+        self.start_time = time.time()
         
         try:
             while self.current_frame is not None:
@@ -139,6 +166,22 @@ class VirtualMachine:
                     self.pop_frame(OzNull())
                     continue
                     
+                # DoS Protection: Instruction and execution time checks
+                self.instruction_count += 1
+                if self.instruction_count > self.security_context.limits.max_instructions:
+                    raise VarynError(
+                        "Kaynak Aşımı Hatası (ResourceExhaustionError)",
+                        f"Maksimum işlem adımı sınırı ({self.security_context.limits.max_instructions}) aşıldı! Sonsuz döngü tespit edildi.",
+                        1
+                    )
+                if (self.instruction_count & 1023) == 0:
+                    if time.time() - self.start_time > self.security_context.limits.max_execution_time_sec:
+                        raise VarynError(
+                            "Zaman Aşımı Hatası (TimeoutError)",
+                            f"Program çalışma süresi sınırı ({self.security_context.limits.max_execution_time_sec} saniye) aşıldı!",
+                            1
+                        )
+
                 opcode, operand = frame.bytecode.instructions[frame.ip]
                 frame.ip += 1
                 
@@ -163,7 +206,8 @@ class VirtualMachine:
                     if not handled:
                         if isinstance(e, VarynError):
                             raise e
-                        raise VarynError("Yürütme Hatası (RuntimeError)", f"Sanal makinede hata oluştu: {str(e)}", 1, e)
+                        sanitized_msg = sanitize_error_message(str(e))
+                        raise VarynError("Yürütme Hatası (RuntimeError)", f"Sanal makinede hata oluştu: {sanitized_msg}", 1, e)
             return self.last_return_value
         finally:
             self.current_frame = saved_frame
@@ -236,6 +280,8 @@ class VirtualMachine:
                 frame.ip = operand
                 
         elif opcode == 'MAKE_LIST':
+            if operand > self.security_context.limits.max_collection_size:
+                raise VarynError("Kaynak Aşımı Hatası (ResourceExhaustionError)", "Maksimum liste boyutu aşıldı.", 1)
             elts = []
             for _ in range(operand):
                 elts.append(frame.stack.pop())
@@ -243,6 +289,8 @@ class VirtualMachine:
             frame.stack.append(OzList(elts))
             
         elif opcode == 'MAKE_MAP':
+            if operand > self.security_context.limits.max_collection_size:
+                raise VarynError("Kaynak Aşımı Hatası (ResourceExhaustionError)", "Maksimum sözlük boyutu aşıldı.", 1)
             keys = []
             vals = []
             for _ in range(operand):
@@ -252,7 +300,6 @@ class VirtualMachine:
                 vals.append(v)
             keys.reverse()
             vals.reverse()
-            # Build dict map
             d = dict(zip(keys, vals))
             frame.stack.append(OzMap(d))
             
@@ -294,6 +341,12 @@ class VirtualMachine:
         elif opcode == 'LOAD_ATTR':
             obj = frame.stack.pop()
             attr = operand
+            if is_dangerous_attribute(attr):
+                raise VarynError(
+                    "Öznitelik Hatası (AttributeError)",
+                    f"Güvenlik İhlali: '{attr}' özniteliğine veya sistem nesnesine erişim engellendi.",
+                    1
+                )
             if isinstance(obj, OzInstance):
                 frame.stack.append(wrap_value(obj.get_attr(attr)))
             elif isinstance(obj, OzValue) and hasattr(obj, 'get_attr'):
@@ -312,16 +365,20 @@ class VirtualMachine:
             obj = frame.stack.pop()
             val = frame.stack.pop()
             attr = operand
+            if is_dangerous_attribute(attr):
+                raise VarynError(
+                    "Öznitelik Hatası (AttributeError)",
+                    f"Güvenlik İhlali: '{attr}' özniteliğine atama engellendi.",
+                    1
+                )
             if isinstance(obj, OzInstance):
                 obj.set_attr(attr, val)
             elif isinstance(obj, OzValue) and hasattr(obj, 'set_attr'):
                 obj.set_attr(attr, val)
+            elif isinstance(obj, dict):
+                obj[attr] = val.to_native() if isinstance(val, OzValue) else val
             else:
-                native_obj = obj.to_native() if isinstance(obj, OzValue) else obj
-                try:
-                    setattr(native_obj, attr, val.to_native() if isinstance(val, OzValue) else val)
-                except Exception as e:
-                    raise VarynError("Öznitelik Hatası (AttributeError)", f"Öznitelik ataması başarısız: {str(e)}", 1)
+                raise VarynError("Öznitelik Hatası (AttributeError)", f"'{type(obj).__name__}' nesnesine öznitelik atanamaz.", 1)
                     
         elif opcode == 'GET_ITER':
             coll = frame.stack.pop()
@@ -376,6 +433,19 @@ class VirtualMachine:
         elif opcode == 'CALL':
             num_args = operand
             callable_obj = frame.stack.pop()
+            
+            # Check Call Stack Depth (Recursion Limit)
+            depth = 0
+            curr = frame
+            while curr is not None:
+                depth += 1
+                curr = curr.prev_frame
+            if depth > self.security_context.limits.max_call_depth:
+                raise VarynError(
+                    "Özyineleme Hatası (RecursionError)",
+                    f"Maksimum çağrı derinliği ({self.security_context.limits.max_call_depth}) aşıldı!",
+                    1
+                )
             
             args = [frame.stack.pop() for _ in range(num_args)]
             args.reverse()
@@ -453,8 +523,6 @@ class VirtualMachine:
             frame.stack.append(OzBool(is_match))
             
         elif opcode == 'CLEAR_EXCEPTION':
-            # Pops exception object and clears handling status if still on stack
-            # Since exception was already bound or popped in handler bytecode, we just pass safely
             pass
             
         elif opcode == 'RERAISE_EXCEPTION':
@@ -462,19 +530,40 @@ class VirtualMachine:
             raise exc.to_native() if isinstance(exc, OzValue) else exc
             
         elif opcode == 'IMPORT_PACKAGE':
-            # Import a package dynamically!
             pkg_name = operand
-            from .package_loader import load_external_package
-            pkg_exports = load_external_package(pkg_name, 1, self.stdout)
+            if pkg_name in self.package_cache:
+                pkg_exports = self.package_cache[pkg_name]
+            else:
+                from .package_loader import load_external_package
+                pkg_exports = load_external_package(
+                    pkg_name,
+                    1,
+                    self.stdout,
+                    capabilities=self.security_context.capabilities,
+                    guest_env=self.security_context.guest_env
+                )
+                self.package_cache[pkg_name] = pkg_exports
             frame.env.define(pkg_name, wrap_value(pkg_exports))
 
     def perform_binary_op(self, left, right, op):
         left_native = left.to_native() if isinstance(left, OzValue) else left
         right_native = right.to_native() if isinstance(right, OzValue) else right
         try:
-            if op == '+': res = left_native + right_native
+            if op == '+':
+                res = left_native + right_native
+                if isinstance(res, str) and len(res) > self.security_context.limits.max_string_length:
+                    raise VarynError("Kaynak Aşımı Hatası (ResourceExhaustionError)", "Maksimum metin boyutu sınırı aşıldı.", 1)
+                if isinstance(res, list) and len(res) > self.security_context.limits.max_collection_size:
+                    raise VarynError("Kaynak Aşımı Hatası (ResourceExhaustionError)", "Maksimum liste boyutu aşıldı.", 1)
             elif op == '-': res = left_native - right_native
-            elif op == '*': res = left_native * right_native
+            elif op == '*':
+                if isinstance(left_native, str) and isinstance(right_native, int):
+                    if len(left_native) * right_native > self.security_context.limits.max_string_length:
+                        raise VarynError("Kaynak Aşımı Hatası (ResourceExhaustionError)", "Maksimum metin boyutu sınırı aşıldı.", 1)
+                if isinstance(left_native, list) and isinstance(right_native, int):
+                    if len(left_native) * right_native > self.security_context.limits.max_collection_size:
+                        raise VarynError("Kaynak Aşımı Hatası (ResourceExhaustionError)", "Maksimum liste boyutu aşıldı.", 1)
+                res = left_native * right_native
             elif op in ('/', '%'):
                 if right_native == 0:
                     raise VarynError("Sıfıra Bölme Hatası (ZeroDivisionError)", "Bir sayı sıfıra bölünemez veya mod alınamaz.", 1)
@@ -482,7 +571,11 @@ class VirtualMachine:
                     res = left_native / right_native
                 else:
                     res = left_native % right_native
-            elif op == '**': res = left_native ** right_native
+            elif op == '**':
+                if isinstance(left_native, (int, float)) and isinstance(right_native, (int, float)):
+                    if right_native > 1000:
+                        raise VarynError("Kaynak Aşımı Hatası (ResourceExhaustionError)", "Üs alma işlemi güvenlik sınırını aştı.", 1)
+                res = left_native ** right_native
             elif op == '==': res = left_native == right_native
             elif op == '!=': res = left_native != right_native
             elif op == '<': res = left_native < right_native
@@ -507,6 +600,8 @@ class VirtualMachine:
                 raise VarynError("Tür Hatası (TypeError)", f"Bilinmeyen tekli operatör '{op}'", 1)
             return wrap_value(res)
         except Exception as e:
+            if isinstance(e, VarynError):
+                raise e
             raise VarynError("Tür Hatası (TypeError)", f"'{op}' işlemi için uyumsuz veri türü ({getattr(val, 'get_type_name', lambda: type(val).__name__)()})", 1)
 
     # For evaluating standard Program/AST directly
@@ -514,4 +609,4 @@ class VirtualMachine:
         from .bytecode_compiler import BytecodeCompiler
         compiler = BytecodeCompiler()
         bytecode = compiler.compile_program(ast_root)
-        self.run(bytecode)
+        self.run(bytecode, env=env)

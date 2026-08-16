@@ -128,45 +128,27 @@ class OzInstance:
     def __repr__(self):
         return f"<{self.__klass.name} nesnesi>"
 
-from .object_model import get_attribute
+from .object_model import get_attribute, is_dangerous_attribute
+from .capabilities import SecurityContext, Capability, ResourceLimits
 
 from .package_loader import (
     validate_url_for_ssrf,
     validate_filepath_for_sandbox,
-    _PACKAGE_CACHE,
-    _BUILTIN_NAME_MAP,
-    _BUILTIN_MODULE_CACHE,
     make_restricted_builtins,
-    load_external_package
+    load_external_package,
+    get_builtin_module
 )
 
-def _web_getir(url):
-    import urllib.request
-    try:
-        validate_url_for_ssrf(url)
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=10) as response:
-            return response.read().decode('utf-8')
-    except Exception as e:
-        raise RuntimeError(f"Web isteği başarısız oldu: {str(e)}")
-
-def _web_gonder(url, data_dict):
-    import urllib.request
-    import urllib.parse
-    try:
-        validate_url_for_ssrf(url)
-        data_bytes = urllib.parse.urlencode(data_dict).encode('utf-8')
-        req = urllib.request.Request(url, data=data_bytes, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=10) as response:
-            return response.read().decode('utf-8')
-    except Exception as e:
-        raise RuntimeError(f"Web gönderme isteği başarısız oldu: {str(e)}")
-
 class Interpreter:
-    def __init__(self, inputs_list=None):
+    def __init__(self, inputs_list=None, capabilities=None, limits=None, guest_env=None):
         self.stdout = []
         self.inputs_list = list(inputs_list) if inputs_list else []
+        self.security_context = SecurityContext(capabilities, limits, guest_env)
+        self.package_cache = {}
         self.global_env = Environment()
+        self.call_depth = 0
+        self.instruction_count = 0
+        self.start_time = 0.0
         self.init_builtins()
         
         # O(1) AST nodes to evaluation methods routing table
@@ -228,8 +210,15 @@ class Interpreter:
         self.global_env.define('ondalık', float)
         self.global_env.define('ondalik', float)
         self.global_env.define('metin', str)
-        self.global_env.define('aralık', range)
-        self.global_env.define('aralik', range)
+        
+        def _safe_range(*args):
+            r = range(*args)
+            if len(r) > self.security_context.limits.max_collection_size:
+                raise VarynError("Kaynak Aşımı Hatası (ResourceExhaustionError)", "Maksimum aralık/liste boyutu aşıldı.", 1)
+            return r
+            
+        self.global_env.define('aralık', _safe_range)
+        self.global_env.define('aralik', _safe_range)
         
         # Register math direct calls for convenience/backwards compatibility
         self.global_env.define('karekök', math.sqrt)
@@ -312,10 +301,16 @@ class Interpreter:
         elif target_cls is Nitelik:
             obj = self.eval(target.value, env)
             attr = target.attr
-            try:
-                setattr(obj, attr, val)
-            except Exception as e:
-                raise VarynError("Öznitelik Hatası (AttributeError)", f"Öznitelik ataması başarısız: {str(e)}", node.lineno)
+            if is_dangerous_attribute(attr):
+                raise VarynError("Öznitelik Hatası (AttributeError)", f"Güvenlik İhlali: '{attr}' özniteliğine atama engellendi.", node.lineno)
+            if isinstance(obj, dict):
+                obj[attr] = val
+            elif hasattr(obj, 'set_attr'):
+                obj.set_attr(attr, val)
+            elif isinstance(obj, OzInstance):
+                obj.set_attr(attr, val)
+            else:
+                raise VarynError("Öznitelik Hatası (AttributeError)", f"'{type(obj).__name__}' nesnesine öznitelik atanamaz.", node.lineno)
         else:
             raise VarynError("Yazım Hatası (SyntaxError)", "Geçersiz atama hedefi.", node.lineno)
         return val
@@ -389,6 +384,12 @@ class Interpreter:
         args = [self.eval(arg, env) for arg in node.args]
         if not callable(func):
             raise VarynError("Tür Hatası (TypeError)", f"Nesne çağrılabilir bir işlem veya fonksiyon değil.", node.lineno)
+        
+        self.call_depth += 1
+        if self.call_depth > self.security_context.limits.max_call_depth:
+            self.call_depth -= 1
+            raise VarynError("Özyineleme Hatası (RecursionError)", f"Maksimum çağrı derinliği ({self.security_context.limits.max_call_depth}) aşıldı!", node.lineno)
+            
         try:
             return func(*args)
         except ReturnException as r:
@@ -399,6 +400,8 @@ class Interpreter:
             if isinstance(e, VarynError):
                 raise e
             raise VarynError("Yürütme Hatası (RuntimeError)", f"İşlem yürütülürken hata: {str(e)}", node.lineno, original_exception=e)
+        finally:
+            self.call_depth -= 1
 
     def eval_Eger(self, node, env):
         if self.eval(node.test, env):
@@ -514,176 +517,31 @@ class Interpreter:
         raise ReturnException(val)
 
     def eval_Getir(self, node, env):
-        canonical = _BUILTIN_NAME_MAP.get(node.name)
-        if canonical and canonical in _BUILTIN_MODULE_CACHE:
-            env.define(node.name, _BUILTIN_MODULE_CACHE[canonical])
-            return
-
-        if node.name in ('matematik', 'math'):
-            math_ns = {
-                'karekök': math.sqrt, 'karekok': math.sqrt,
-                'faktöriyel': math.factorial, 'faktoriyel': math.factorial,
-                'sinüs': math.sin, 'sinus': math.sin,
-                'kosinüs': math.cos, 'kosinus': math.cos,
-                'tanjant': math.tan,
-                'radyan': math.radians,
-                'derece': math.degrees,
-                'üs': math.pow, 'us': math.pow,
-                'mutlak': math.fabs,
-                'aşağı_yuvarla': math.floor, 'asagi_yuvarla': math.floor,
-                'yukarı_yuvarla': math.ceil, 'yukari_yuvarla': math.ceil,
-                'ebob': math.gcd, 'en_buyuk_ortak_bolen': math.gcd,
-                'pi_sayısı': math.pi, 'pi_sayisi': math.pi,
-                'pi': math.pi, 'e': math.e
-            }
-            try:
-                import os
-                package_dirs = [
-                    os.path.abspath(os.path.expanduser("~/.varyn/packages")),
-                    LOCAL_PACKAGES_DIR,
-                ]
-                found = False
-                for pdir in package_dirs:
-                    if os.path.isdir(os.path.join(pdir, "matematik")):
-                        found = True
-                        break
-                if found:
-                    ext_ns = load_external_package("matematik", node.lineno, self.stdout)
-                    for k, v in ext_ns.items():
-                        if k not in math_ns:
-                            math_ns[k] = v
-            except Exception:
-                pass
-            _BUILTIN_MODULE_CACHE['matematik'] = math_ns
-            env.define(node.name, math_ns)
-        elif node.name in ('rastgele', 'random'):
-            def _rastgele_sayi(min_val, max_val):
-                return random.randint(int(min_val), int(max_val))
-
-            def _rastgele_sec(liste):
-                if not liste:
-                    return None
-                return random.choice(liste)
-
-            def _rastgele_karistir(liste):
-                copied = list(liste)
-                random.shuffle(copied)
-                return copied
-
-            def _sifre_olustur(uzunluk):
-                import secrets
-                characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
-                return "".join(secrets.choice(characters) for _ in range(int(uzunluk)))
-
-            random_ns = {
-                'ondalık_seç': random.random, 'ondalik_sec': random.random,
-                'tamsayı_seç': random.randint, 'tamsayi_sec': random.randint,
-                'aralıkta_seç': random.randrange, 'aralikta_sec': random.randrange,
-                'seç': random.choice, 'sec': random.choice,
-                'karıştır': random.shuffle, 'karistir': random.shuffle,
-                'örnek_seç': random.sample, 'ornek_sec': random.sample,
-                'rastgele_sayı': _rastgele_sayi, 'rastgele_sayi': _rastgele_sayi,
-                'rastgele_seç': _rastgele_sec, 'rastgele_sec': _rastgele_sec,
-                'rastgele_karıştır': _rastgele_karistir, 'rastgele_karistir': _rastgele_karistir,
-                'şifre_oluştur': _sifre_olustur, 'sifre_olustur': _sifre_olustur
-            }
-            try:
-                import os
-                package_dirs = [
-                    os.path.abspath(os.path.expanduser("~/.varyn/packages")),
-                    LOCAL_PACKAGES_DIR,
-                ]
-                found = False
-                for pdir in package_dirs:
-                    if os.path.isdir(os.path.join(pdir, "rastgele")):
-                        found = True
-                        break
-                if found:
-                    ext_ns = load_external_package("rastgele", node.lineno, self.stdout)
-                    for k, v in ext_ns.items():
-                        if k not in random_ns:
-                            random_ns[k] = v
-            except Exception:
-                pass
-            _BUILTIN_MODULE_CACHE['rastgele'] = random_ns
-            env.define(node.name, random_ns)
-        elif node.name in ('zaman', 'time'):
-            def _zaman_damgasi():
-                return time.time()
+        if node.name in self.package_cache:
+            env.define(node.name, self.package_cache[node.name])
+            return None
             
-            def _bicimlendir(format_str, t=None):
-                if t is None:
-                    t = time.localtime()
-                return time.strftime(format_str, t)
-
-            time_ns = {
-                'bekle': time.sleep, 'yerel_zaman': time.localtime, 'tarih_saat': time.ctime,
-                'saniye': time.time,
-                'zaman_damgası': _zaman_damgasi, 'zaman_damgasi': _zaman_damgasi,
-                'biçimlendir': _bicimlendir, 'bicimlendir': _bicimlendir
-            }
-            _BUILTIN_MODULE_CACHE['zaman'] = time_ns
-            env.define(node.name, time_ns)
-        elif node.name in ('web', 'internet'):
-            web_ns = {
-                'getir': _web_getir,
-                'gönder': _web_gonder, 'gonder': _web_gonder
-            }
-            _BUILTIN_MODULE_CACHE['web'] = web_ns
-            env.define(node.name, web_ns)
-        elif node.name in ('sistem', 'system'):
-            sistem_ns = {
-                'isim': os.name,
-                'platform': sys.platform,
-                'argümanlar': sys.argv, 'argumanlar': sys.argv,
-                'çevre': dict(os.environ), 'cevre': dict(os.environ),
-                'dosya_var_mı': os.path.exists, 'dosya_var_mi': os.path.exists,
-                'klasör_yarat': os.makedirs, 'klasor_yarat': os.makedirs
-            }
-            _BUILTIN_MODULE_CACHE['sistem'] = sistem_ns
-            env.define(node.name, sistem_ns)
-        elif node.name == 'json':
-            json_ns = {
-                'çöz': json.loads, 'coz': json.loads,
-                'kodla': json.dumps
-            }
-            _BUILTIN_MODULE_CACHE['json'] = json_ns
-            env.define(node.name, json_ns)
-        elif node.name in ('dosya', 'file'):
-            def _dosya_oku(filepath):
-                validate_filepath_for_sandbox(filepath)
-                with open(filepath, 'r', encoding='utf-8') as f:
-                    return f.read()
-            def _dosya_yaz(filepath, content):
-                validate_filepath_for_sandbox(filepath)
-                with open(filepath, 'w', encoding='utf-8') as f:
-                    f.write(str(content))
-            def _dosya_ekle(filepath, content):
-                validate_filepath_for_sandbox(filepath)
-                with open(filepath, 'a', encoding='utf-8') as f:
-                    f.write(str(content))
-            dosya_ns = {
-                'oku': _dosya_oku,
-                'yaz': _dosya_yaz,
-                'ekle': _dosya_ekle
-            }
-            _BUILTIN_MODULE_CACHE['dosya'] = dosya_ns
-            env.define(node.name, dosya_ns)
-        else:
-            try:
-                pkg_ns = load_external_package(node.name, node.lineno, self.stdout)
-                env.define(node.name, pkg_ns)
+        try:
+            pkg_ns = load_external_package(
+                node.name,
+                node.lineno,
+                self.stdout,
+                capabilities=self.security_context.capabilities,
+                guest_env=self.security_context.guest_env
+            )
+            self.package_cache[node.name] = pkg_ns
+            env.define(node.name, pkg_ns)
+            
+            import varyn.plugin_api
+            for func_name, func_obj in getattr(varyn.plugin_api.plugin, "functions", {}).items():
+                env.define(func_name, func_obj)
+            for cmd_name, cmd_obj in getattr(varyn.plugin_api.plugin, "commands", {}).items():
+                env.define(cmd_name, cmd_obj)
                 
-                import varyn.plugin_api
-                for func_name, func_obj in varyn.plugin_api.plugin.functions.items():
-                    env.define(func_name, func_obj)
-                for cmd_name, cmd_obj in varyn.plugin_api.plugin.commands.items():
-                    env.define(cmd_name, cmd_obj)
-                    
-            except VarynError as varyn_err:
-                raise varyn_err
-            except Exception as e:
-                raise VarynError("Kütüphane Hatası (ImportError)", f"'{node.name}' kütüphanesi yüklenirken hata oluştu: {str(e)}", node.lineno)
+        except VarynError as varyn_err:
+            raise varyn_err
+        except Exception as e:
+            raise VarynError("Kütüphane Hatası (ImportError)", f"'{node.name}' kütüphanesi yüklenirken hata oluştu: {str(e)}", node.lineno)
         return None
 
     def eval_DurNode(self, node, env):

@@ -136,6 +136,21 @@ export const KEYWORDS: KeywordInfo[] = [
   { keyword: 'k_ortalama_kumele', pythonEquivalent: 'K-Means clustering', description: 'Çok boyutlu veri noktalarını K gruba kümeleyen makine öğrenmesi algoritması.', usage: 'yapay_zeka.k_ortalama_kumele([[1,1], [5,5]], 2, 5)' },
   { keyword: 'knn_siniflandir', pythonEquivalent: 'K-Nearest Neighbors classification', description: 'En yakın K adet eğitim örneğine bakarak test noktasının kategorisini sınıflandırır.', usage: 'yapay_zeka.knn_siniflandir(egitim, test, 3)' },
   { keyword: 'yapay_sinir_hucresi', pythonEquivalent: 'artificial neuron simulation', description: 'Girdiler, ağırlıklar, sapma ve aktivasyon fonksiyonu (relu, adim, yok) ile yapay sinir hücresini (perseptron) simüle eder.', usage: 'yapay_zeka.yapay_sinir_hucresi([0.5, 0.2], [1, -1], 0.1, "relu")' },
+  // Masaüstü ve Pencere Programı Kütüphanesi (program)
+  { keyword: 'program', pythonEquivalent: 'gui window software framework', description: 'ÖzDil ile tam donanımlı masaüstü programları, form uygulamaları, veri panelleri ve pencereli yazılımlar geliştirme kütüphanesi.', usage: 'getir program' },
+  { keyword: 'olustur', pythonEquivalent: 'create window', description: 'Yeni bir masaüstü pencere uygulaması başlatır.', usage: 'program.olustur("Program Adı", 640, 480, "karanlik")' },
+  { keyword: 'menu_cubugu', pythonEquivalent: 'menubar', description: 'Pencerenin üstüne Dosya, Düzenle gibi masaüstü menü çubuğu ekler.', usage: 'program.menu_cubugu(["Dosya", "Düzenle", "Görünüm", "Yardım"])' },
+  { keyword: 'arac_cubugu', pythonEquivalent: 'toolbar', description: 'Pencereye hızlı erişim araç çubuğu butonları ekler.', usage: 'program.arac_cubugu(["Yeni", "Kaydet", "Çalıştır", "Ayarlar"])' },
+  { keyword: 'metin_kutusu', pythonEquivalent: 'input text field', description: 'Kullanıcıdan metin girdisi almak için form kutusu ekler.', usage: 'program.metin_kutusu("Kullanıcı Adı", "Mert", "Adınızı yazın")' },
+  { keyword: 'sayi_kutusu', pythonEquivalent: 'number spinbox', description: 'Sayısal giriş kutusu ekler.', usage: 'program.sayi_kutusu("Miktar", 1, 100, 10)' },
+  { keyword: 'onay_kutusu', pythonEquivalent: 'checkbox', description: 'Onay kutusu (Checkbox) ekler.', usage: 'program.onay_kutusu("Beni Hatırla", dogru)' },
+  { keyword: 'secim_kutusu', pythonEquivalent: 'dropdown combobox', description: 'Açılır seçim kutusu (Dropdown) ekler.', usage: 'program.secim_kutusu("Kategori", ["Elektronik", "Giyim", "Kitap"])' },
+  { keyword: 'kaydirici', pythonEquivalent: 'slider', description: 'Değer aralığı kaydırıcısı (Slider) ekler.', usage: 'program.kaydirici("Ses Düzeyi", 0, 100, 75)' },
+  { keyword: 'tablo', pythonEquivalent: 'data table grid', description: 'Dinamik veri tablosu / grid bileşeni oluşturur.', usage: 'program.tablo(["ID", "Ürün", "Fiyat"], [["1", "Laptop", "25.000 TL"]])' },
+  { keyword: 'kod_kutusu', pythonEquivalent: 'code viewer / editor', description: 'Program içine kod düzenleme ve görüntüleme alanı ekler.', usage: 'program.kod_kutusu("# Kod buraya", "varyn")' },
+  { keyword: 'terminal_kutusu', pythonEquivalent: 'embedded terminal / logs', description: 'Pencere içine gömülü konsol ve log akış alanı ekler.', usage: 'program.terminal_kutusu(["[Sistem] Hazır..."])' },
+  { keyword: 'durum_cubugu', pythonEquivalent: 'statusbar', description: 'Pencerenin altına durum çubuğu ekler.', usage: 'program.durum_cubugu("Hazır", "v1.0.0", "tamam")' },
+  { keyword: 'ornek_program', pythonEquivalent: 'run preset program template', description: 'Hazır program şablonlarını çalıştırır (hesap_makinesi, not_defteri, gorev_yoneticisi, veri_tablosu).', usage: 'program.ornek_program("hesap_makinesi")' },
 ];
 
 export const EXAMPLES: ExampleCode[] = [
@@ -744,6 +759,81 @@ yazdir("Yapay Sinir Hücresi Çıktıları:")
 yazdir(" - ReLU Aktivasyonlu:", sonuc_relu)
 yazdir(" - Adım (Step) Aktivasyonlu:", sonuc_adim)
 yazdir("==========================================")
+`
+  },
+  {
+    title: "Masaüstü Envanter ve Stok Yönetim Programı (program)",
+    description: "Yeni 'program' kütüphanesini kullanarak menü çubuğu, araçlar, arama kutusu, veri tablosu ve istatistik kartları içeren tam donanımlı masaüstü yazılımı oluşturun.",
+    code: `# Yeni 'program' kütüphanesi ile Masaüstü Envanter ve Satış Yönetim Programı!
+getir program
+
+# 1. Uygulama Penceresi Oluştur
+program.olustur("Envanter & Depo Yönetim Sistemi v2.0", 720, 520, "karanlik", "kutu")
+
+# 2. Üst Menü Çubuğu
+program.menu_cubugu(["Dosya", "Kayıtlar", "Raporlar", "Veri Tabanı", "Yardım"])
+
+# 3. Hızlı Eylem Araç Çubuğu
+program.arac_cubugu(["Yeni Ürün", "Dışa Aktar (CSV)", "Filtrele", "Yedek Al"])
+
+# 4. Program Başlığı ve Açıklaması
+program.baslik("Depo ve Stok Kontrol Merkezi", "Gerçek zamanlı ürün ve stok takip yazılımı")
+
+# 5. Özet İstatistik Kartları
+program.kart("Toplam Ciro", "148.500 ₺", "+%14 Bu Hafta", "para")
+program.kart("Kritik Stok Uyarıları", "2 Ürün", "Dikkat", "uyari")
+
+# 6. Dinamik Veri Tablosu (Grid)
+program.tablo(["Barkod", "Ürün Adı", "Kategori", "Birim Fiyat", "Stok"], [
+    ["869001", "Varyn Ultra Dizüstü", "Bilgisayar", "32.500 ₺", "14 Adet"],
+    ["869002", "RGB Mekanik Klavye", "Donanım", "1.450 ₺", "85 Adet"],
+    ["869003", "Kablosuz Oyuncu Faresi", "Aksesuar", "420 ₺", "110 Adet"],
+    ["869004", "27 inç 165Hz Monitör", "Ekran", "6.900 ₺", "4 Adet"]
+])
+
+# 7. Form Alanları ve Etkileşim Butonu
+program.metin_kutusu("Hızlı Ürün Arama", "", "Ürün adı veya barkod giriniz...")
+program.buton("Yeni Ürün Kaydı Ekle", "yeni_urun_ac", "basari", "arti")
+
+# 8. Pencereli Durum Çubuğu
+program.durum_cubugu("4 Ürün Kaydı Listelendi", "Sistem: Çevrimiçi | v2.0.0", "tamam")
+
+yazdir("Masaüstü envanter programı başarıyla çalıştırıldı!")
+`
+  },
+  {
+    title: "Sistem ve Süreç Yöneticisi Programı (program)",
+    description: "CPU/RAM metrikleri, işlem tablosu, ilerleme çubukları ve terminal logları içeren gelişmiş bir sistem yönetim aracı.",
+    code: `# Sistem ve Görev Yöneticisi Masaüstü Programı
+getir program
+
+program.olustur("Varyn Sistem & Süreç Yöneticisi", 700, 500, "karanlik", "sistem")
+program.menu_cubugu(["İşlemler", "Performans", "Ağ", "Görünüm", "Yardım"])
+program.arac_cubugu(["Yenile", "Süreç Durdur", "Öncelik Ata", "Ayarlar"])
+
+program.baslik("Performans ve Görevler", "Sistem kaynakları optimum seviyede")
+
+program.kart("İşlemci (CPU)", "%16 Aktif (4 Çekirdek)", "Normal", "islemci")
+program.kart("Bellek (RAM)", "3.2 GB / 16.0 GB", "%20", "bellek")
+
+program.ilerleme(20, "RAM Kullanım Durumu: %20")
+
+program.tablo(["PID", "İşlem Adı", "Kullanıcı", "CPU %", "RAM"], [
+    ["1024", "varyn_ide_core", "mert", "%8.2", "120 MB"],
+    ["1082", "python_vm_worker", "sistem", "%4.5", "85 MB"],
+    ["1140", "desktop_renderer", "mert", "%3.1", "64 MB"],
+    ["1205", "package_guard", "sistem", "%0.2", "18 MB"]
+])
+
+program.terminal_kutusu([
+    "[09:41:00] Varyn Çekirdeği başlatıldı.",
+    "[09:41:02] Tüm modüller ve güvenlik izinleri doğrulandı.",
+    "[09:41:05] Sistem izleyici aktif ve dinlemede..."
+])
+
+program.durum_cubugu("4 Süreç Aktif", "CPU: 3.4 GHz | UTF-8", "tamam")
+
+yazdir("Sistem yöneticisi programı aktif!")
 `
   }
 ];

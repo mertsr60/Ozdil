@@ -163,9 +163,16 @@ class OzString(OzValue):
         
     def __add__(self, other):
         o_val = other.val if isinstance(other, OzString) else (other.to_native() if isinstance(other, OzValue) else other)
-        return OzString(self.val + str(o_val))
+        res = self.val + str(o_val)
+        if len(res) > 10_000_000:
+            raise VarynError("Kaynak Aşımı Hatası (ResourceExhaustionError)", "Maksimum metin boyutu sınırı (10MB) aşıldı.", 1)
+        return OzString(res)
     def __mul__(self, other):
-        n_val = other.val if isinstance(other, OzInt) else other
+        n_val = other.val if isinstance(other, OzInt) else (other.to_native() if isinstance(other, OzValue) else other)
+        if int(n_val) < 0:
+            n_val = 0
+        if len(self.val) * int(n_val) > 10_000_000:
+            raise VarynError("Kaynak Aşımı Hatası (ResourceExhaustionError)", "Maksimum metin boyutu sınırı (10MB) aşıldı.", 1)
         return OzString(self.val * int(n_val))
         
     def __getitem__(self, idx):
@@ -175,10 +182,26 @@ class OzString(OzValue):
         return len(self.val)
         
     def get_attr(self, name):
+        if not isinstance(name, str) or name.startswith('_') or '__' in name:
+            raise AttributeError(f"'Metin' nesnesinin '{name}' adında bir özelliği yok.")
         if name in ('büyük_harf', 'buyuk_harf', 'upper'):
             return OzNativeCallable(name, lambda: tr_upper(self.val))
         if name in ('küçük_harf', 'kucuk_harf', 'lower'):
             return OzNativeCallable(name, lambda: tr_lower(self.val))
+        if name in ('uzunluk', 'len'):
+            return OzNativeCallable(name, lambda: len(self.val))
+        if name in ('parçala', 'parcala', 'split'):
+            return OzNativeCallable(name, lambda sep=None: OzList([OzString(s) for s in self.val.split(sep.to_native() if isinstance(sep, OzValue) else sep) if sep is not None] if sep is not None else [OzString(s) for s in self.val.split()]))
+        if name in ('değiştir', 'degistir', 'replace'):
+            return OzNativeCallable(name, lambda old, new: OzString(self.val.replace(str(old.to_native() if isinstance(old, OzValue) else old), str(new.to_native() if isinstance(new, OzValue) else new))))
+        if name in ('kırp', 'kirp', 'strip'):
+            return OzNativeCallable(name, lambda: OzString(self.val.strip()))
+        if name in ('başlar_mı', 'baslar_mi', 'startswith'):
+            return OzNativeCallable(name, lambda prefix: OzBool(self.val.startswith(str(prefix.to_native() if isinstance(prefix, OzValue) else prefix))))
+        if name in ('biter_mi', 'endswith'):
+            return OzNativeCallable(name, lambda suffix: OzBool(self.val.endswith(str(suffix.to_native() if isinstance(suffix, OzValue) else suffix))))
+        if name in ('bul', 'find'):
+            return OzNativeCallable(name, lambda sub: OzInt(self.val.find(str(sub.to_native() if isinstance(sub, OzValue) else sub))))
         raise AttributeError(f"'Metin' nesnesinin '{name}' adında bir özelliği yok.")
 
 class OzList(OzValue):
@@ -189,6 +212,8 @@ class OzList(OzValue):
             self.val = [wrap_value(v) for v in val]
         else:
             self.val = list(val)
+        if len(self.val) > 100_000:
+            raise VarynError("Kaynak Aşımı Hatası (ResourceExhaustionError)", "Maksimum liste boyutu (100.000 eleman) aşıldı.", 1)
     def to_native(self):
         return [v.to_native() if isinstance(v, OzValue) else v for v in self.val]
     def get_type_name(self):
@@ -198,6 +223,8 @@ class OzList(OzValue):
         
     def __add__(self, other):
         if isinstance(other, OzList):
+            if len(self.val) + len(other.val) > 100_000:
+                raise VarynError("Kaynak Aşımı Hatası (ResourceExhaustionError)", "Maksimum liste boyutu (100.000 eleman) aşıldı.", 1)
             return OzList(self.val + other.val)
         raise TypeError(f"Liste ile {type(other).__name__} toplanamaz.")
         
@@ -213,8 +240,14 @@ class OzList(OzValue):
         return iter(self.val)
         
     def get_attr(self, name):
+        if not isinstance(name, str) or name.startswith('_') or '__' in name:
+            raise AttributeError(f"'Liste' nesnesinin '{name}' adında bir özelliği yok.")
         if name in ('ekle', 'append'):
-            return OzNativeCallable(name, lambda item: self.val.append(wrap_value(item)))
+            def _ekle(item):
+                if len(self.val) >= 100_000:
+                    raise VarynError("Kaynak Aşımı Hatası (ResourceExhaustionError)", "Maksimum liste boyutu aşıldı.", 1)
+                self.val.append(wrap_value(item))
+            return OzNativeCallable(name, _ekle)
         if name in ('çıkar', 'cikar', 'remove'):
             return OzNativeCallable(name, lambda item: self.val.remove(wrap_value(item)))
         if name in ('temizle', 'clear'):
@@ -241,6 +274,8 @@ class OzMap(OzValue):
             self.val = {wrap_value(k): wrap_value(v) for k, v in val.items()}
         else:
             self.val = val
+        if len(self.val) > 100_000:
+            raise VarynError("Kaynak Aşımı Hatası (ResourceExhaustionError)", "Maksimum sözlük boyutu (100.000 eleman) aşıldı.", 1)
     def to_native(self):
         return {
             (k.to_native() if isinstance(k, OzValue) else k):
@@ -264,6 +299,8 @@ class OzMap(OzValue):
                 return v
         raise KeyError(repr(key))
     def __setitem__(self, key, value):
+        if len(self.val) >= 100_000 and wrap_value(key) not in self.val:
+            raise VarynError("Kaynak Aşımı Hatası (ResourceExhaustionError)", "Maksimum sözlük boyutu aşıldı.", 1)
         wrapped_key = wrap_value(key)
         wrapped_val = wrap_value(value)
         self.val[wrapped_key] = wrapped_val
@@ -281,6 +318,8 @@ class OzMap(OzValue):
         return iter(self.val)
         
     def get_attr(self, name):
+        if not isinstance(name, str) or name.startswith('_') or '__' in name:
+            raise AttributeError(f"'Sözlük' nesnesinin '{name}' adında bir özelliği yok.")
         if name in ('temizle', 'clear'):
             return OzNativeCallable(name, lambda: self.val.clear())
         if name in ('sil', 'pop'):
@@ -291,6 +330,8 @@ class OzMap(OzValue):
             return OzNativeCallable(name, lambda: list(v.to_native() if isinstance(v, OzValue) else v for v in self.val.values()))
         if name in ('çıkar', 'cikar', 'remove'):
             return OzNativeCallable(name, lambda key: self.val.pop(wrap_value(key), None))
+        if name in ('uzunluk', 'len'):
+            return OzNativeCallable(name, lambda: len(self.val))
         raise AttributeError(f"'Sözlük' nesnesinin '{name}' adında bir özelliği yok.")
 
 class OzFunction(OzValue):
@@ -310,6 +351,8 @@ class OzFunction(OzValue):
         return "İşlem"
     def __repr__(self):
         return f"<işlem {self.name}>"
+    def get_attr(self, name):
+        raise AttributeError(f"'İşlem' nesnesinin '{name}' adında bir özelliği yok.")
     def call(self, passed_args):
         if len(passed_args) != len(self.args):
             raise VarynError(
@@ -347,6 +390,8 @@ class OzClass(OzValue):
         return "Sınıf"
     def __repr__(self):
         return f"<sınıf {self.name}>"
+    def get_attr(self, name):
+        raise AttributeError(f"'Sınıf' nesnesinin '{name}' adında bir özelliği yok.")
     def call(self, passed_args):
         instance = OzInstance(self)
         init_method = self.methods.get('__init__')
@@ -371,6 +416,8 @@ class OzBoundMethod(OzValue):
         return "Metot"
     def __repr__(self):
         return f"<bağlı metot {self.method.name}>"
+    def get_attr(self, name):
+        raise AttributeError(f"'Metot' nesnesinin '{name}' adında bir özelliği yok.")
     def call(self, passed_args):
         return self.method.call([self.instance] + passed_args)
 
@@ -385,12 +432,16 @@ class OzInstance(OzValue):
     def __repr__(self):
         return f"<{self.klass.name} nesnesi>"
     def get_attr(self, name):
+        if not isinstance(name, str) or name.startswith('_') or '__' in name:
+            raise AttributeError(f"'{self.klass.name}' nesnesinin '{name}' özelliğine erişilemez.")
         if name in self.fields:
             return self.fields[name]
         if name in self.klass.methods:
             return OzBoundMethod(self.klass.methods[name], self)
         raise AttributeError(f"'{self.klass.name}' nesnesinin '{name}' adında bir özelliği yok.")
     def set_attr(self, name, value):
+        if not isinstance(name, str) or name.startswith('_') or '__' in name:
+            raise AttributeError(f"'{self.klass.name}' nesnesinin '{name}' özelliğine atama yapılamaz.")
         self.fields[name] = wrap_value(value)
 
 class OzNativeCallable(OzValue):
@@ -403,6 +454,8 @@ class OzNativeCallable(OzValue):
         return "Yerleşik İşlem"
     def __repr__(self):
         return f"<yerleşik işlem {self.name}>"
+    def get_attr(self, name):
+        raise AttributeError(f"'Yerleşik İşlem' nesnesinin '{name}' adında bir özelliği yok.")
     def call(self, passed_args):
         native_args = [v.to_native() if isinstance(v, OzValue) else v for v in passed_args]
         res = self.func(*native_args)
