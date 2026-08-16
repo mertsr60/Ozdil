@@ -1,10 +1,10 @@
 {
   "isim": "matematik",
-  "surum": "1.1.0",
+  "surum": "1.0.0",
   "yazar": "varyn_toplulugu",
   "tur": "python",
   "aciklama": "Gelişmiş matematiksel işlemler ve sabitler kütüphanesi.",
   "izinler": [],
   "bagimliliklar": [],
-  "imza": "4600f772961e363c40a153c29d09d854a7b7167c8072696783ed007e098771ce"
+  "imza": "468f1c7f7b7ad730f19d7f3b89ed296a06a1f0a5e193480657755fe64067b0be96c885b1cdaba84fda6594754f317d50077661318e431cb3f9ab0399c1f15f9cc6d35e253636dccb519f51760acef827c8525342716a9c07c2087ecc1c5d2f7a7f5ea46daaa7ebd7060cf100003d53a46b7da1b7cf77789556bb2620c2f6baad"
 }

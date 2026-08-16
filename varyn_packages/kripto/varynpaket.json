@@ -1,10 +1,10 @@
 {
   "isim": "kripto",
-  "surum": "1.1.0",
+  "surum": "1.0.0",
   "yazar": "güvenlik_timi",
   "tur": "python",
   "aciklama": "Veri özetleme (MD5, SHA256), Base64 kodlama/çözme ve Sezar şifreleme kütüphanesi.",
   "izinler": [],
   "bagimliliklar": [],
-  "imza": "f6bb92b60136dfe4e787260ab51c4d8896f0bd8e2f23d623a23a3ddbfa0a6bc5"
+  "imza": "dc86753a1ce9ad0b3f0db3f86cd5ece93b03388efd6a4057573c31d64b7d052295b9f1ab68a62384bf2d51defe8e2df6ed596cfb427123715a790ea7f3a5dc80392f60b9c3c11a9da77e00e9a92bdc88523e7e4128145aa12b61f5f81f39eee1fb3599fed93bfb7ea4b9d346c42bcad8ba65389fda098e3df66f19c9ccf8af4"
 }

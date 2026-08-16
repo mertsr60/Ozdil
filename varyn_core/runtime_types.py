@@ -323,11 +323,17 @@ class OzFunction(OzValue):
         for arg_name, arg_val in zip(self.args, passed_args):
             local_env.define(arg_name, wrap_value(arg_val))
         
-        try:
-            for stmt in self.body:
-                self.interpreter.eval(stmt, local_env)
-        except ReturnException as r:
-            return wrap_value(r.value)
+        # Check if we have bytecode
+        if getattr(self, 'bytecode', None) is not None:
+            if hasattr(self.interpreter, 'run'):
+                return self.interpreter.run(self.bytecode, local_env)
+        
+        if self.body is not None:
+            try:
+                for stmt in self.body:
+                    self.interpreter.eval(stmt, local_env)
+            except ReturnException as r:
+                return wrap_value(r.value)
         return OzNull()
 
 class OzClass(OzValue):

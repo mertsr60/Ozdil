@@ -1,10 +1,10 @@
 {
   "isim": "finans",
-  "surum": "1.1.0",
+  "surum": "1.0.0",
   "yazar": "finans_analisti",
   "tur": "python",
   "aciklama": "Bileşik faiz hesaplama, döviz çevirme, enflasyon etkisi ve kredi taksit tablosu çıkaran finansal analiz kütüphanesi.",
   "izinler": [],
   "bagimliliklar": [],
-  "imza": "ee584e23a1f73c456c0363b7e4b1acd6f445b51385234e3071e68fac8ed7094c"
+  "imza": "2f58c09f3c131aee1e0394f4c8f78d17e829ebea3a5f13caf5f451e9d10ffaf6083dfa0fad8b6c19200ba81d0f4226cbc4c8626a4e83a42ad21b592f94d2ab2b9e2072a39d9b2169edbb7b9a1525890460dfadd5b93d4769c5671a933b880e1fa809482f462a801b708a9c2a58d01ade55f9d12faa9b82483db1628fdfaf5e75"
 }

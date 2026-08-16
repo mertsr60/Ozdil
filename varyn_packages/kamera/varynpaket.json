@@ -1,0 +1,13 @@
+{
+  "isim": "kamera",
+  "surum": "1.0.4",
+  "yazar": "sistem_gelistirici",
+  "tur": "python",
+  "aciklama": "Kamera kontrolleri ve fotoğraf çekme işlevleri sağlayan Python eklentisi.",
+  "izinler": [
+    "kamera",
+    "dosya_sistemi"
+  ],
+  "bagimliliklar": [],
+  "imza": "94d422e1c0afb7c4ac0ef71cb0409e849a7be0e41ff3efbb7cdb4551233842fce97847294e9661480d08d14eddf2c253d35ff8588f38c826c7ba0e90d83ab1c0dfc509983d22d2bed7644d5739ff6c714dd3823995b9dc76a0425f3ed8a98f1f5588e5200b32a42856e9152d624041daf3701edbaf4b336d589720d62ac61539"
+}

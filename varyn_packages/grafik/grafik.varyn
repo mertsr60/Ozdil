@@ -1,0 +1,25 @@
+# Grafik ve Konsol Çizim Kütüphanesi
+
+işlem çizgi(karakter, uzunluk):
+    değişken s = ""
+    döngü i içinde aralık(uzunluk):
+        s = s + karakter
+    yazdır(s)
+
+işlem kutu(en, boy):
+    çizgi("*", en)
+    döngü i içinde aralık(boy - 2):
+        değişken s = "*"
+        döngü j içinde aralık(en - 2):
+            s = s + " "
+        s = s + "*"
+        yazdır(s)
+    çizgi("*", en)
+
+işlem grafik_ciz(veriler):
+    yazdır("--- Sütun Grafiği ---")
+    döngü x içinde veriler:
+        değişken bar = ""
+        döngü i içinde aralık(x):
+            bar = bar + "█"
+        yazdır(bar + " (" + metin(x) + ")")

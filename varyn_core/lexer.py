@@ -106,9 +106,12 @@ def tokenize_line(line_str, lineno):
     return tokens
 
 def lex_varyn(code_str):
+    import unicodedata
+    code_str = unicodedata.normalize('NFC', code_str)
     lines = code_str.splitlines()
     all_tokens = []
     indent_stack = [0]
+    nesting_depth = 0
     
     for idx, line in enumerate(lines):
         lineno = idx + 1
@@ -137,20 +140,32 @@ def lex_varyn(code_str):
         if not line_tokens:
             continue
             
-        # Handle indents and dedents
-        current_indent = indent_stack[-1]
-        if indent_level > current_indent:
-            indent_stack.append(indent_level)
-            all_tokens.append(Token('INDENT', '    ', lineno, 1))
-        elif indent_level < current_indent:
-            while indent_level < indent_stack[-1]:
-                indent_stack.pop()
-                all_tokens.append(Token('DEDENT', '', lineno, 1))
-            if indent_level != indent_stack[-1]:
-                raise IndentationError("Girinti düzeyleri eşleşmiyor.")
+        # Handle indents and dedents only if we are not inside brackets
+        if nesting_depth == 0:
+            current_indent = indent_stack[-1]
+            if indent_level > current_indent:
+                indent_stack.append(indent_level)
+                all_tokens.append(Token('INDENT', '    ', lineno, 1))
+            elif indent_level < current_indent:
+                while indent_level < indent_stack[-1]:
+                    indent_stack.pop()
+                    all_tokens.append(Token('DEDENT', '', lineno, 1))
+                if indent_level != indent_stack[-1]:
+                    raise IndentationError("Girinti düzeyleri eşleşmiyor.")
                 
         all_tokens.extend(line_tokens)
-        all_tokens.append(Token('NEWLINE', '\n', lineno, len(line) + 1))
+        
+        # Update nesting depth based on the added tokens
+        for tok in line_tokens:
+            if tok.type == 'OP':
+                if tok.value in ('(', '[', '{'):
+                    nesting_depth += 1
+                elif tok.value in (')', ']', '}'):
+                    nesting_depth = max(0, nesting_depth - 1)
+                    
+        # Append NEWLINE only if we are not inside brackets
+        if nesting_depth == 0:
+            all_tokens.append(Token('NEWLINE', '\n', lineno, len(line) + 1))
         
     # Clean up trailing indents
     while len(indent_stack) > 1:

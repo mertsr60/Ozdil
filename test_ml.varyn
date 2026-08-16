@@ -1,0 +1,58 @@
+getir yapay_zeka
+
+yazdır("==========================================")
+yazdır("     ÖZDİL YAPAY ZEKA VE ML TESTİ         ")
+yazdır("==========================================")
+
+# 1. Doğrusal Regresyon (Linear Regression)
+yazdır("[1] DOĞRUSAL REGRESYON (TAHMİN MODELİ)")
+değişken ev_buyuklukleri = [50, 70, 90, 110, 130]
+değişken ev_fiyatlari = [1500, 2100, 2600, 3100, 3800]
+
+değişken model = yapay_zeka.dogrusal_regresyon_egit(ev_buyuklukleri, ev_fiyatlari)
+yazdır("Eğitilen Model Parametreleri:")
+yazdır(" - Eğim (w):", model["egim"])
+yazdır(" - Kesim Noktası (b):", model["kesim_noktasi"])
+
+değişken yeni_ev = 100
+değişken tahmin_fiyat = yapay_zeka.dogrusal_regresyon_tahmin_et(model, yeni_ev)
+yazdır(" -> " + metin(yeni_ev) + " m2 ev için fiyat tahmini: " + metin(tahmin_fiyat) + " bin TL")
+yazdır("------------------------------------------")
+
+# 2. K-Means Clustering (Kümeleme)
+yazdır("[2] K-MEANS KÜMELEME ALGORİTMASI")
+değişken veri_noktalari = [
+    [1.0, 1.0], [1.5, 1.2], [1.2, 0.8],
+    [5.0, 5.0], [5.5, 5.2], [4.8, 4.9]
+]
+
+değişken k_sonuc = yapay_zeka.k_ortalama_kumele(veri_noktalari, 2, 5)
+yazdır("Bulunan Küme Merkezleri:")
+yazdır(" - Merkez 1:", k_sonuc["merkezler"][0])
+yazdır(" - Merkez 2:", k_sonuc["merkezler"][1])
+yazdır("------------------------------------------")
+
+# 3. K-Nearest Neighbors (k-NN Sınıflandırma)
+yazdır("[3] K-EN YAKIN KOMŞU (k-NN) SINIFLANDIRMA")
+değişken egitim_seti = [
+    [[1, 2], "meyve"], [[1.5, 1.8], "meyve"],
+    [[8, 9], "sebze"], [[9, 10], "sebze"]
+]
+değişken test_nesnesi = [1.2, 2.1]
+değişken sinif_sonucu = yapay_zeka.knn_siniflandir(egitim_seti, test_nesnesi, 3)
+yazdır("Test Nesnesi [1.2, 2.1] Sınıflandırma Sonucu:", sinif_sonucu)
+yazdır("------------------------------------------")
+
+# 4. Yapay Sinir Hücresi (Single Perceptron Node)
+yazdır("[4] YAPAY SİNİR HÜCRESİ SİMÜLASYONU")
+değişken girdiler = [0.8, -0.5]
+değişken agirliklar = [2.0, 1.2]
+değişken sapma = -0.4
+
+değişken sonuc_relu = yapay_zeka.yapay_sinir_hucresi(girdiler, agirliklar, sapma, "relu")
+değişken sonuc_adim = yapay_zeka.yapay_sinir_hucresi(girdiler, agirliklar, sapma, "adim")
+
+yazdır("Yapay Sinir Hücresi Çıktıları:")
+yazdır(" - ReLU Aktivasyonlu:", sonuc_relu)
+yazdır(" - Adım (Step) Aktivasyonlu:", sonuc_adim)
+yazdır("==========================================")

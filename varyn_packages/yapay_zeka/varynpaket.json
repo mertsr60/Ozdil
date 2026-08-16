@@ -1,10 +1,10 @@
 {
   "isim": "yapay_zeka",
-  "surum": "1.1.0",
-  "yazar": "varyn_toplulugu",
+  "surum": "1.1.2",
+  "yazar": "ai_uzmani",
   "tur": "varyn",
-  "aciklama": "Tamamen %100 ÖzDil ile yazılmış yapay zeka kütüphanesi. Doğrusal regresyon, k-means kümeleme, k-NN sınıflandırma ve yapay sinir hücresi simülasyonu içerir.",
+  "aciklama": "Temel yapay zeka ve doğrusal regresyon tahmin modeli, k-means kümeleme, k-NN sınıflandırma ve yapay sinir hücresi simülasyonu.",
   "izinler": [],
   "bagimliliklar": [],
-  "imza": "a2a003d2162af50ba0f2fed5dfa5cbbb8325435742c78a8010df99d98fdf698a"
+  "imza": "884a04c10ce9bc0a2ac7e4f5c8c9781d92d78dfecb01efe3e7ff4f9ee5b965a161e16384be7cefc3fa958e060f9f94c7824d1f4e410b0d080fa2b00de38da387b39b9581c9b091b30a0bbb66df9ea75ca212cdc40eec612b090aa220aa0548ce3b72d89a57f5b1c9514f2f99e6ef8605dd12e212ee0e37a5cfa5493a00d0f2ed"
 }

@@ -1,10 +1,10 @@
 {
   "isim": "oyun",
-  "surum": "1.1.0",
+  "surum": "1.0.0",
   "yazar": "retro_kodcu",
   "tur": "python",
   "aciklama": "Taş-kağıt-makas simülasyonu, sayı tahmin rehberliği, şans zarları ve skor tablosu oluşturucu içeren eğlenceli oyun araçları.",
   "izinler": [],
   "bagimliliklar": [],
-  "imza": "f4f1ff5cc746833e29a578e4e5182e7ab22cc24c916e4dc5caeac392a6d66c76"
+  "imza": "33c7e0b0882b5209e4adba81f1c56f8b87e139d7873d62d27edc228b4521105400ffd4af8265feca270070e1da95f77faa80d6269b21504d7a7012975bad701382c70f467b501c4650401d8193ba378041a759cc4e4aaceaad75afb01a3f5e174d0a7af1b50e43c8505a55c61290371dae5c2259c8f3dcb6e937950768b38323"
 }

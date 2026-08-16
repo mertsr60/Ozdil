@@ -1,0 +1,137 @@
+yazdır("==================================================")
+yazdır("   VARYN TÜM KÜTÜPHANELERİN KAPSAMLI TESTİ")
+yazdır("==================================================")
+
+# 1. algoritma
+yazdır("[1] test: algoritma")
+getir algoritma
+değişken dizi = [5, 2, 9, 1, 5, 6]
+algoritma.sirala(dizi)
+yazdır("  - sirala [5,2,9,1,5,6] ->", dizi)
+yazdır("  - en_buyuk ->", algoritma.en_buyuk(dizi))
+yazdır("  - en_kucuk ->", algoritma.en_kucuk(dizi))
+yazdır("  - toplam ->", algoritma.toplam(dizi))
+yazdır("  - ortalama ->", algoritma.ortalama(dizi))
+yazdır("  - asal_mi(17) ->", algoritma.asal_mi(17))
+yazdır("  - ebob(24, 36) ->", algoritma.ebob(24, 36))
+yazdır("  - ekok(12, 18) ->", algoritma.ekok(12, 18))
+yazdır("  - fibonacci(8) ->", algoritma.fibonacci(8))
+yazdır("--------------------------------------------------")
+
+# 2. matematik
+yazdır("[2] test: matematik")
+getir matematik
+yazdır("  - karekok(64) ->", matematik.karekok(64))
+yazdır("  - us(2, 5) ->", matematik.us(2, 5))
+yazdır("--------------------------------------------------")
+
+# 3. renkler
+yazdır("[3] test: renkler")
+getir renkler
+yazdır("  - kirmizi(\"Hata!\") ->", renkler.kirmizi("Hata!"))
+yazdır("  - yesil(\"Başarılı!\") ->", renkler.yesil("Başarılı!"))
+yazdır("  - mavi(\"Bilgi!\") ->", renkler.mavi("Bilgi!"))
+yazdır("--------------------------------------------------")
+
+# 4. hesap
+yazdır("[4] test: hesap")
+getir hesap
+yazdır("  - renkli_topla(10, 20) ->", hesap.renkli_topla(10, 20))
+yazdır("--------------------------------------------------")
+
+# 5. grafik
+yazdır("[5] test: grafik")
+getir grafik
+yazdır("  - kutu(4, 3) ->")
+grafik.kutu(4, 3)
+değişken veri_noktalari = [2, 5, 1, 8, 4]
+yazdır("  - grafik_ciz ->")
+grafik.grafik_ciz(veri_noktalari)
+yazdır("--------------------------------------------------")
+
+# 6. kamera
+yazdır("[6] test: kamera")
+getir kamera
+yazdır("  - kamera_ac() ->", kamera.kamera_ac())
+yazdır("  - foto_cek() ->", kamera.foto_cek())
+yazdır("--------------------------------------------------")
+
+# 7. veri_analizi
+yazdır("[7] test: veri_analizi")
+getir veri_analizi
+değişken v_dizi = [10, 20, 30, 40, 50]
+yazdır("  - ortalama ->", veri_analizi.ortalama(v_dizi))
+yazdır("  - medyan ->", veri_analizi.medyan(v_dizi))
+yazdır("--------------------------------------------------")
+
+# 8. yapay_zeka
+yazdır("[8] test: yapay_zeka")
+getir yapay_zeka
+değişken model = yapay_zeka.dogrusal_regresyon_egit([1, 2, 3], [2, 4, 6])
+yazdır("  - dogrusal_regresyon_tahmin_et(5) ->", yapay_zeka.dogrusal_regresyon_tahmin_et(model, 5))
+yazdır("--------------------------------------------------")
+
+# 9. tarih_saat
+yazdır("[9] test: tarih_saat")
+getir tarih_saat
+yazdır("  - simdi() ->", tarih_saat.simdi())
+yazdır("  - turkce_tarih() ->", tarih_saat.turkce_tarih())
+yazdır("  - gun_farki(\"2026-08-01\", \"2026-08-11\") ->", tarih_saat.gun_farki("2026-08-01", "2026-08-11"))
+yazdır("--------------------------------------------------")
+
+# 10. metin_isleme
+yazdır("[10] test: metin_isleme")
+getir metin_isleme
+yazdır("  - turkce_buyut(\"türkçe karakterler\") ->", metin_isleme.turkce_buyut("türkçe karakterler"))
+yazdır("  - turkce_kucult(\"İSTANBUL IĞDIR\") ->", metin_isleme.turkce_kucult("İSTANBUL IĞDIR"))
+yazdır("  - slug_yap(\"Bu bir Örnek Metindir!\") ->", metin_isleme.slug_yap("Bu bir Örnek Metindir!"))
+yazdır("  - sesli_say(\"merhaba dunya\") ->", metin_isleme.sesli_say("merhaba dunya"))
+yazdır("--------------------------------------------------")
+
+# 11. kripto
+yazdır("[11] test: kripto")
+getir kripto
+yazdır("  - md5_uret(\"varyn\") ->", kripto.md5_uret("varyn"))
+yazdır("  - sha256_uret(\"varyn\") ->", kripto.sha256_uret("varyn"))
+değişken kodlanmis = kripto.base64_kodla("Varyn Language")
+yazdır("  - base64_kodla ->", kodlanmis)
+yazdır("  - base64_coz ->", kripto.base64_coz(kodlanmis))
+yazdır("  - sezar_sifrele(\"abc\", 3) ->", kripto.sezar_sifrele("abc", 3))
+yazdır("--------------------------------------------------")
+
+# 12. rastgele
+yazdır("[12] test: rastgele")
+getir rastgele
+yazdır("  - rastgele_sayi(10, 50) ->", rastgele.rastgele_sayi(10, 50))
+yazdır("  - rastgele_sec([1, 2, 3, 4, 5]) ->", rastgele.rastgele_sec([1, 2, 3, 4, 5]))
+yazdır("  - sifre_olustur(12) ->", uzunluk(rastgele.sifre_olustur(12)))
+yazdır("--------------------------------------------------")
+
+# 13. finans
+yazdır("[13] test: finans")
+getir finans
+yazdır("  - faiz_hesapla(1000, 15, 2) ->", finans.faiz_hesapla(1000, 15, 2))
+yazdır("  - doviz_cevir(100, 32.5) ->", finans.doviz_cevir(100, 32.5))
+yazdır("  - enflasyon_etkisi(1000, 50, 3) ->", finans.enflasyon_etkisi(1000, 50, 3))
+yazdır("  - kredi_taksit(50000, 1.89, 12) ->", finans.kredi_taksit(50000, 1.89, 12))
+yazdır("--------------------------------------------------")
+
+# 14. oyun
+yazdır("[14] test: oyun")
+getir oyun
+yazdır("  - tas_kagit_makas(\"tas\") ->", oyun.tas_kagit_makas("tas"))
+yazdır("  - sayi_tahmin_et(5, 5) ->", oyun.sayi_tahmin_et(5, 5))
+yazdır("  - zar_at() ->", oyun.zar_at())
+yazdır("--------------------------------------------------")
+
+# 15. telefon
+yazdır("[15] test: telefon")
+getir telefon
+yazdır("  - sayfa(\"Anasayfa\") ->", telefon.sayfa("Anasayfa"))
+yazdır("  - baslik(\"Merhaba\") ->", telefon.baslik("Merhaba"))
+yazdır("  - kart(\"Başlık\", \"İçerik\") ->", telefon.kart("Başlık", "İçerik"))
+yazdır("  - kaydirici(\"Ses\", 0, 100, 50) ->", telefon.kaydirici("Ses", 0, 100, 50))
+yazdır("  - sayfa_bitir() ->", telefon.sayfa_bitir())
+yazdır("==================================================")
+yazdır("       TÜM KÜTÜPHANELER BAŞARIYLA ÇALIŞTI!")
+yazdır("==================================================")

@@ -220,9 +220,6 @@ class BytecodeCompiler:
             self.patch(setup_ip, len(self.instructions))
             
             for idx, (err_type, err_var, handler_body) in enumerate(node.handlers):
-                if idx < len(node.handlers) - 1:
-                    self.emit('DUP')
-                    
                 self.emit('CHECK_EXCEPTION_TYPE', err_type)
                 jmp_next = self.emit('JUMP_IF_FALSE', 0)
                 

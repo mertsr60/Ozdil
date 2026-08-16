@@ -110,4 +110,3 @@ işlem fibonacci(n):
         değişken yeni_eleman = dizi[n2 - 1] + dizi[n2 - 2]
         dizi.ekle(yeni_eleman)
     döndür dizi
-

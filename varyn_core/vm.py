@@ -63,8 +63,7 @@ class VirtualMachine:
     def init_builtins(self):
         # 1. Custom Turkish yazdır (print)
         def varyn_yazdir(*args):
-            # Print strings natively
-            text = " ".join(repr(wrap_value(arg)) if isinstance(arg, OzValue) else str(arg) for arg in args)
+            text = " ".join(repr(wrap_value(arg)) for arg in args)
             self.stdout.append(text + "\n")
             
         # 2. Custom Turkish girdi (input)
@@ -126,41 +125,49 @@ class VirtualMachine:
         self.global_env.define('seç', wrap_value(lambda x: wrap_value(random.choice(x.val if isinstance(x, OzList) else x))))
         self.global_env.define('sec', wrap_value(lambda x: wrap_value(random.choice(x.val if isinstance(x, OzList) else x))))
 
-    def run(self, bytecode):
-        self.current_frame = Frame(bytecode, self.global_env)
+    def run(self, bytecode, env=None):
+        saved_frame = self.current_frame
+        saved_last_return = getattr(self, 'last_return_value', OzNull())
+        self.last_return_value = OzNull()
+        self.current_frame = Frame(bytecode, env if env is not None else self.global_env)
         
-        while self.current_frame is not None:
-            frame = self.current_frame
-            if frame.ip >= len(frame.bytecode.instructions):
-                # Implicit return of OzNull
-                self.pop_frame(OzNull())
-                continue
-                
-            opcode, operand = frame.bytecode.instructions[frame.ip]
-            frame.ip += 1
-            
-            try:
-                self.execute_instruction(opcode, operand, frame)
-            except Exception as e:
-                # Catch exception and try to handle it in exception_handlers stack
-                handled = False
-                # Traversal of current frame and previous frames to find exception handler
-                curr = frame
-                while curr is not None:
-                    if curr.exception_handlers:
-                        handler_ip = curr.exception_handlers.pop()
-                        # Clean call stack up to curr
-                        self.current_frame = curr
-                        curr.stack.append(wrap_value(e))  # Push exception onto stack
-                        curr.ip = handler_ip
-                        handled = True
-                        break
-                    curr = curr.prev_frame
+        try:
+            while self.current_frame is not None:
+                frame = self.current_frame
+                if frame.ip >= len(frame.bytecode.instructions):
+                    # Implicit return of OzNull
+                    self.pop_frame(OzNull())
+                    continue
                     
-                if not handled:
-                    if isinstance(e, VarynError):
-                        raise e
-                    raise VarynError("Yürütme Hatası (RuntimeError)", f"Sanal makinede hata oluştu: {str(e)}", 1, e)
+                opcode, operand = frame.bytecode.instructions[frame.ip]
+                frame.ip += 1
+                
+                try:
+                    self.execute_instruction(opcode, operand, frame)
+                except Exception as e:
+                    # Catch exception and try to handle it in exception_handlers stack
+                    handled = False
+                    # Traversal of current frame and previous frames to find exception handler
+                    curr = frame
+                    while curr is not None:
+                        if curr.exception_handlers:
+                            handler_ip = curr.exception_handlers.pop()
+                            # Clean call stack up to curr
+                            self.current_frame = curr
+                            curr.stack.append(wrap_value(e))  # Push exception onto stack
+                            curr.ip = handler_ip
+                            handled = True
+                            break
+                        curr = curr.prev_frame
+                        
+                    if not handled:
+                        if isinstance(e, VarynError):
+                            raise e
+                        raise VarynError("Yürütme Hatası (RuntimeError)", f"Sanal makinede hata oluştu: {str(e)}", 1, e)
+            return self.last_return_value
+        finally:
+            self.current_frame = saved_frame
+            self.last_return_value = saved_last_return
 
     def pop_frame(self, return_val):
         frame = self.current_frame
@@ -172,6 +179,10 @@ class VirtualMachine:
                 prev.stack.append(return_val)
             self.current_frame = prev
         else:
+            if frame.init_return_instance is not None:
+                self.last_return_value = frame.init_return_instance
+            else:
+                self.last_return_value = return_val
             self.current_frame = None
 
     def execute_instruction(self, opcode, operand, frame):
@@ -327,7 +338,6 @@ class VirtualMachine:
                 next_val = next(iterator)
                 frame.stack.append(wrap_value(next_val))
             except StopIteration:
-                frame.stack.pop()  # Pop iterator
                 frame.ip = operand  # Jump to end of loop
                 
         elif opcode == 'POP_ITER':
