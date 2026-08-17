@@ -1,0 +1,10 @@
+{
+  "isim": "fizik",
+  "surum": "1.0.0",
+  "yazar": "bilim_toplulugu",
+  "tur": "python",
+  "aciklama": "2D ve 3D temel fizik, hareket denklemleri, serbest düşme, atışlar ve enerji simülasyonu.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "3308bc473bb204da4d301c3a55a2d9c62479cc670fda59e6a6e3642ef4fc3f018ba695e13737cbe9b3ec12363b6420635d0184042c7d83e55a0222c76333886bfd5b6ee1cb6f6d001ccc5e596be19481eecb9c6dd5c6dd9a74b09a0c04495d938574e6eaebb9023b2471e3810e69ee5879d0ac480df0172399b074eea490cb6c"
+}

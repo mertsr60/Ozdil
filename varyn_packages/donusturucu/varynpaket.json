@@ -1,0 +1,10 @@
+{
+  "isim": "donusturucu",
+  "surum": "1.0.0",
+  "yazar": "donusum_ekibi",
+  "tur": "python",
+  "aciklama": "Sıcaklık (C, F, K), uzunluk, ağırlık, alan ve dijital veri boyutu dönüştürme kütüphanesi.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "2a68d96e5147af56e0667a96f97361132d5a7ab1172782cb102fa8741374746fc8bba6c7b2b2820f9d34a49c5844e1474e0fb37f540c38df8999bfd5582887840689bb2a80df46e28906ed407dc7bdc8f5a3004c2388c8029d23ab55ba2cbfe6db6182c939d7e714d2b1a1411ac5fc89c64f9d042ca490939de3e67d172e3d4f"
+}

@@ -1,0 +1,105 @@
+# İleri İstatistik ve Veri Madenciliği Kütüphanesi - %100 Saf Varyn
+
+işlem varyans(dizi):
+    değişken n = uzunluk(dizi)
+    eğer n <= 1:
+        döndür 0.0
+    değişken toplam = 0.0
+    döngü x içinde dizi:
+        toplam = toplam + x
+    değişken ortalama = toplam / n
+    değişken kareler_toplami = 0.0
+    döngü x içinde dizi:
+        değişken fark = x - ortalama
+        kareler_toplami = kareler_toplami + (fark * fark)
+    döndür kareler_toplami / n
+
+işlem standart_sapma(dizi):
+    değişken v = varyans(dizi)
+    eğer v == 0.0:
+        döndür 0.0
+    değişken kok = v / 2.0
+    döngü i içinde aralık(20):
+        kok = (kok + (v / kok)) / 2.0
+    döndür kok
+
+işlem dizi_sirala_kopyala(dizi):
+    değişken kopya = []
+    döngü x içinde dizi:
+        kopya.ekle(x)
+    değişken n = uzunluk(kopya)
+    döngü i içinde aralık(n):
+        döngü j içinde aralık(n - i - 1):
+            eğer kopya[j] > kopya[j + 1]:
+                değişken temp = kopya[j]
+                kopya[j] = kopya[j + 1]
+                kopya[j + 1] = temp
+    döndür kopya
+
+işlem ceyrekler(dizi):
+    değişken sirali = dizi_sirala_kopyala(dizi)
+    değişken n = uzunluk(sirali)
+    eğer n == 0:
+        döndür {"q1": 0, "q2": 0, "q3": 0}
+    değişken q1_idx = tam_sayi(n * 0.25)
+    değişken q2_idx = tam_sayi(n * 0.50)
+    değişken q3_idx = tam_sayi(n * 0.75)
+    döndür {
+        "q1": sirali[q1_idx],
+        "q2": sirali[q2_idx],
+        "q3": sirali[q3_idx]
+    }
+
+işlem ceyrekler_acikligi(dizi):
+    değişken c = ceyrekler(dizi)
+    döndür c["q3"] - c["q1"]
+
+işlem min_max_olcekle(dizi):
+    değişken n = uzunluk(dizi)
+    eğer n == 0:
+        döndür []
+    değişken min_val = dizi[0]
+    değişken max_val = dizi[0]
+    döngü x içinde dizi:
+        eğer x < min_val:
+            min_val = x
+        eğer x > max_val:
+            max_val = x
+    değişken aralik_farki = max_val - min_val
+    eğer aralik_farki == 0:
+        değişken sifir_dizi = []
+        döngü i içinde aralık(n):
+            sifir_dizi.ekle(0.0)
+        döndür sifir_dizi
+    değişken sonuc = []
+    döngü x içinde dizi:
+        sonuc.ekle((x - min_val) / aralik_farki)
+    döndür sonuc
+
+işlem pearson_korelasyon(x_dizi, y_dizi):
+    değişken n = uzunluk(x_dizi)
+    eğer n == 0 veya n != uzunluk(y_dizi):
+        döndür 0.0
+    değişken sum_x = 0.0
+    değişken sum_y = 0.0
+    döngü i içinde aralık(n):
+        sum_x = sum_x + x_dizi[i]
+        sum_y = sum_y + y_dizi[i]
+    değişken ort_x = sum_x / n
+    değişken ort_y = sum_y / n
+    değişken pay = 0.0
+    değişken payda_x = 0.0
+    değişken payda_y = 0.0
+    döngü i içinde aralık(n):
+        değişken dx = x_dizi[i] - ort_x
+        değişken dy = y_dizi[i] - ort_y
+        pay = pay + (dx * dy)
+        payda_x = payda_x + (dx * dx)
+        payda_y = payda_y + (dy * dy)
+    değişken payda = payda_x * payda_y
+    eğer payda <= 0.0:
+        döndür 0.0
+    değişken kok = payda / 2.0
+    döngü i içinde aralık(20):
+        kok = (kok + (payda / kok)) / 2.0
+    döndür pay / kok

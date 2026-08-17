@@ -329,6 +329,37 @@ def make_restricted_builtins(permissions, stdout_ref):
         if hasattr(builtins, name):
             safe_builtins[name] = getattr(builtins, name)
             
+    # Sandboxed __import__
+    forbidden_modules = {
+        "os": "dosya_sistemi",
+        "subprocess": "sistem",
+        "sys": "sistem",
+        "socket": "ag",
+        "urllib": "ag",
+        "requests": "ag",
+        "shutil": "dosya_sistemi",
+        "pathlib": "dosya_sistemi",
+        "ctypes": "sistem",
+        "platform": "sistem",
+        "builtins": "sistem",
+        "importlib": "sistem",
+        "pickle": "sistem",
+        "marshal": "sistem",
+        "shelve": "sistem",
+        "runpy": "sistem",
+        "gc": "sistem"
+    }
+
+    def sandboxed_import(name, globals=None, locals=None, fromlist=(), level=0):
+        base_module = name.split('.')[0]
+        if base_module in forbidden_modules:
+            req_perm = forbidden_modules[base_module]
+            if req_perm not in permissions:
+                raise PermissionError(f"Güvenlik İhlali: '{name}' modülünü içe aktarmak için '{req_perm}' izni gereklidir.")
+        return builtins.__import__(name, globals, locals, fromlist, level)
+
+    safe_builtins['__import__'] = sandboxed_import
+
     # Custom print
     safe_builtins['print'] = lambda *args: stdout_ref.append(" ".join(str(x) for x in args) + "\n")
     

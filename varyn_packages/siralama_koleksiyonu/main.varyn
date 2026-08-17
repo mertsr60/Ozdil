@@ -1,0 +1,63 @@
+# Sıralama ve Arama Koleksiyonu Kütüphanesi - %100 Saf Varyn
+
+işlem kabarcik_sirala(dizi):
+    değişken d = []
+    döngü x içinde dizi:
+        d.ekle(x)
+    değişken n = uzunluk(d)
+    döngü i içinde aralık(n):
+        döngü j içinde aralık(n - i - 1):
+            eğer d[j] > d[j + 1]:
+                değişken temp = d[j]
+                d[j] = d[j + 1]
+                d[j + 1] = temp
+    döndür d
+
+işlem secmeli_sirala(dizi):
+    değişken d = []
+    döngü x içinde dizi:
+        d.ekle(x)
+    değişken n = uzunluk(d)
+    döngü i içinde aralık(n):
+        değişken min_idx = i
+        döngü j içinde aralık(i + 1, n):
+            eğer d[j] < d[min_idx]:
+                min_idx = j
+        eğer min_idx != i:
+            değişken temp = d[i]
+            d[i] = d[min_idx]
+            d[min_idx] = temp
+    döndür d
+
+işlem eklemeli_sirala(dizi):
+    değişken d = []
+    döngü x içinde dizi:
+        d.ekle(x)
+    değişken n = uzunluk(d)
+    döngü i içinde aralık(1, n):
+        değişken anahtar = d[i]
+        değişken j = i - 1
+        iken j >= 0 ve d[j] > anahtar:
+            d[j + 1] = d[j]
+            j = j - 1
+        d[j + 1] = anahtar
+    döndür d
+
+işlem sirali_mi(dizi):
+    değişken n = uzunluk(dizi)
+    döngü i içinde aralık(n - 1):
+        eğer dizi[i] > dizi[i + 1]:
+            döndür yanlış
+    döndür doğru
+
+işlem saymali_sirala(dizi, max_deger):
+    değişken sayac = []
+    döngü i içinde aralık(max_deger + 1):
+        sayac.ekle(0)
+    döngü x içinde dizi:
+        sayac[x] = sayac[x] + 1
+    değişken sonuc = []
+    döngü i içinde aralık(max_deger + 1):
+        döngü k içinde aralık(sayac[i]):
+            sonuc.ekle(i)
+    döndür sonuc

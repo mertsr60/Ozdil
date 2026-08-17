@@ -1,0 +1,78 @@
+# Ağaç ve Çizge Algoritmaları Kütüphanesi - %100 Saf Varyn
+
+işlem bst_dugum_olustur(deger):
+    döndür {"deger": deger, "sol": boş, "sag": boş}
+
+işlem bst_ekle(kok, deger):
+    eğer kok == boş:
+        döndür bst_dugum_olustur(deger)
+    eğer deger < kok["deger"]:
+        kok["sol"] = bst_ekle(kok["sol"], deger)
+    değilse_eğer deger > kok["deger"]:
+        kok["sag"] = bst_ekle(kok["sag"], deger)
+    döndür kok
+
+işlem bst_ara(kok, hedef):
+    eğer kok == boş:
+        döndür yanlış
+    eğer kok["deger"] == hedef:
+        döndür doğru
+    eğer hedef < kok["deger"]:
+        döndür bst_ara(kok["sol"], hedef)
+    değilse:
+        döndür bst_ara(kok["sag"], hedef)
+
+işlem bst_sirali_dizi(kok):
+    eğer kok == boş:
+        döndür []
+    değişken sonuc = []
+    değişken sol_dizi = bst_sirali_dizi(kok["sol"])
+    döngü x içinde sol_dizi:
+        sonuc.ekle(x)
+    sonuc.ekle(kok["deger"])
+    değişken sag_dizi = bst_sirali_dizi(kok["sag"])
+    döngü x içinde sag_dizi:
+        sonuc.ekle(x)
+    döndür sonuc
+
+işlem graf_olustur():
+    döndür {}
+
+işlem graf_kenar_ekle(graf, dugum1, dugum2):
+    değişken k1 = metin(dugum1)
+    değişken k2 = metin(dugum2)
+    eğer değil (k1 içinde graf):
+        graf[k1] = []
+    eğer değil (k2 içinde graf):
+        graf[k2] = []
+    graf[k1].ekle(k2)
+    graf[k2].ekle(k1)
+    döndür graf
+
+işlem dugum_derecesi(graf, dugum):
+    değişken k = metin(dugum)
+    eğer k içinde graf:
+        döndür uzunluk(graf[k])
+    döndür 0
+
+işlem graf_bfs(graf, baslangic):
+    değişken ziyaret_edilen = []
+    değişken kuyruk = [metin(baslangic)]
+    ziyaret_edilen.ekle(metin(baslangic))
+    iken uzunluk(kuyruk) > 0:
+        değişken simdiki = kuyruk[0]
+        değişken yeni_k = []
+        döngü i içinde aralık(1, uzunluk(kuyruk)):
+            yeni_k.ekle(kuyruk[i])
+        kuyruk = yeni_k
+        
+        eğer simdiki içinde graf:
+            döngü komsu içinde graf[simdiki]:
+                değişken var_mi = yanlış
+                döngü z içinde ziyaret_edilen:
+                    eğer z == komsu:
+                        var_mi = doğru
+                eğer değil var_mi:
+                    ziyaret_edilen.ekle(komsu)
+                    kuyruk.ekle(komsu)
+    döndür ziyaret_edilen

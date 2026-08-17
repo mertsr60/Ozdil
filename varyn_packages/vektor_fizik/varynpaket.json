@@ -1,0 +1,10 @@
+{
+  "isim": "vektor_fizik",
+  "surum": "1.0.0",
+  "yazar": "varyn_toplulugu",
+  "tur": "varyn",
+  "aciklama": "Saf Varyn ile 2D/3D Vektör Matematiği, Büyüklük, Normalizasyon, Nokta Çarpımı ve AABB Çarpışma Testi.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "68f83d2378afdeb0111867dfbfa8646d781cd091deb617b78ebee2eb3032f10468ce47425cdbd9f14b159e67614e522e2e79cb42f332938df3bf74932eea8b077a6688b5d59559c86f10d8d7983c731302d11e2e08bf14fe8fa1ade849882e35716c592b7c5fa85cfccaa59c33b4d6a64fd6075a32c66d976fdf9c593ff1b69d"
+}

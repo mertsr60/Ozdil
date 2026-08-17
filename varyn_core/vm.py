@@ -582,6 +582,7 @@ class VirtualMachine:
             elif op == '>': res = left_native > right_native
             elif op == '<=': res = left_native <= right_native
             elif op == '>=': res = left_native >= right_native
+            elif op in ('içinde', 'icinde', 'in'): res = left_native in right_native
             else:
                 raise VarynError("Tür Hatası (TypeError)", f"Bilinmeyen operatör '{op}'", 1)
             return wrap_value(res)

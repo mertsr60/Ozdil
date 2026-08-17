@@ -1,0 +1,10 @@
+{
+  "isim": "bulmaca_zeka",
+  "surum": "1.0.0",
+  "yazar": "varyn_toplulugu",
+  "tur": "varyn",
+  "aciklama": "Saf Varyn ile Sudoku 4x4 Doğrulayıcı, Hanoi Kuleleri Çözücü, N-Vezir Tehdit Kontrolü ve Anagram Testi.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "4c97323c2d58076e42f4aa1f012078dfc6953e970311b8f5a61ab9c75e3d5b05b388c276f9eeefbdb818cbb9107244be7da6ffc34855ef5e5cbaedb9573bb266fba355c999137df985a21b15ed7078c5df3158fcf70c9f992d7c780bcce576cec9a23287887cef464001d77ce3fdc116293da461a3e834b3b289f7077540c2c6"
+}

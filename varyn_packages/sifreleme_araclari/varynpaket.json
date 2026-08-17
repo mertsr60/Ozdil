@@ -1,0 +1,10 @@
+{
+  "isim": "sifreleme_araclari",
+  "surum": "1.0.0",
+  "yazar": "guvenlik_ekibi",
+  "tur": "python",
+  "aciklama": "Güvenli karma fonksiyonları (SHA256, MD5), Base64 dönüştürme ve Sezar şifreleme araçları.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "13dfbaa2c594ad662d19309db39353e13d19672a260a7d9de70519933dab1fa8ca9638f51c0e61c19d55dd763465d69df765f235e663a114510f1a81e5fbb993d0d0a65645106ddddb9632be077b495506fae1dc3e98a4ffad0541ae41f173469ea0c64b812c75cc37c0dcbd5175c174c46d9671525e6a7d3b6c9cd29f3c90c"
+}

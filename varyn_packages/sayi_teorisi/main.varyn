@@ -1,0 +1,83 @@
+# Sayı Teorisi ve Matematiksel Diziler Kütüphanesi - %100 Saf Varyn
+
+işlem asal_carpanlar(n):
+    değişken carpanlar = []
+    değişken bolen = 2
+    değişken sayi = n
+    iken sayi > 1:
+        iken sayi % bolen == 0:
+            carpanlar.ekle(bolen)
+            sayi = tam_sayi(sayi / bolen)
+        bolen = bolen + 1
+        eğer bolen * bolen > sayi ve sayi > 1:
+            carpanlar.ekle(sayi)
+            dur
+    döndür carpanlar
+
+işlem armstrong_mu(n):
+    değişken s = metin(n)
+    değişken basamak_sayisi = uzunluk(s)
+    değişken toplam = 0
+    döngü i içinde aralık(basamak_sayisi):
+        değişken rakam = tam_sayi(s[i])
+        değişken us = 1
+        döngü j içinde aralık(basamak_sayisi):
+            us = us * rakam
+        toplam = toplam + us
+    döndür toplam == n
+
+işlem mukemmel_sayi_mi(n):
+    eğer n <= 1:
+        döndür yanlış
+    değişken toplam = 1
+    değişken i = 2
+    iken i * i <= n:
+        eğer n % i == 0:
+            toplam = toplam + i
+            eğer i * i != n:
+                toplam = toplam + tam_sayi(n / i)
+        i = i + 1
+    döndür toplam == n
+
+işlem collatz_dizisi(baslangic):
+    değişken dizi = [baslangic]
+    değişken n = baslangic
+    iken n > 1:
+        eğer n % 2 == 0:
+            n = tam_sayi(n / 2)
+        değilse:
+            n = (3 * n) + 1
+        dizi.ekle(n)
+    döndür dizi
+
+işlem pascal_ucgeni(satir_sayisi):
+    değişken ucgen = []
+    döngü i içinde aralık(satir_sayisi):
+        değişken satir = []
+        döngü j içinde aralık(i + 1):
+            eğer j == 0 veya j == i:
+                satir.ekle(1)
+            değilse:
+                değişken ust_satir = ucgen[i - 1]
+                satir.ekle(ust_satir[j - 1] + ust_satir[j])
+        ucgen.ekle(satir)
+    döndür ucgen
+
+işlem palindrom_sayi_mi(n):
+    değişken s = metin(n)
+    değişken len_s = uzunluk(s)
+    döngü i içinde aralık(tam_sayi(len_s / 2)):
+        eğer s[i] != s[len_s - 1 - i]:
+            döndür yanlış
+    döndür doğru
+
+işlem moduler_us(taban, us, mod_degeri):
+    değişken sonuc = 1
+    değişken t = taban % mod_degeri
+    değişken u = us
+    iken u > 0:
+        eğer u % 2 == 1:
+            sonuc = (sonuc * t) % mod_degeri
+        u = tam_sayi(u / 2)
+        t = (t * t) % mod_degeri
+    döndür sonuc

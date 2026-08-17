@@ -1,0 +1,10 @@
+{
+  "isim": "kuyruk_yigin",
+  "surum": "1.0.0",
+  "yazar": "varyn_toplulugu",
+  "tur": "varyn",
+  "aciklama": "Saf Varyn ile yazılmış Yığın (Stack), Kuyruk (Queue) ve parantez dengeleme veri yapıları kütüphanesi.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "350d6460c06095cab7a670c0f2d173ced5b23e1d46d552f8c8a9a39130d425b0e91d07928456bbe783b18b9fe9fe1432057b35ff69824b7f1ebdb7568a38794ea6c918e6c277a4f58384ffd7b98dae3b594ac55723c3522c2dca46675bcbbe8c1e215ca5142ddf9bb8e231594afe83275ae32b3fc3aef87806e2cbcc266220c2"
+}

@@ -889,7 +889,7 @@ def plugin():
 import plugin_api
 
 def _append_element(elem):
-    if getattr(plugin_api.plugin, "current_page", None) is not None:
+    if plugin_api.plugin.current_page is not None:
         plugin_api.plugin.current_page["elements"].append(elem)
     else:
         plugin_api.plugin.gui_elements.append(elem)
@@ -923,7 +923,7 @@ def yazi(metin, stil="normal"):
 
 def buton(metin, mesaj=""):
     if callable(mesaj):
-        func_name = getattr(mesaj, '__name__', 'buton_olay')
+        func_name = str(mesaj)
         event_name = f"click_{func_name}"
         plugin_api.plugin.event_ekle(event_name, mesaj)
         action_val = event_name
@@ -1133,7 +1133,7 @@ def plugin():
 import plugin_api
 
 def _append_element(elem):
-    if getattr(plugin_api.plugin, "current_program", None) is not None:
+    if plugin_api.plugin.current_program is not None:
         plugin_api.plugin.current_program["elements"].append(elem)
     else:
         pencere_dict = {
@@ -1363,7 +1363,1517 @@ def plugin():
     return apis
 """
         }
+    },
+    "veritabani": {
+        "meta": {
+            "isim": "veritabani",
+            "surum": "1.0.0",
+            "yazar": "varyn_toplulugu",
+            "tur": "python",
+            "aciklama": "ÖzDil / Varyn için anahtar-değer ve JSON tabanlı bellek içi veritabanı kütüphanesi.",
+            "izinler": [],
+            "bagimliliklar": []
+        },
+        "files": {
+            "main.py": """# Veritabanı ve Anahtar-Değer Deposu Kütüphanesi
+import json
+
+_DB_STORE = {}
+
+def baglan(db_adi="varsayilan"):
+    if db_adi not in _DB_STORE:
+        _DB_STORE[db_adi] = {}
+    return db_adi
+
+def koy(anahtar, deger, db_adi="varsayilan"):
+    if db_adi not in _DB_STORE:
+        _DB_STORE[db_adi] = {}
+    _DB_STORE[db_adi][str(anahtar)] = deger
+    return True
+
+def al(anahtar, varsayilan=None, db_adi="varsayilan"):
+    if db_adi in _DB_STORE:
+        return _DB_STORE[db_adi].get(str(anahtar), varsayilan)
+    return varsayilan
+
+def sil(anahtar, db_adi="varsayilan"):
+    if db_adi in _DB_STORE and str(anahtar) in _DB_STORE[db_adi]:
+        del _DB_STORE[db_adi][str(anahtar)]
+        return True
+    return False
+
+def tumunu_getir(db_adi="varsayilan"):
+    if db_adi in _DB_STORE:
+        return dict(_DB_STORE[db_adi])
+    return {}
+
+def temizle(db_adi="varsayilan"):
+    if db_adi in _DB_STORE:
+        _DB_STORE[db_adi].clear()
+        return True
+    return False
+
+def plugin():
+    return {
+        "veritabani_baglan": baglan,
+        "veritabani_koy": koy,
+        "veritabani_al": al,
+        "veritabani_sil": sil,
+        "veritabani_tumunu_getir": tumunu_getir,
+        "veritabani_temizle": temizle
     }
+"""
+        }
+    },
+    "ag_istemci": {
+        "meta": {
+            "isim": "ag_istemci",
+            "surum": "1.0.0",
+            "yazar": "ag_uzmani",
+            "tur": "python",
+            "aciklama": "HTTP/HTTPS istekleri gönderme, REST API etkileşimi ve veri çekme kütüphanesi.",
+            "izinler": ["ag"],
+            "bagimliliklar": []
+        },
+        "files": {
+            "main.py": """# Ağ İstemcisi ve REST API Kütüphanesi
+import urllib.request
+import json
+
+def get_iste(url):
+    req = urllib.request.Request(url, headers={"User-Agent": "Varyn-HTTP/1.0"})
+    with urllib.request.urlopen(req, timeout=5) as resp:
+        return resp.read().decode("utf-8")
+
+def post_iste(url, veri_dict):
+    data = json.dumps(veri_dict).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={"Content-Type": "application/json", "User-Agent": "Varyn-HTTP/1.0"}
+    )
+    with urllib.request.urlopen(req, timeout=5) as resp:
+        return resp.read().decode("utf-8")
+
+def json_coz(metin):
+    try:
+        return json.loads(metin)
+    except Exception:
+        return None
+
+def plugin():
+    return {
+        "ag_get_iste": get_iste,
+        "ag_post_iste": post_iste,
+        "ag_json_coz": json_coz
+    }
+"""
+        }
+    },
+    "sifreleme_araclari": {
+        "meta": {
+            "isim": "sifreleme_araclari",
+            "surum": "1.0.0",
+            "yazar": "guvenlik_ekibi",
+            "tur": "python",
+            "aciklama": "Güvenli karma fonksiyonları (SHA256, MD5), Base64 dönüştürme ve Sezar şifreleme araçları.",
+            "izinler": [],
+            "bagimliliklar": []
+        },
+        "files": {
+            "main.py": """# Şifreleme ve Kriptografi Yardımcı Araçları
+import hashlib
+import base64
+
+def sha256_hesapla(metin):
+    return hashlib.sha256(str(metin).encode("utf-8")).hexdigest()
+
+def md5_hesapla(metin):
+    return hashlib.md5(str(metin).encode("utf-8")).hexdigest()
+
+def base64_kodla(metin):
+    return base64.b64encode(str(metin).encode("utf-8")).decode("utf-8")
+
+def base64_coz(kodlanmis_metin):
+    try:
+        return base64.b64decode(str(kodlanmis_metin).encode("utf-8")).decode("utf-8")
+    except Exception:
+        return None
+
+def sezar_sifrele(metin, anahtar=3):
+    sonuc = []
+    for char in str(metin):
+        if char.isalpha():
+            base = ord("A") if char.isupper() else ord("a")
+            sonuc.append(chr((ord(char) - base + int(anahtar)) % 26 + base))
+        else:
+            sonuc.append(char)
+    return "".join(sonuc)
+
+def sezar_coz(metin, anahtar=3):
+    return sezar_sifrele(metin, -int(anahtar))
+
+def plugin():
+    return {
+        "sha256_hesapla": sha256_hesapla,
+        "md5_hesapla": md5_hesapla,
+        "base64_kodla": base64_kodla,
+        "base64_coz": base64_coz,
+        "sezar_sifrele": sezar_sifrele,
+        "sezar_coz": sezar_coz
+    }
+"""
+        }
+    },
+    "ses_muzik": {
+        "meta": {
+            "isim": "ses_muzik",
+            "surum": "1.0.0",
+            "yazar": "muzik_studyosu",
+            "tur": "python",
+            "aciklama": "Ses frekansı hesaplama, nota frekans eşleme, bpm ve ritim zamanlayıcı simülatörü.",
+            "izinler": [],
+            "bagimliliklar": []
+        },
+        "files": {
+            "main.py": """# Ses ve Müzik Frekans/Ritim Kütüphanesi
+import math
+
+_NOTALAR = {
+    "DO": 261.63, "C": 261.63,
+    "RE": 293.66, "D": 293.66,
+    "MI": 329.63, "E": 329.63,
+    "FA": 349.23, "F": 349.23,
+    "SOL": 392.00, "G": 392.00,
+    "LA": 440.00, "A": 440.00,
+    "SI": 493.88, "B": 493.88
+}
+
+def nota_frekansi(nota_adi):
+    return _NOTALAR.get(str(nota_adi).upper(), 440.0)
+
+def oktav_hesapla(frekans, oktav_farki):
+    return float(frekans) * (2 ** int(oktav_farki))
+
+def bpm_vurus_suresi(bpm):
+    if bpm <= 0:
+        return 0.0
+    return 60.0 / float(bpm)
+
+def sinus_dalgasi_ornekle(frekans, sure_saniye=1, ornekleme_hizi=8000):
+    ornekler = []
+    toplam_ornek = int(sure_saniye * ornekleme_hizi)
+    for i in range(min(toplam_ornek, 1000)):
+        t = i / float(ornekleme_hizi)
+        val = math.sin(2 * math.pi * float(frekans) * t)
+        ornekler.append(round(val, 4))
+    return ornekler
+
+def plugin():
+    return {
+        "nota_frekansi": nota_frekansi,
+        "oktav_hesapla": oktav_hesapla,
+        "bpm_vurus_suresi": bpm_vurus_suresi,
+        "sinus_dalgasi_ornekle": sinus_dalgasi_ornekle
+    }
+"""
+        }
+    },
+    "muhasebe": {
+        "meta": {
+            "isim": "muhasebe",
+            "surum": "1.0.0",
+            "yazar": "finans_ekibi",
+            "tur": "python",
+            "aciklama": "Vergi (KDV, Gelir Vergisi), net/brüt maaş, zam ve fatura hesaplama kütüphanesi.",
+            "izinler": [],
+            "bagimliliklar": []
+        },
+        "files": {
+            "main.py": """# Finansal Muhasebe ve Vergi Hesaplama Kütüphanesi
+
+def kdv_hesapla(tutar, oran=20):
+    kdv_tutari = (float(tutar) * float(oran)) / 100.0
+    toplam = float(tutar) + kdv_tutari
+    return {
+        "ham_tutar": float(tutar),
+        "kdv_orani": float(oran),
+        "kdv_tutari": round(kdv_tutari, 2),
+        "toplam_tutar": round(toplam, 2)
+    }
+
+def brutten_nete_maas(brut_maas, sgk_orani=14, issizlik_orani=1, gelir_vergisi_orani=15):
+    brut = float(brut_maas)
+    sgk = (brut * sgk_orani) / 100.0
+    issizlik = (brut * issizlik_orani) / 100.0
+    matrah = brut - (sgk + issizlik)
+    gelir_vergisi = (matrah * gelir_vergisi_orani) / 100.0
+    damga_vergisi = (brut * 0.759) / 100.0
+    kesintiler_toplami = sgk + issizlik + gelir_vergisi + damga_vergisi
+    net_maas = brut - kesintiler_toplami
+    return {
+        "brut_maas": round(brut, 2),
+        "kesintiler_toplami": round(kesintiler_toplami, 2),
+        "net_maas": round(net_maas, 2)
+    }
+
+def zam_hesapla(mevcut_tutar, zam_orani):
+    arti = (float(mevcut_tutar) * float(zam_orani)) / 100.0
+    yeni_tutar = float(mevcut_tutar) + arti
+    return {
+        "eski_tutar": float(mevcut_tutar),
+        "zam_miktari": round(arti, 2),
+        "yeni_tutar": round(yeni_tutar, 2)
+    }
+
+def plugin():
+    return {
+        "kdv_hesapla": kdv_hesapla,
+        "brutten_nete_maas": brutten_nete_maas,
+        "zam_hesapla": zam_hesapla
+    }
+"""
+        }
+    },
+    "fizik": {
+        "meta": {
+            "isim": "fizik",
+            "surum": "1.0.0",
+            "yazar": "bilim_toplulugu",
+            "tur": "python",
+            "aciklama": "2D ve 3D temel fizik, hareket denklemleri, serbest düşme, atışlar ve enerji simülasyonu.",
+            "izinler": [],
+            "bagimliliklar": []
+        },
+        "files": {
+            "main.py": """# Temel Fizik ve Hareket Denklemleri Kütüphanesi
+import math
+
+G = 9.80665
+
+def serbest_dusme(sure_saniye):
+    t = float(sure_saniye)
+    h = 0.5 * G * (t ** 2)
+    v = G * t
+    return {"yukseklik": round(h, 2), "hiz": round(v, 2)}
+
+def egik_atis(ilk_hiz, aci_derece):
+    v0 = float(ilk_hiz)
+    rad = math.radians(float(aci_derece))
+    v0x = v0 * math.cos(rad)
+    v0y = v0 * math.sin(rad)
+    ucus_suresi = (2 * v0y) / G
+    max_yukseklik = (v0y ** 2) / (2 * G)
+    menzil = v0x * ucus_suresi
+    return {
+        "ucus_suresi": round(ucus_suresi, 2),
+        "max_yukseklik": round(max_yukseklik, 2),
+        "menzil": round(menzil, 2)
+    }
+
+def kinetik_enerji(kutle_kg, hiz_m_s):
+    m = float(kutle_kg)
+    v = float(hiz_m_s)
+    return round(0.5 * m * (v ** 2), 2)
+
+def potansiyel_enerji(kutle_kg, yukseklik_m):
+    m = float(kutle_kg)
+    h = float(yukseklik_m)
+    return round(m * G * h, 2)
+
+def plugin():
+    return {
+        "serbest_dusme": serbest_dusme,
+        "egik_atis": egik_atis,
+        "kinetik_enerji": kinetik_enerji,
+        "potansiyel_enerji": potansiyel_enerji
+    }
+"""
+        }
+    },
+    "geometri": {
+        "meta": {
+            "isim": "geometri",
+            "surum": "1.0.0",
+            "yazar": "matematik_kulubu",
+            "tur": "python",
+            "aciklama": "2D Alan/Çevre ve 3D Hacim/Yüzey Alanı hesaplama kütüphanesi.",
+            "izinler": [],
+            "bagimliliklar": []
+        },
+        "files": {
+            "main.py": """# Geometri ve Alan/Hacim Hesaplama Kütüphanesi
+import math
+
+def ucgen_alani(taban, yukseklik):
+    return round(0.5 * float(taban) * float(yukseklik), 2)
+
+def daire_alani(yaricap):
+    r = float(yaricap)
+    return round(math.pi * (r ** 2), 2)
+
+def daire_cevresi(yaricap):
+    r = float(yaricap)
+    return round(2 * math.pi * r, 2)
+
+def hipotenus(a, b):
+    return round(math.sqrt((float(a) ** 2) + (float(b) ** 2)), 2)
+
+def kure_hacmi(yaricap):
+    r = float(yaricap)
+    return round((4.0 / 3.0) * math.pi * (r ** 3), 2)
+
+def silindir_hacmi(yaricap, yukseklik):
+    r = float(yaricap)
+    h = float(yukseklik)
+    return round(math.pi * (r ** 2) * h, 2)
+
+def plugin():
+    return {
+        "ucgen_alani": ucgen_alani,
+        "daire_alani": daire_alani,
+        "daire_cevresi": daire_cevresi,
+        "hipotenus": hipotenus,
+        "kure_hacmi": kure_hacmi,
+        "silindir_hacmi": silindir_hacmi
+    }
+"""
+        }
+    },
+    "otomasyon": {
+        "meta": {
+            "isim": "otomasyon",
+            "surum": "1.0.0",
+            "yazar": "sistem_otomasyonu",
+            "tur": "python",
+            "aciklama": "Zamanlanmış görevler, kronometre, zamanlayıcı ve günlük (logger) otomasyon araçları.",
+            "izinler": [],
+            "bagimliliklar": []
+        },
+        "files": {
+            "main.py": """# İş Otomasyonu ve Günlük Tutma Kütüphanesi
+import time
+
+_GUNLUK_LISTESI = []
+
+def gunluk_ekle(mesaj, seviye="BILGI"):
+    zaman_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    kayit = f"[{zaman_str}] [{str(seviye).upper()}]: {str(mesaj)}"
+    _GUNLUK_LISTESI.append(kayit)
+    return kayit
+
+def gunluk_dokum():
+    return list(_GUNLUK_LISTESI)
+
+def gunluk_temizle():
+    _GUNLUK_LISTESI.clear()
+    return True
+
+def zamanlayici_suresi(saniye_sayisi):
+    s = int(saniye_sayisi)
+    dakika = s // 60
+    kalan_saniye = s % 60
+    saat = dakika // 60
+    kalan_dakika = dakika % 60
+    return f"{saat:02d}:{kalan_dakika:02d}:{kalan_saniye:02d}"
+
+def plugin():
+    return {
+        "gunluk_ekle": gunluk_ekle,
+        "gunluk_dokum": gunluk_dokum,
+        "gunluk_temizle": gunluk_temizle,
+        "zamanlayici_suresi": zamanlayici_suresi
+    }
+"""
+        }
+    },
+    "lokasyon": {
+        "meta": {
+            "isim": "lokasyon",
+            "surum": "1.0.0",
+            "yazar": "cografi_bilgiler",
+            "tur": "python",
+            "aciklama": "Coğrafi koordinatlar, Haversine mesafe hesaplama ve şehir bulucu kütüphanesi.",
+            "izinler": [],
+            "bagimliliklar": []
+        },
+        "files": {
+            "main.py": """# Coğrafi Konum ve Mesafe Hesaplama Kütüphanesi
+import math
+
+_SEHIR_KOORDINATLARI = {
+    "ANKARA": (39.9334, 32.8597),
+    "ISTANBUL": (41.0082, 28.9784),
+    "IZMIR": (38.4237, 27.1428),
+    "BURSA": (40.1885, 29.0610),
+    "ANTALYA": (36.8969, 30.7133),
+    "ADANA": (37.0000, 35.3213),
+    "TRABZON": (41.0027, 39.7168),
+    "ERZURUM": (39.9043, 41.2679),
+    "SIVAS": (39.7477, 37.0179),
+    "GAZIANTEP": (37.0662, 37.3833)
+}
+
+def haversine_mesafe(lat1, lon1, lat2, lon2):
+    R = 6371.0 # Dünya yarıçapı km
+    dlat = math.radians(float(lat2) - float(lat1))
+    dlon = math.radians(float(lon2) - float(lon1))
+    a = (math.sin(dlat / 2) ** 2) + math.cos(math.radians(float(lat1))) * math.cos(math.radians(float(lat2))) * (math.sin(dlon / 2) ** 2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return round(R * c, 2)
+
+def sehir_koordinati(sehir_adi):
+    return _SEHIR_KOORDINATLARI.get(str(sehir_adi).upper(), (0.0, 0.0))
+
+def sehirler_arasi_mesafe(sehir1, sehir2):
+    k1 = sehir_koordinati(sehir1)
+    k2 = sehir_koordinati(sehir2)
+    if k1 == (0.0, 0.0) or k2 == (0.0, 0.0):
+        return None
+    return haversine_mesafe(k1[0], k1[1], k2[0], k2[1])
+
+def plugin():
+    return {
+        "haversine_mesafe": haversine_mesafe,
+        "sehir_koordinati": sehir_koordinati,
+        "sehirler_arasi_mesafe": sehirler_arasi_mesafe
+    }
+"""
+        }
+    },
+    "donusturucu": {
+        "meta": {
+            "isim": "donusturucu",
+            "surum": "1.0.0",
+            "yazar": "donusum_ekibi",
+            "tur": "python",
+            "aciklama": "Sıcaklık (C, F, K), uzunluk, ağırlık, alan ve dijital veri boyutu dönüştürme kütüphanesi.",
+            "izinler": [],
+            "bagimliliklar": []
+        },
+        "files": {
+            "main.py": """# Birim Dönüştürücü Kütüphanesi
+
+def celcius_fahrenheit(c):
+    return round((float(c) * 9.0 / 5.0) + 32.0, 2)
+
+def fahrenheit_celcius(f):
+    return round((float(f) - 32.0) * 5.0 / 9.0, 2)
+
+def celcius_kelvin(c):
+    return round(float(c) + 273.15, 2)
+
+def km_mil(km):
+    return round(float(km) * 0.621371, 2)
+
+def mil_km(mil):
+    return round(float(mil) / 0.621371, 2)
+
+def kg_lbs(kg):
+    return round(float(kg) * 2.20462, 2)
+
+def lbs_kg(lbs):
+    return round(float(lbs) / 2.20462, 2)
+
+def bayt_donustur(bayt_sayisi, hedef_birim="MB"):
+    b = float(bayt_sayisi)
+    birim = str(hedef_birim).upper()
+    if birim == "KB":
+        return round(b / 1024.0, 2)
+    elif birim == "MB":
+        return round(b / (1024.0 ** 2), 2)
+    elif birim == "GB":
+        return round(b / (1024.0 ** 3), 2)
+    elif birim == "TB":
+        return round(b / (1024.0 ** 4), 2)
+    return b
+
+def plugin():
+    return {
+        "celcius_fahrenheit": celcius_fahrenheit,
+        "fahrenheit_celcius": fahrenheit_celcius,
+        "celcius_kelvin": celcius_kelvin,
+        "km_mil": km_mil,
+        "mil_km": mil_km,
+        "kg_lbs": kg_lbs,
+        "lbs_kg": lbs_kg,
+        "bayt_donustur": bayt_donustur
+    }
+"""
+        }
+    },
+
+    "kuyruk_yigin": {
+        "meta": {
+            "isim": "kuyruk_yigin",
+            "surum": "1.0.0",
+            "yazar": "varyn_toplulugu",
+            "tur": "varyn",
+            "aciklama": "Saf Varyn ile yazılmış Yığın (Stack), Kuyruk (Queue) ve parantez dengeleme veri yapıları kütüphanesi.",
+            "izinler": [],
+            "bagimliliklar": []
+},
+        "files": {
+            "main.varyn": """# Kuyruk ve Yığın Veri Yapıları Kütüphanesi - %100 Saf Varyn
+
+işlem yigin_olustur():
+    döndür []
+
+işlem yigin_ekle(yigin, eleman):
+    yigin.ekle(eleman)
+    döndür yigin
+
+işlem yigin_cikar(yigin):
+    değişken n = uzunluk(yigin)
+    eğer n == 0:
+        döndür boş
+    değişken son_indis = n - 1
+    değişken son_eleman = yigin[son_indis]
+    değişken yeni_yigin = []
+    döngü i içinde aralık(son_indis):
+        yeni_yigin.ekle(yigin[i])
+    döndür son_eleman
+
+işlem yigin_bak(yigin):
+    değişken n = uzunluk(yigin)
+    eğer n == 0:
+        döndür boş
+    döndür yigin[n - 1]
+
+işlem yigin_bos_mu(yigin):
+    döndür uzunluk(yigin) == 0
+
+işlem kuyruk_olustur():
+    döndür []
+
+işlem kuyruk_ekle(kuyruk, eleman):
+    kuyruk.ekle(eleman)
+    döndür kuyruk
+
+işlem kuyruk_cikar(kuyruk):
+    değişken n = uzunluk(kuyruk)
+    eğer n == 0:
+        döndür boş
+    değişken ilk = kuyruk[0]
+    değişken yeni_kuyruk = []
+    döngü i içinde aralık(1, n):
+        yeni_kuyruk.ekle(kuyruk[i])
+    döndür ilk
+
+işlem kuyruk_bak(kuyruk):
+    eğer uzunluk(kuyruk) == 0:
+        döndür boş
+    döndür kuyruk[0]
+
+işlem kuyruk_bos_mu(kuyruk):
+    döndür uzunluk(kuyruk) == 0
+
+işlem parantez_dengeli_mi(ifade):
+    değişken yigin = []
+    döngü i içinde aralık(uzunluk(ifade)):
+        değişken k = ifade[i]
+        eğer k == "(" veya k == "[" veya k == "{":
+            yigin.ekle(k)
+        değilse_eğer k == ")" veya k == "]" veya k == "}":
+            eğer uzunluk(yigin) == 0:
+                döndür yanlış
+            değişken son = yigin[uzunluk(yigin) - 1]
+            değişken uygun = yanlış
+            eğer k == ")" ve son == "(":
+                uygun = doğru
+            değilse_eğer k == "]" ve son == "[":
+                uygun = doğru
+            değilse_eğer k == "}" ve son == "{":
+                uygun = doğru
+            eğer değil uygun:
+                döndür yanlış
+            değişken n_y = uzunluk(yigin)
+            değişken temp = []
+            döngü j içinde aralık(n_y - 1):
+                temp.ekle(yigin[j])
+            yigin = temp
+    döndür uzunluk(yigin) == 0
+"""
+        }
+    },
+    "matris": {
+        "meta": {
+            "isim": "matris",
+            "surum": "1.0.0",
+            "yazar": "varyn_toplulugu",
+            "tur": "varyn",
+            "aciklama": "Saf Varyn ile yazılmış Matris ve Lineer Cebir işlemleri (toplama, çarpma, transpoz, determinant, birim matris).",
+            "izinler": [],
+            "bagimliliklar": []
+},
+        "files": {
+            "main.varyn": """# Matris ve Lineer Cebir Kütüphanesi - %100 Saf Varyn
+
+işlem matris_olustur(satir, sutun, varsayilan):
+    değişken m = []
+    döngü i içinde aralık(satir):
+        değişken s = []
+        döngü j içinde aralık(sutun):
+            s.ekle(varsayilan)
+        m.ekle(s)
+    döndür m
+
+işlem birim_matris(boyut):
+    değişken m = []
+    döngü i içinde aralık(boyut):
+        değişken s = []
+        döngü j içinde aralık(boyut):
+            eğer i == j:
+                s.ekle(1)
+            değilse:
+                s.ekle(0)
+        m.ekle(s)
+    döndür m
+
+işlem matris_topla(m1, m2):
+    değişken satir = uzunluk(m1)
+    değişken sutun = uzunluk(m1[0])
+    değişken sonuc = []
+    döngü i içinde aralık(satir):
+        değişken satir_dizi = []
+        döngü j içinde aralık(sutun):
+            satir_dizi.ekle(m1[i][j] + m2[i][j])
+        sonuc.ekle(satir_dizi)
+    döndür sonuc
+
+işlem matris_cikar(m1, m2):
+    değişken satir = uzunluk(m1)
+    değişken sutun = uzunluk(m1[0])
+    değişken sonuc = []
+    döngü i içinde aralık(satir):
+        değişken satir_dizi = []
+        döngü j içinde aralık(sutun):
+            satir_dizi.ekle(m1[i][j] - m2[i][j])
+        sonuc.ekle(satir_dizi)
+    döndür sonuc
+
+işlem skaler_carp(m, katsayi):
+    değişken sonuc = []
+    döngü i içinde aralık(uzunluk(m)):
+        değişken s = []
+        döngü j içinde aralık(uzunluk(m[i])):
+            s.ekle(m[i][j] * katsayi)
+        sonuc.ekle(s)
+    döndür sonuc
+
+işlem transpoz_al(m):
+    değişken satir = uzunluk(m)
+    değişken sutun = uzunluk(m[0])
+    değişken t = []
+    döngü j içinde aralık(sutun):
+        değişken s = []
+        döngü i içinde aralık(satir):
+            s.ekle(m[i][j])
+        t.ekle(s)
+    döndür t
+
+işlem matris_carp(m1, m2):
+    değişken satir1 = uzunluk(m1)
+    değişken sutun1 = uzunluk(m1[0])
+    değişken sutun2 = uzunluk(m2[0])
+    değişken sonuc = []
+    döngü i içinde aralık(satir1):
+        değişken s = []
+        döngü j içinde aralık(sutun2):
+            değişken toplam = 0
+            döngü k içinde aralık(sutun1):
+                toplam = toplam + (m1[i][k] * m2[k][j])
+            s.ekle(toplam)
+        sonuc.ekle(s)
+    döndür sonuc
+
+işlem determinant_2x2(m):
+    döndür (m[0][0] * m[1][1]) - (m[0][1] * m[1][0])
+
+işlem determinant_3x3(m):
+    değişken a = m[0][0] * ((m[1][1] * m[2][2]) - (m[1][2] * m[2][1]))
+    değişken b = m[0][1] * ((m[1][0] * m[2][2]) - (m[1][2] * m[2][0]))
+    değişken c = m[0][2] * ((m[1][0] * m[2][1]) - (m[1][1] * m[2][0]))
+    döndür a - b + c
+
+işlem iz_hesapla(m):
+    değişken toplam = 0
+    değişken n = uzunluk(m)
+    döngü i içinde aralık(n):
+        toplam = toplam + m[i][i]
+    döndür toplam
+"""
+        }
+    },
+    "sayi_teorisi": {
+        "meta": {
+            "isim": "sayi_teorisi",
+            "surum": "1.0.0",
+            "yazar": "varyn_toplulugu",
+            "tur": "varyn",
+            "aciklama": "Saf Varyn ile Asal Çarpanlar, Armstrong Sayıları, Mükemmel Sayılar, Collatz Dizisi ve Pascal Üçgeni.",
+            "izinler": [],
+            "bagimliliklar": []
+},
+        "files": {
+            "main.varyn": """# Sayı Teorisi ve Matematiksel Diziler Kütüphanesi - %100 Saf Varyn
+
+işlem asal_carpanlar(n):
+    değişken carpanlar = []
+    değişken bolen = 2
+    değişken sayi = n
+    iken sayi > 1:
+        iken sayi % bolen == 0:
+            carpanlar.ekle(bolen)
+            sayi = tam_sayi(sayi / bolen)
+        bolen = bolen + 1
+        eğer bolen * bolen > sayi ve sayi > 1:
+            carpanlar.ekle(sayi)
+            dur
+    döndür carpanlar
+
+işlem armstrong_mu(n):
+    değişken s = metin(n)
+    değişken basamak_sayisi = uzunluk(s)
+    değişken toplam = 0
+    döngü i içinde aralık(basamak_sayisi):
+        değişken rakam = tam_sayi(s[i])
+        değişken us = 1
+        döngü j içinde aralık(basamak_sayisi):
+            us = us * rakam
+        toplam = toplam + us
+    döndür toplam == n
+
+işlem mukemmel_sayi_mi(n):
+    eğer n <= 1:
+        döndür yanlış
+    değişken toplam = 1
+    değişken i = 2
+    iken i * i <= n:
+        eğer n % i == 0:
+            toplam = toplam + i
+            eğer i * i != n:
+                toplam = toplam + tam_sayi(n / i)
+        i = i + 1
+    döndür toplam == n
+
+işlem collatz_dizisi(baslangic):
+    değişken dizi = [baslangic]
+    değişken n = baslangic
+    iken n > 1:
+        eğer n % 2 == 0:
+            n = tam_sayi(n / 2)
+        değilse:
+            n = (3 * n) + 1
+        dizi.ekle(n)
+    döndür dizi
+
+işlem pascal_ucgeni(satir_sayisi):
+    değişken ucgen = []
+    döngü i içinde aralık(satir_sayisi):
+        değişken satir = []
+        döngü j içinde aralık(i + 1):
+            eğer j == 0 veya j == i:
+                satir.ekle(1)
+            değilse:
+                değişken ust_satir = ucgen[i - 1]
+                satir.ekle(ust_satir[j - 1] + ust_satir[j])
+        ucgen.ekle(satir)
+    döndür ucgen
+
+işlem palindrom_sayi_mi(n):
+    değişken s = metin(n)
+    değişken len_s = uzunluk(s)
+    döngü i içinde aralık(tam_sayi(len_s / 2)):
+        eğer s[i] != s[len_s - 1 - i]:
+            döndür yanlış
+    döndür doğru
+
+işlem moduler_us(taban, us, mod_degeri):
+    değişken sonuc = 1
+    değişken t = taban % mod_degeri
+    değişken u = us
+    iken u > 0:
+        eğer u % 2 == 1:
+            sonuc = (sonuc * t) % mod_degeri
+        u = tam_sayi(u / 2)
+        t = (t * t) % mod_degeri
+    döndür sonuc
+"""
+        }
+    },
+    "agac_graf": {
+        "meta": {
+            "isim": "agac_graf",
+            "surum": "1.0.0",
+            "yazar": "varyn_toplulugu",
+            "tur": "varyn",
+            "aciklama": "Saf Varyn ile İkili Arama Ağacı (BST), Çizge (Graph) temsili, Kenar ekleme ve BFS gezintisi.",
+            "izinler": [],
+            "bagimliliklar": []
+},
+        "files": {
+            "main.varyn": """# Ağaç ve Çizge Algoritmaları Kütüphanesi - %100 Saf Varyn
+
+işlem bst_dugum_olustur(deger):
+    döndür {"deger": deger, "sol": boş, "sag": boş}
+
+işlem bst_ekle(kok, deger):
+    eğer kok == boş:
+        döndür bst_dugum_olustur(deger)
+    eğer deger < kok["deger"]:
+        kok["sol"] = bst_ekle(kok["sol"], deger)
+    değilse_eğer deger > kok["deger"]:
+        kok["sag"] = bst_ekle(kok["sag"], deger)
+    döndür kok
+
+işlem bst_ara(kok, hedef):
+    eğer kok == boş:
+        döndür yanlış
+    eğer kok["deger"] == hedef:
+        döndür doğru
+    eğer hedef < kok["deger"]:
+        döndür bst_ara(kok["sol"], hedef)
+    değilse:
+        döndür bst_ara(kok["sag"], hedef)
+
+işlem bst_sirali_dizi(kok):
+    eğer kok == boş:
+        döndür []
+    değişken sonuc = []
+    değişken sol_dizi = bst_sirali_dizi(kok["sol"])
+    döngü x içinde sol_dizi:
+        sonuc.ekle(x)
+    sonuc.ekle(kok["deger"])
+    değişken sag_dizi = bst_sirali_dizi(kok["sag"])
+    döngü x içinde sag_dizi:
+        sonuc.ekle(x)
+    döndür sonuc
+
+işlem graf_olustur():
+    döndür {}
+
+işlem graf_kenar_ekle(graf, dugum1, dugum2):
+    değişken k1 = metin(dugum1)
+    değişken k2 = metin(dugum2)
+    eğer değil (k1 içinde graf):
+        graf[k1] = []
+    eğer değil (k2 içinde graf):
+        graf[k2] = []
+    graf[k1].ekle(k2)
+    graf[k2].ekle(k1)
+    döndür graf
+
+işlem dugum_derecesi(graf, dugum):
+    değişken k = metin(dugum)
+    eğer k içinde graf:
+        döndür uzunluk(graf[k])
+    döndür 0
+
+işlem graf_bfs(graf, baslangic):
+    değişken ziyaret_edilen = []
+    değişken kuyruk = [metin(baslangic)]
+    ziyaret_edilen.ekle(metin(baslangic))
+    iken uzunluk(kuyruk) > 0:
+        değişken simdiki = kuyruk[0]
+        değişken yeni_k = []
+        döngü i içinde aralık(1, uzunluk(kuyruk)):
+            yeni_k.ekle(kuyruk[i])
+        kuyruk = yeni_k
+        
+        eğer simdiki içinde graf:
+            döngü komsu içinde graf[simdiki]:
+                değişken var_mi = yanlış
+                döngü z içinde ziyaret_edilen:
+                    eğer z == komsu:
+                        var_mi = doğru
+                eğer değil var_mi:
+                    ziyaret_edilen.ekle(komsu)
+                    kuyruk.ekle(komsu)
+    döndür ziyaret_edilen
+"""
+        }
+    },
+    "istatistik_pro": {
+        "meta": {
+            "isim": "istatistik_pro",
+            "surum": "1.0.0",
+            "yazar": "varyn_toplulugu",
+            "tur": "varyn",
+            "aciklama": "Saf Varyn ile Varyans, Standart Sapma, Çeyrekler (Q1/Q3), Min-Max Ölçekleme ve Pearson Korelasyonu.",
+            "izinler": [],
+            "bagimliliklar": []
+},
+        "files": {
+            "main.varyn": """# İleri İstatistik ve Veri Madenciliği Kütüphanesi - %100 Saf Varyn
+
+işlem varyans(dizi):
+    değişken n = uzunluk(dizi)
+    eğer n <= 1:
+        döndür 0.0
+    değişken toplam = 0.0
+    döngü x içinde dizi:
+        toplam = toplam + x
+    değişken ortalama = toplam / n
+    değişken kareler_toplami = 0.0
+    döngü x içinde dizi:
+        değişken fark = x - ortalama
+        kareler_toplami = kareler_toplami + (fark * fark)
+    döndür kareler_toplami / n
+
+işlem standart_sapma(dizi):
+    değişken v = varyans(dizi)
+    eğer v == 0.0:
+        döndür 0.0
+    değişken kok = v / 2.0
+    döngü i içinde aralık(20):
+        kok = (kok + (v / kok)) / 2.0
+    döndür kok
+
+işlem dizi_sirala_kopyala(dizi):
+    değişken kopya = []
+    döngü x içinde dizi:
+        kopya.ekle(x)
+    değişken n = uzunluk(kopya)
+    döngü i içinde aralık(n):
+        döngü j içinde aralık(n - i - 1):
+            eğer kopya[j] > kopya[j + 1]:
+                değişken temp = kopya[j]
+                kopya[j] = kopya[j + 1]
+                kopya[j + 1] = temp
+    döndür kopya
+
+işlem ceyrekler(dizi):
+    değişken sirali = dizi_sirala_kopyala(dizi)
+    değişken n = uzunluk(sirali)
+    eğer n == 0:
+        döndür {"q1": 0, "q2": 0, "q3": 0}
+    değişken q1_idx = tam_sayi(n * 0.25)
+    değişken q2_idx = tam_sayi(n * 0.50)
+    değişken q3_idx = tam_sayi(n * 0.75)
+    döndür {
+        "q1": sirali[q1_idx],
+        "q2": sirali[q2_idx],
+        "q3": sirali[q3_idx]
+    }
+
+işlem ceyrekler_acikligi(dizi):
+    değişken c = ceyrekler(dizi)
+    döndür c["q3"] - c["q1"]
+
+işlem min_max_olcekle(dizi):
+    değişken n = uzunluk(dizi)
+    eğer n == 0:
+        döndür []
+    değişken min_val = dizi[0]
+    değişken max_val = dizi[0]
+    döngü x içinde dizi:
+        eğer x < min_val:
+            min_val = x
+        eğer x > max_val:
+            max_val = x
+    değişken aralik_farki = max_val - min_val
+    eğer aralik_farki == 0:
+        değişken sifir_dizi = []
+        döngü i içinde aralık(n):
+            sifir_dizi.ekle(0.0)
+        döndür sifir_dizi
+    değişken sonuc = []
+    döngü x içinde dizi:
+        sonuc.ekle((x - min_val) / aralik_farki)
+    döndür sonuc
+
+işlem pearson_korelasyon(x_dizi, y_dizi):
+    değişken n = uzunluk(x_dizi)
+    eğer n == 0 veya n != uzunluk(y_dizi):
+        döndür 0.0
+    değişken sum_x = 0.0
+    değişken sum_y = 0.0
+    döngü i içinde aralık(n):
+        sum_x = sum_x + x_dizi[i]
+        sum_y = sum_y + y_dizi[i]
+    değişken ort_x = sum_x / n
+    değişken ort_y = sum_y / n
+    değişken pay = 0.0
+    değişken payda_x = 0.0
+    değişken payda_y = 0.0
+    döngü i içinde aralık(n):
+        değişken dx = x_dizi[i] - ort_x
+        değişken dy = y_dizi[i] - ort_y
+        pay = pay + (dx * dy)
+        payda_x = payda_x + (dx * dx)
+        payda_y = payda_y + (dy * dy)
+    değişken payda = payda_x * payda_y
+    eğer payda <= 0.0:
+        döndür 0.0
+    değişken kok = payda / 2.0
+    döngü i içinde aralık(20):
+        kok = (kok + (payda / kok)) / 2.0
+    döndür pay / kok
+"""
+        }
+    },
+    "metin_bicim": {
+        "meta": {
+            "isim": "metin_bicim",
+            "surum": "1.0.0",
+            "yazar": "varyn_toplulugu",
+            "tur": "varyn",
+            "aciklama": "Saf Varyn ile Metin Doldurma (Padding), Ters Çevirme, Kelime Frekansı ve Levenshtein Düzenleme Mesafesi.",
+            "izinler": [],
+            "bagimliliklar": []
+},
+        "files": {
+            "main.varyn": """# Metin Biçimlendirme, Arama ve Analiz Kütüphanesi - %100 Saf Varyn
+
+işlem metin_doldur_sol(metin_degeri, hedef_uzunluk, dolgu_karakteri):
+    değişken s = metin(metin_degeri)
+    değişken eksik = hedef_uzunluk - uzunluk(s)
+    eğer eksik <= 0:
+        döndür s
+    değişken on_ek = ""
+    döngü i içinde aralık(eksik):
+        on_ek = on_ek + dolgu_karakteri
+    döndür on_ek + s
+
+işlem metin_doldur_sag(metin_degeri, hedef_uzunluk, dolgu_karakteri):
+    değişken s = metin(metin_degeri)
+    değişken eksik = hedef_uzunluk - uzunluk(s)
+    eğer eksik <= 0:
+        döndür s
+    değişken son_ek = ""
+    döngü i içinde aralık(eksik):
+        son_ek = son_ek + dolgu_karakteri
+    döndür s + son_ek
+
+işlem kelimelere_ayir(cumle):
+    değişken kelimeler = []
+    değişken aktif_kelime = ""
+    döngü i içinde aralık(uzunluk(cumle)):
+        değişken c = cumle[i]
+        eğer c == " " veya c == "\t" veya c == "\n":
+            eğer uzunluk(aktif_kelime) > 0:
+                kelimeler.ekle(aktif_kelime)
+                aktif_kelime = ""
+        değilse:
+            aktif_kelime = aktif_kelime + c
+    eğer uzunluk(aktif_kelime) > 0:
+        kelimeler.ekle(aktif_kelime)
+    döndür kelimeler
+
+işlem kelime_frekansi(cumle):
+    değişken kelimeler = kelimelere_ayir(cumle)
+    değişken sozluk_veri = {}
+    döngü k içinde kelimeler:
+        eğer k içinde sozluk_veri:
+            sozluk_veri[k] = sozluk_veri[k] + 1
+        değilse:
+            sozluk_veri[k] = 1
+    döndür sozluk_veri
+
+işlem ters_cevir(metin_degeri):
+    değişken s = metin(metin_degeri)
+    değişken n = uzunluk(s)
+    değişken sonuc = ""
+    döngü i içinde aralık(n):
+        sonuc = sonuc + s[n - 1 - i]
+    döndür sonuc
+
+işlem palindrom_metin_mi(metin_degeri):
+    değişken s = metin(metin_degeri)
+    döndür s == ters_cevir(s)
+
+işlem duzenleme_mesafesi(s1, s2):
+    değişken m = uzunluk(s1)
+    değişken n = uzunluk(s2)
+    değişken dp = []
+    döngü i içinde aralık(m + 1):
+        değişken satir = []
+        döngü j içinde aralık(n + 1):
+            satir.ekle(0)
+        dp.ekle(satir)
+        
+    döngü i içinde aralık(m + 1):
+        dp[i][0] = i
+    döngü j içinde aralık(n + 1):
+        dp[0][j] = j
+        
+    döngü i içinde aralık(1, m + 1):
+        döngü j içinde aralık(1, n + 1):
+            eğer s1[i - 1] == s2[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1]
+            değilse:
+                değişken ekl = dp[i][j - 1]
+                değişken sil = dp[i - 1][j]
+                değişken deg = dp[i - 1][j - 1]
+                değişken min_islem = ekl
+                eğer sil < min_islem:
+                    min_islem = sil
+                eğer deg < min_islem:
+                    min_islem = deg
+                dp[i][j] = 1 + min_islem
+    döndür dp[m][n]
+"""
+        }
+    },
+    "kripto_klasik": {
+        "meta": {
+            "isim": "kripto_klasik",
+            "surum": "1.0.0",
+            "yazar": "varyn_toplulugu",
+            "tur": "varyn",
+            "aciklama": "Saf Varyn ile Klasik Şifreleme (ROT13, Atbash, Vigenère, Çit / Rail Fence şifreleme ve çözme).",
+            "izinler": [],
+            "bagimliliklar": []
+},
+        "files": {
+            "main.varyn": """# Klasik Şifreleme ve Kriptoloji Kütüphanesi - %100 Saf Varyn
+
+işlem harf_indisi(harf):
+    değişken alfabe = "abcdefghijklmnopqrstuvwxyz"
+    döngü i içinde aralık(26):
+        eğer alfabe[i] == harf:
+            döndür i
+    döndür -1
+
+işlem rot13(metin_degeri):
+    değişken alfabe_kucuk = "abcdefghijklmnopqrstuvwxyz"
+    değişken alfabe_buyuk = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    değişken sonuc = ""
+    döngü i içinde aralık(uzunluk(metin_degeri)):
+        değişken c = metin_degeri[i]
+        değişken bulundu = yanlış
+        döngü j içinde aralık(26):
+            eğer alfabe_kucuk[j] == c:
+                sonuc = sonuc + alfabe_kucuk[(j + 13) % 26]
+                bulundu = doğru
+                dur
+            değilse_eğer alfabe_buyuk[j] == c:
+                sonuc = sonuc + alfabe_buyuk[(j + 13) % 26]
+                bulundu = doğru
+                dur
+        eğer değil bulundu:
+            sonuc = sonuc + c
+    döndür sonuc
+
+işlem atbash_sifrele(metin_degeri):
+    değişken alfabe = "abcdefghijklmnopqrstuvwxyz"
+    değişken sonuc = ""
+    döngü i içinde aralık(uzunluk(metin_degeri)):
+        değişken c = metin_degeri[i]
+        değişken idx = harf_indisi(c)
+        eğer idx != -1:
+            sonuc = sonuc + alfabe[25 - idx]
+        değilse:
+            sonuc = sonuc + c
+    döndür sonuc
+
+işlem vigenere_sifrele(duz_metin, anahtar):
+    değişken alfabe = "abcdefghijklmnopqrstuvwxyz"
+    değişken sonuc = ""
+    değişken anahtar_uzunluk = uzunluk(anahtar)
+    değişken k_idx = 0
+    döngü i içinde aralık(uzunluk(duz_metin)):
+        değişken c = duz_metin[i]
+        değişken p_val = harf_indisi(c)
+        eğer p_val != -1:
+            değişken k_val = harf_indisi(anahtar[k_idx % anahtar_uzunluk])
+            değişken yeni_val = (p_val + k_val) % 26
+            sonuc = sonuc + alfabe[yeni_val]
+            k_idx = k_idx + 1
+        değilse:
+            sonuc = sonuc + c
+    döndür sonuc
+
+işlem vigenere_coz(sifreli_metin, anahtar):
+    değişken alfabe = "abcdefghijklmnopqrstuvwxyz"
+    değişken sonuc = ""
+    değişken anahtar_uzunluk = uzunluk(anahtar)
+    değişken k_idx = 0
+    döngü i içinde aralık(uzunluk(sifreli_metin)):
+        değişken c = sifreli_metin[i]
+        değişken c_val = harf_indisi(c)
+        eğer c_val != -1:
+            değişken k_val = harf_indisi(anahtar[k_idx % anahtar_uzunluk])
+            değişken p_val = (c_val - k_val + 26) % 26
+            sonuc = sonuc + alfabe[p_val]
+            k_idx = k_idx + 1
+        değilse:
+            sonuc = sonuc + c
+    döndür sonuc
+
+işlem cit_sifrele(metin_degeri, ray_sayisi):
+    eğer ray_sayisi <= 1:
+        döndür metin_degeri
+    değişken raylar = []
+    döngü i içinde aralık(ray_sayisi):
+        raylar.ekle("")
+    değişken aktif_ray = 0
+    değişken yon = 1
+    döngü i içinde aralık(uzunluk(metin_degeri)):
+        raylar[aktif_ray] = raylar[aktif_ray] + metin_degeri[i]
+        eğer aktif_ray == 0:
+            yon = 1
+        değilse_eğer aktif_ray == ray_sayisi - 1:
+            yon = -1
+        aktif_ray = aktif_ray + yon
+    değişken sonuc = ""
+    döngü i içinde aralık(ray_sayisi):
+        sonuc = sonuc + raylar[i]
+    döndür sonuc
+"""
+        }
+    },
+    "siralama_koleksiyonu": {
+        "meta": {
+            "isim": "siralama_koleksiyonu",
+            "surum": "1.0.0",
+            "yazar": "varyn_toplulugu",
+            "tur": "varyn",
+            "aciklama": "Saf Varyn ile Kabarcık (Bubble), Seçmeli (Selection), Eklemeli (Insertion) ve Saymalı (Counting) sıralama algoritmaları.",
+            "izinler": [],
+            "bagimliliklar": []
+},
+        "files": {
+            "main.varyn": """# Sıralama ve Arama Koleksiyonu Kütüphanesi - %100 Saf Varyn
+
+işlem kabarcik_sirala(dizi):
+    değişken d = []
+    döngü x içinde dizi:
+        d.ekle(x)
+    değişken n = uzunluk(d)
+    döngü i içinde aralık(n):
+        döngü j içinde aralık(n - i - 1):
+            eğer d[j] > d[j + 1]:
+                değişken temp = d[j]
+                d[j] = d[j + 1]
+                d[j + 1] = temp
+    döndür d
+
+işlem secmeli_sirala(dizi):
+    değişken d = []
+    döngü x içinde dizi:
+        d.ekle(x)
+    değişken n = uzunluk(d)
+    döngü i içinde aralık(n):
+        değişken min_idx = i
+        döngü j içinde aralık(i + 1, n):
+            eğer d[j] < d[min_idx]:
+                min_idx = j
+        eğer min_idx != i:
+            değişken temp = d[i]
+            d[i] = d[min_idx]
+            d[min_idx] = temp
+    döndür d
+
+işlem eklemeli_sirala(dizi):
+    değişken d = []
+    döngü x içinde dizi:
+        d.ekle(x)
+    değişken n = uzunluk(d)
+    döngü i içinde aralık(1, n):
+        değişken anahtar = d[i]
+        değişken j = i - 1
+        iken j >= 0 ve d[j] > anahtar:
+            d[j + 1] = d[j]
+            j = j - 1
+        d[j + 1] = anahtar
+    döndür d
+
+işlem sirali_mi(dizi):
+    değişken n = uzunluk(dizi)
+    döngü i içinde aralık(n - 1):
+        eğer dizi[i] > dizi[i + 1]:
+            döndür yanlış
+    döndür doğru
+
+işlem saymali_sirala(dizi, max_deger):
+    değişken sayac = []
+    döngü i içinde aralık(max_deger + 1):
+        sayac.ekle(0)
+    döngü x içinde dizi:
+        sayac[x] = sayac[x] + 1
+    değişken sonuc = []
+    döngü i içinde aralık(max_deger + 1):
+        döngü k içinde aralık(sayac[i]):
+            sonuc.ekle(i)
+    döndür sonuc
+"""
+        }
+    },
+    "vektor_fizik": {
+        "meta": {
+            "isim": "vektor_fizik",
+            "surum": "1.0.0",
+            "yazar": "varyn_toplulugu",
+            "tur": "varyn",
+            "aciklama": "Saf Varyn ile 2D/3D Vektör Matematiği, Büyüklük, Normalizasyon, Nokta Çarpımı ve AABB Çarpışma Testi.",
+            "izinler": [],
+            "bagimliliklar": []
+},
+        "files": {
+            "main.varyn": """# 2D/3D Vektör Matematiği ve Çarpışma Fiziği Kütüphanesi - %100 Saf Varyn
+
+işlem vektor2d(x, y):
+    döndür {"x": ondalik(x), "y": ondalik(y)}
+
+işlem vektor3d(x, y, z):
+    döndür {"x": ondalik(x), "y": ondalik(y), "z": ondalik(z)}
+
+işlem vektor_topla(v1, v2):
+    eğer "z" içinde v1 ve "z" içinde v2:
+        döndür {"x": v1["x"] + v2["x"], "y": v1["y"] + v2["y"], "z": v1["z"] + v2["z"]}
+    döndür {"x": v1["x"] + v2["x"], "y": v1["y"] + v2["y"]}
+
+işlem vektor_cikar(v1, v2):
+    eğer "z" içinde v1 ve "z" içinde v2:
+        döndür {"x": v1["x"] - v2["x"], "y": v1["y"] - v2["y"], "z": v1["z"] - v2["z"]}
+    döndür {"x": v1["x"] - v2["x"], "y": v1["y"] - v2["y"]}
+
+işlem vektor_olcekle(v, skaler):
+    eğer "z" içinde v:
+        döndür {"x": v["x"] * skaler, "y": v["y"] * skaler, "z": v["z"] * skaler}
+    döndür {"x": v["x"] * skaler, "y": v["y"] * skaler}
+
+işlem nokta_carpim(v1, v2):
+    eğer "z" içinde v1 ve "z" içinde v2:
+        döndür (v1["x"] * v2["x"]) + (v1["y"] * v2["y"]) + (v1["z"] * v2["z"])
+    döndür (v1["x"] * v2["x"]) + (v1["y"] * v2["y"])
+
+işlem vektor_uzunluk(v):
+    değişken kareler = 0.0
+    eğer "z" içinde v:
+        kareler = (v["x"] * v["x"]) + (v["y"] * v["y"]) + (v["z"] * v["z"])
+    değilse:
+        kareler = (v["x"] * v["x"]) + (v["y"] * v["y"])
+    eğer kareler == 0.0:
+        döndür 0.0
+    değişken kok = kareler / 2.0
+    döngü i içinde aralık(20):
+        kok = (kok + (kareler / kok)) / 2.0
+    döndür kok
+
+işlem vektor_birim(v):
+    değişken u = vektor_uzunluk(v)
+    eğer u == 0.0:
+        döndür v
+    döndür vektor_olcekle(v, 1.0 / u)
+
+işlem capraz_carpim_3d(v1, v2):
+    değişken rx = (v1["y"] * v2["z"]) - (v1["z"] * v2["y"])
+    değişken ry = (v1["z"] * v2["x"]) - (v1["x"] * v2["z"])
+    değişken rz = (v1["x"] * v2["y"]) - (v1["y"] * v2["x"])
+    döndür {"x": rx, "y": ry, "z": rz}
+
+işlem aabb_carpismasi_mi(kutu1, kutu2):
+    değişken k1_sag = kutu1["x"] + kutu1["genislik"]
+    değişken k1_alt = kutu1["y"] + kutu1["yukseklik"]
+    değişken k2_sag = kutu2["x"] + kutu2["genislik"]
+    değişken k2_alt = kutu2["y"] + kutu2["yukseklik"]
+    
+    eğer k1_sag < kutu2["x"] veya kutu1["x"] > k2_sag:
+        döndür yanlış
+    eğer k1_alt < kutu2["y"] veya kutu1["y"] > k2_alt:
+        döndür yanlış
+    döndür doğru
+"""
+        }
+    },
+    "bulmaca_zeka": {
+        "meta": {
+            "isim": "bulmaca_zeka",
+            "surum": "1.0.0",
+            "yazar": "varyn_toplulugu",
+            "tur": "varyn",
+            "aciklama": "Saf Varyn ile Sudoku 4x4 Doğrulayıcı, Hanoi Kuleleri Çözücü, N-Vezir Tehdit Kontrolü ve Anagram Testi.",
+            "izinler": [],
+            "bagimliliklar": []
+},
+        "files": {
+            "main.varyn": """# Mantık, Zeka Oyunları ve Bulmaca Algoritmaları Kütüphanesi - %100 Saf Varyn
+
+işlem sudoku_4x4_dogrula(matris):
+    döngü i içinde aralık(4):
+        değişken sayac = [0, 0, 0, 0, 0]
+        döngü j içinde aralık(4):
+            değişken val = matris[i][j]
+            eğer val < 1 veya val > 4 veya sayac[val] > 0:
+                döndür yanlış
+            sayac[val] = 1
+            
+    döngü j içinde aralık(4):
+        değişken sayac = [0, 0, 0, 0, 0]
+        döngü i içinde aralık(4):
+            değişken val = matris[i][j]
+            eğer val < 1 veya val > 4 veya sayac[val] > 0:
+                döndür yanlış
+            sayac[val] = 1
+            
+    döngü bi içinde [0, 2]:
+        döngü bj içinde [0, 2]:
+            değişken sayac = [0, 0, 0, 0, 0]
+            döngü r içinde aralık(2):
+                döngü c içinde aralık(2):
+                    değişken val = matris[bi + r][bj + c]
+                    eğer val < 1 veya val > 4 veya sayac[val] > 0:
+                        döndür yanlış
+                    sayac[val] = 1
+    döndür doğru
+
+işlem hanoi_hamleleri(disk_sayisi, kaynak, hedef, yardimci):
+    eğer disk_sayisi == 1:
+        döndür [metin(kaynak) + " -> " + metin(hedef)]
+    değişken hamleler = []
+    değişken adim1 = hanoi_hamleleri(disk_sayisi - 1, kaynak, yardimci, hedef)
+    döngü h içinde adim1:
+        hamleler.ekle(h)
+    hamleler.ekle(metin(kaynak) + " -> " + metin(hedef))
+    değişken adim2 = hanoi_hamleleri(disk_sayisi - 1, yardimci, hedef, kaynak)
+    döngü h içinde adim2:
+        hamleler.ekle(h)
+    döndür hamleler
+
+işlem vezir_tehditi_var_mi(vezir_pozisyonlari):
+    değişken n = uzunluk(vezir_pozisyonlari)
+    döngü i içinde aralık(n):
+        döngü j içinde aralık(i + 1, n):
+            eğer vezir_pozisyonlari[i] == vezir_pozisyonlari[j]:
+                döndür doğru
+            değişken satir_farki = j - i
+            değişken sutun_farki = vezir_pozisyonlari[j] - vezir_pozisyonlari[i]
+            eğer sutun_farki < 0:
+                sutun_farki = sutun_farki * -1
+            eğer satir_farki == sutun_farki:
+                döndür doğru
+    döndür yanlış
+
+işlem anagram_mi(kelime1, kelime2):
+    eğer uzunluk(kelime1) != uzunluk(kelime2):
+        döndür yanlış
+    değişken harfler1 = []
+    değişken harfler2 = []
+    döngü i içinde aralık(uzunluk(kelime1)):
+        harfler1.ekle(kelime1[i])
+        harfler2.ekle(kelime2[i])
+    değişken n = uzunluk(harfler1)
+    döngü i içinde aralık(n):
+        döngü j içinde aralık(n - i - 1):
+            eğer harfler1[j] > harfler1[j + 1]:
+                değişken temp = harfler1[j]
+                harfler1[j] = harfler1[j + 1]
+                harfler1[j + 1] = temp
+            eğer harfler2[j] > harfler2[j + 1]:
+                değişken temp2 = harfler2[j]
+                harfler2[j] = harfler2[j + 1]
+                harfler2[j + 1] = temp2
+    döngü i içinde aralık(n):
+        eğer harfler1[i] != harfler2[i]:
+            döndür yanlış
+    döndür doğru
+"""
+        }
+    },
+
 }
 
 import hashlib

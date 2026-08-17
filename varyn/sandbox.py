@@ -138,7 +138,7 @@ class SandboxChecker(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_Name(self, node):
-        if node.id.startswith("_") and node.id != "_" and node.id != "__init__":
+        if node.id.startswith("__") and node.id != "__init__":
             self.errors.append(f"Güvenlik İhlali: Gizli veya sistem seviyesi nesnelere erişim yasaktır ('{node.id}').")
         elif node.id in ("eval", "exec", "compile", "globals", "locals", "vars", "dir", "getattr", "setattr", "delattr", "hasattr"):
             self.errors.append(f"Güvenlik İhlali: Güvensiz '{node.id}' kelimesinin kullanımı yasaktır.")
@@ -233,7 +233,7 @@ try:
         sys.exit(0)
         
     # Restricted builtins ve global alan oluştur
-    from varyn_core.interpreter import make_restricted_builtins
+    from varyn_core.package_loader import make_restricted_builtins
     import math, random, time
     stdout_ref = []
     restricted_builtins = make_restricted_builtins({allowed_permissions or []}, stdout_ref)

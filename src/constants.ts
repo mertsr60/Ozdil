@@ -151,6 +151,17 @@ export const KEYWORDS: KeywordInfo[] = [
   { keyword: 'terminal_kutusu', pythonEquivalent: 'embedded terminal / logs', description: 'Pencere içine gömülü konsol ve log akış alanı ekler.', usage: 'program.terminal_kutusu(["[Sistem] Hazır..."])' },
   { keyword: 'durum_cubugu', pythonEquivalent: 'statusbar', description: 'Pencerenin altına durum çubuğu ekler.', usage: 'program.durum_cubugu("Hazır", "v1.0.0", "tamam")' },
   { keyword: 'ornek_program', pythonEquivalent: 'run preset program template', description: 'Hazır program şablonlarını çalıştırır (hesap_makinesi, not_defteri, gorev_yoneticisi, veri_tablosu).', usage: 'program.ornek_program("hesap_makinesi")' },
+  // Saf Varyn Veri Yapıları ve Matematik Kütüphaneleri (%100 Saf .varyn)
+  { keyword: 'kuyruk_yigin', pythonEquivalent: 'stack & queue data structures', description: 'Saf Varyn ile Yığın (LIFO), Kuyruk (FIFO) ve parantez sözdizimi doğrulayıcı kütüphanesi.', usage: 'getir kuyruk_yigin' },
+  { keyword: 'matris', pythonEquivalent: 'matrix linear algebra', description: 'Saf Varyn ile matris toplama, çarpma, determinant, transpoz ve birim matris kütüphanesi.', usage: 'getir matris' },
+  { keyword: 'sayi_teorisi', pythonEquivalent: 'number theory & sequences', description: 'Saf Varyn ile asal çarpanlar, Armstrong sayıları, Collatz dizisi, Pascal üçgeni ve mükemmel sayılar.', usage: 'getir sayi_teorisi' },
+  { keyword: 'agac_graf', pythonEquivalent: 'binary search tree & graph', description: 'Saf Varyn ile İkili Arama Ağacı (BST), Çizge temsili, kenar ekleme ve BFS genişlik öncelikli arama.', usage: 'getir agac_graf' },
+  { keyword: 'istatistik_pro', pythonEquivalent: 'advanced statistics & correlation', description: 'Saf Varyn ile varyans, standart sapma, kartiller/çeyrekler, min-max ölçekleme ve Pearson korelasyonu.', usage: 'getir istatistik_pro' },
+  { keyword: 'metin_bicim', pythonEquivalent: 'string formatting & levenshtein', description: 'Saf Varyn ile metin dolgulama, ters çevirme, kelime frekansı ve Levenshtein düzenleme mesafesi.', usage: 'getir metin_bicim' },
+  { keyword: 'kripto_klasik', pythonEquivalent: 'classical cryptography', description: 'Saf Varyn ile ROT13, Atbash, Vigenère ve Çit (Rail Fence) şifreleme algoritmaları.', usage: 'getir kripto_klasik' },
+  { keyword: 'siralama_koleksiyonu', pythonEquivalent: 'sorting algorithms collection', description: 'Saf Varyn ile Kabarcık, Seçmeli, Eklemeli ve Saymalı sıralama algoritmaları koleksiyonu.', usage: 'getir siralama_koleksiyonu' },
+  { keyword: 'vektor_fizik', pythonEquivalent: '2D/3D vector math & AABB physics', description: 'Saf Varyn ile 2D/3D vektör toplamı, nokta çarpım, birim vektör ve AABB kutu çarpışma testi.', usage: 'getir vektor_fizik' },
+  { keyword: 'bulmaca_zeka', pythonEquivalent: 'puzzle & logic algorithms', description: 'Saf Varyn ile 4x4 Sudoku doğrulayıcı, Hanoi kuleleri adımları, N-Vezir tehdit kontrolü ve anagram testi.', usage: 'getir bulmaca_zeka' }
 ];
 
 export const EXAMPLES: ExampleCode[] = [
@@ -834,6 +845,307 @@ program.terminal_kutusu([
 program.durum_cubugu("4 Süreç Aktif", "CPU: 3.4 GHz | UTF-8", "tamam")
 
 yazdir("Sistem yöneticisi programı aktif!")
+`
+  },
+  {
+    title: "Yığın, Kuyruk & Parantez Doğrulayıcı (kuyruk_yigin)",
+    description: "%100 Saf Varyn ile yazılmış Yığın (Stack - LIFO) ve Kuyruk (Queue - FIFO) veri yapıları ve parantez dengesi denetimi.",
+    code: `# Saf Varyn ile Veri Yapıları Testi
+getir kuyruk_yigin
+
+yazdir("=== 1. YIĞIN (STACK - LIFO) İŞLEMLERİ ===")
+değişken y = kuyruk_yigin.yigin_olustur()
+kuyruk_yigin.yigin_ekle(y, "Sayfa 1")
+kuyruk_yigin.yigin_ekle(y, "Sayfa 2")
+kuyruk_yigin.yigin_ekle(y, "Sayfa 3")
+
+yazdir("Yığının Tepesindeki Eleman:", kuyruk_yigin.yigin_bak(y))
+yazdir("Yığından Çıkarılan:", kuyruk_yigin.yigin_cikar(y))
+yazdir("Yığının Yeni Tepesi:", kuyruk_yigin.yigin_bak(y))
+
+yazdir("\\n=== 2. KUYRUK (QUEUE - FIFO) İŞLEMLERİ ===")
+değişken k = kuyruk_yigin.kuyruk_olustur()
+kuyruk_yigin.kuyruk_ekle(k, "Müşteri 1")
+kuyruk_yigin.kuyruk_ekle(k, "Müşteri 2")
+kuyruk_yigin.kuyruk_ekle(k, "Müşteri 3")
+
+yazdir("Kuyruk Başındaki:", kuyruk_yigin.kuyruk_bak(k))
+yazdir("Kuyruktan Hizmet Alan:", kuyruk_yigin.kuyruk_cikar(k))
+yazdir("Kuyruktaki Yeni İlk Kişi:", kuyruk_yigin.kuyruk_bak(k))
+
+yazdir("\\n=== 3. SÖZDİZİMİ PARANTEZ DENGESİ TESTİ ===")
+değişken kod1 = "{[a + b] * (c - d)}"
+değişken kod2 = "((a + b) * [c - d]"
+
+yazdir(kod1, "-> Dengeli mi?:", kuyruk_yigin.parantez_dengeli_mi(kod1))
+yazdir(kod2, "-> Dengeli mi?:", kuyruk_yigin.parantez_dengeli_mi(kod2))
+`
+  },
+  {
+    title: "Matris & Lineer Cebir Kütüphanesi (matris)",
+    description: "%100 Saf Varyn ile matris oluşturma, toplama, çıkarma, çarpma, determinant ve transpoz hesaplamaları.",
+    code: `# Saf Varyn ile Matris ve Lineer Cebir Testi
+getir matris
+
+yazdir("=== 1. MATRİS VE BİRİM MATRİS OLUŞTURMA ===")
+değişken I = matris.birim_matris(3)
+yazdir("3x3 Birim Matris:")
+döngü satir içinde I:
+    yazdir(" ", satir)
+
+yazdir("\\n=== 2. MATRİS TOPLAMA VE ÇIKARMA ===")
+değişken A = [[1, 2], [3, 4]]
+değişken B = [[5, 6], [7, 8]]
+
+değişken toplam = matris.matris_topla(A, B)
+yazdir("A + B Toplamı:", toplam)
+
+yazdir("\\n=== 3. MATRİS ÇARPIMI VE TRANSPOZ ===")
+değişken carpim = matris.matris_carp(A, B)
+yazdir("A * B Çarpımı:", carpim)
+
+değişken At = matris.transpoz_al(A)
+yazdir("A'nın Transpozu:", At)
+
+yazdir("\\n=== 4. DETERMINANT VE İZ (TRACE) ===")
+değişken det2 = matris.determinant_2x2(A)
+yazdir("det(A):", det2)
+
+değişken iz = matris.iz_hesapla(A)
+yazdir("iz(A):", iz)
+`
+  },
+  {
+    title: "Sayı Teorisi & Özel Diziler (sayi_teorisi)",
+    description: "%100 Saf Varyn ile Asal Çarpanlara Ayırma, Armstrong Sayıları, Collatz Dizisi ve Pascal Üçgeni.",
+    code: `# Saf Varyn ile Sayı Teorisi Testi
+getir sayi_teorisi
+
+yazdir("=== 1. ASAL ÇARPANLARA AYIRMA ===")
+değişken n = 1260
+yazdir(n, "sayısının asal çarpanları:", sayi_teorisi.asal_carpanlar(n))
+
+yazdir("\\n=== 2. ARMSTRONG VE MÜKEMMEL SAYILAR ===")
+yazdir("153 bir Armstrong sayısı mı?:", sayi_teorisi.armstrong_mu(153))
+yazdir("370 bir Armstrong sayısı mı?:", sayi_teorisi.armstrong_mu(370))
+yazdir("28 bir Mükemmel Sayı mı?:", sayi_teorisi.mukemmel_sayi_mi(28))
+
+yazdir("\\n=== 3. COLLATZ (3n + 1) DİZİSİ ===")
+değişken collatz = sayi_teorisi.collatz_dizisi(13)
+yazdir("13 için Collatz adımları (Uzunluk: " + metin(uzunluk(collatz)) + "):")
+yazdir(collatz)
+
+yazdir("\\n=== 4. PASCAL ÜÇGENİ ===")
+değişken ucgen = sayi_teorisi.pascal_ucgeni(6)
+döngü satir içinde ucgen:
+    yazdir("  ", satir)
+`
+  },
+  {
+    title: "İkili Arama Ağacı ve Çizgeler (agac_graf)",
+    description: "%100 Saf Varyn ile İkili Arama Ağacı (BST) ekleme, arama, sıralı gezinti ve Çizge (Graph) BFS araması.",
+    code: `# Saf Varyn ile Ağaç ve Çizge Algoritmaları Testi
+getir agac_graf
+
+yazdir("=== 1. İKİLİ ARAMA AĞACI (BST) ===")
+değişken kok = agac_graf.bst_dugum_olustur(50)
+agac_graf.bst_ekle(kok, 30)
+agac_graf.bst_ekle(kok, 70)
+agac_graf.bst_ekle(kok, 20)
+agac_graf.bst_ekle(kok, 40)
+agac_graf.bst_ekle(kok, 60)
+agac_graf.bst_ekle(kok, 80)
+
+yazdir("Ağaçtaki Elemanların Sıralı Listesi (Inorder):", agac_graf.bst_sirali_dizi(kok))
+yazdir("40 ağaçta var mı?:", agac_graf.bst_ara(kok, 40))
+yazdir("99 ağaçta var mı?:", agac_graf.bst_ara(kok, 99))
+
+yazdir("\\n=== 2. ÇİZGE (GRAPH) VE BFS GEZİNTİSİ ===")
+değişken g = agac_graf.graf_olustur()
+agac_graf.graf_kenar_ekle(g, "İstanbul", "Ankara")
+agac_graf.graf_kenar_ekle(g, "İstanbul", "İzmir")
+agac_graf.graf_kenar_ekle(g, "Ankara", "Konya")
+agac_graf.graf_kenar_ekle(g, "İzmir", "Antalya")
+agac_graf.graf_kenar_ekle(g, "Konya", "Antalya")
+
+yazdir("İstanbul düğüm derecesi (bağlantı sayısı):", agac_graf.dugum_derecesi(g, "İstanbul"))
+değişken bfs_yol = agac_graf.graf_bfs(g, "İstanbul")
+yazdir("İstanbul merkezli BFS Gezinti Rotası:", bfs_yol)
+`
+  },
+  {
+    title: "İleri İstatistik & Veri Madenciliği (istatistik_pro)",
+    description: "%100 Saf Varyn ile Varyans, Standart Sapma, Kartiller (Q1/Q3), Min-Max Normalizasyonu ve Korelasyon.",
+    code: `# Saf Varyn ile İleri İstatistik Testi
+getir istatistik_pro
+
+değişken veriler = [12, 15, 18, 22, 25, 30, 35, 42, 50, 65]
+
+yazdir("=== 1. TEMEL VE İLERİ İSTATİSTİKLER ===")
+yazdir("Veri Kümesi:", veriler)
+yazdir("Varyans:", istatistik_pro.varyans(veriler))
+yazdir("Standart Sapma:", istatistik_pro.standart_sapma(veriler))
+
+yazdir("\\n=== 2. ÇEYREKLER (KARTİLLER) VE AÇIKLIK ===")
+değişken q = istatistik_pro.ceyrekler(veriler)
+yazdir("Q1 (25. Yüzdelik):", q["q1"])
+yazdir("Q2 (Medyan):", q["q2"])
+yazdir("Q3 (75. Yüzdelik):", q["q3"])
+yazdir("Çeyrekler Açıklığı (IQR):", istatistik_pro.ceyrekler_acikligi(veriler))
+
+yazdir("\\n=== 3. MİN-MAX NORMALİZASYONU (0.0 - 1.0) ===")
+değişken olcekli = istatistik_pro.min_max_olcekle(veriler)
+yazdir("Ölçeklenmiş Veriler:", olcekli)
+
+yazdir("\\n=== 4. PEARSON KORELASYON KATSAYISI ===")
+değişken x = [1, 2, 3, 4, 5]
+değişken y = [2, 4, 6, 8, 10]
+yazdir("X ve Y Arasındaki Korelasyon:", istatistik_pro.pearson_korelasyon(x, y))
+`
+  },
+  {
+    title: "Metin Biçimlendirme & Levenshtein Mesafesi (metin_bicim)",
+    description: "%100 Saf Varyn ile metin dolgulama, kelime frekansı analizi, palindrom testi ve Levenshtein benzerlik algoritması.",
+    code: `# Saf Varyn ile Metin Biçimleme ve Analiz Testi
+getir metin_bicim
+
+yazdir("=== 1. METİN DOLGULAMA (PADDING) ===")
+yazdir("Fatura No:", metin_bicim.metin_doldur_sol("458", 8, "0"))
+yazdir("Hizalama :", metin_bicim.metin_doldur_sag("Varyn", 12, ".") + "|")
+
+yazdir("\\n=== 2. KELİME FREKANSI ANALİZİ ===")
+değişken metin_icerik = "varyn dili cok guzel ve varyn dili cok hizli calisir"
+değişken frekans = metin_bicim.kelime_frekansi(metin_icerik)
+yazdir("Metin:", metin_icerik)
+yazdir("Kelime Sayımları:", frekans)
+
+yazdir("\\n=== 3. TERS ÇEVİRME VE PALİNDROM ===")
+yazdir("'ey edip adanada pide ye' palindrom mu?:", metin_bicim.palindrom_metin_mi("ey edip adanada pide ye"))
+
+yazdir("\\n=== 4. LEVENSHTEIN DÜZENLEME MESAFESİ ===")
+değişken s1 = "kitap"
+değişken s2 = "katip"
+yazdir("'" + s1 + "' ile '" + s2 + "' arasındaki düzenleme mesafesi:", metin_bicim.duzenleme_mesafesi(s1, s2))
+`
+  },
+  {
+    title: "Klasik Kriptoloji & Şifreleme (kripto_klasik)",
+    description: "%100 Saf Varyn ile ROT13, Atbash, Vigenère ve Çit (Rail Fence) şifreleme ve çözme algoritmaları.",
+    code: `# Saf Varyn ile Klasik Şifreleme Kütüphanesi Testi
+getir kripto_klasik
+
+değişken gizli_mesaj = "varynprogramlamadili"
+değişken anahtar_soz = "anahtar"
+
+yazdir("=== 1. ROT13 ŞİFRELEME ===")
+değişken rot_sifreli = kripto_klasik.rot13(gizli_mesaj)
+yazdir("Şifreli (ROT13):", rot_sifreli)
+yazdir("Geri Çözüldü   :", kripto_klasik.rot13(rot_sifreli))
+
+yazdir("\\n=== 2. ATBASH (ALFABE AYNASI) ŞİFRELEME ===")
+değişken atbash_sifreli = kripto_klasik.atbash_sifrele("abcdef")
+yazdir("Atbash Çıktısı:", atbash_sifreli)
+
+yazdir("\\n=== 3. VIGENERE POLİALFABETİK ŞİFRELEME ===")
+değişken vig_sifreli = kripto_klasik.vigenere_sifrele(gizli_mesaj, anahtar_soz)
+değişken vig_cozum = kripto_klasik.vigenere_coz(vig_sifreli, anahtar_soz)
+yazdir("Orijinal Metin:", gizli_mesaj)
+yazdir("Şifrelenmiş   :", vig_sifreli)
+yazdir("Çözülmüş Metin :", vig_cozum)
+
+yazdir("\\n=== 4. ÇİT (RAIL FENCE) ŞİFRELEME ===")
+değişken cit_sonuc = kripto_klasik.cit_sifrele("HELLOWORLD", 3)
+yazdir("Çit Şifresi (3 Ray):", cit_sonuc)
+`
+  },
+  {
+    title: "Sıralama Algoritmaları Koleksiyonu (siralama_koleksiyonu)",
+    description: "%100 Saf Varyn ile Kabarcık (Bubble), Seçmeli (Selection), Eklemeli (Insertion) ve Saymalı (Counting) sıralama.",
+    code: `# Saf Varyn ile Sıralama Algoritmaları Karşılaştırma Testi
+getir siralama_koleksiyonu
+
+değişken ham_dizi = [64, 25, 12, 22, 11, 90, 33, 47]
+
+yazdir("Ham Dizi:", ham_dizi)
+
+yazdir("\\n=== 1. KABARCIK SIRALAMA (BUBBLE SORT) ===")
+değişken s1 = siralama_koleksiyonu.kabarcik_sirala(ham_dizi)
+yazdir("Sonuç:", s1, "| Sıralı mı?:", siralama_koleksiyonu.sirali_mi(s1))
+
+yazdir("\\n=== 2. SEÇMELİ SIRALAMA (SELECTION SORT) ===")
+değişken s2 = siralama_koleksiyonu.secmeli_sirala(ham_dizi)
+yazdir("Sonuç:", s2, "| Sıralı mı?:", siralama_koleksiyonu.sirali_mi(s2))
+
+yazdir("\\n=== 3. EKLEMELİ SIRALAMA (INSERTION SORT) ===")
+değişken s3 = siralama_koleksiyonu.eklemeli_sirala(ham_dizi)
+yazdir("Sonuç:", s3, "| Sıralı mı?:", siralama_koleksiyonu.sirali_mi(s3))
+
+yazdir("\\n=== 4. SAYMALI SIRALAMA (COUNTING SORT) ===")
+değişken sayi_dizisi = [4, 2, 2, 8, 3, 3, 1]
+değişken s4 = siralama_koleksiyonu.saymali_sirala(sayi_dizisi, 8)
+yazdir("Saymalı Sıralama:", s4)
+`
+  },
+  {
+    title: "2D/3D Vektör Matematiği ve Çarpışma Fiziği (vektor_fizik)",
+    description: "%100 Saf Varyn ile Vektör Toplama, Nokta Çarpım, Vektör Büyüklüğü, Birim Vektör ve 2D Kutu (AABB) Çarpışması.",
+    code: `# Saf Varyn ile Vektör Fiziği ve Çarpışma Testi
+getir vektor_fizik
+
+yazdir("=== 1. 2D VE 3D VEKTÖR VE BÜYÜKLÜK ===")
+değişken v1 = vektor_fizik.vektor2d(3, 4)
+değişken v2 = vektor_fizik.vektor2d(1, 2)
+
+yazdir("v1 Büyüklüğü (Hipotenüs):", vektor_fizik.vektor_uzunluk(v1))
+yazdir("v1 + v2 Toplamı:", vektor_fizik.vektor_topla(v1, v2))
+yazdir("v1 . v2 Nokta Çarpımı:", vektor_fizik.nokta_carpim(v1, v2))
+
+değişken birim_v1 = vektor_fizik.vektor_birim(v1)
+yazdir("v1 Birim Vektörü:", birim_v1)
+
+yazdir("\\n=== 2. 3D ÇAPRAZ ÇARPIM (CROSS PRODUCT) ===")
+değişken a3 = vektor_fizik.vektor3d(1, 0, 0)
+değişken b3 = vektor_fizik.vektor3d(0, 1, 0)
+yazdir("a3 x b3 Çapraz Çarpımı:", vektor_fizik.capraz_carpim_3d(a3, b3))
+
+yazdir("\\n=== 3. 2D AABB KUTU ÇARPIŞMA FİZİĞİ ===")
+değişken oyuncu = {"x": 10, "y": 10, "genislik": 30, "yukseklik": 30}
+değişken engel = {"x": 25, "y": 20, "genislik": 40, "yukseklik": 40}
+değişken uzak_nesne = {"x": 100, "y": 100, "genislik": 20, "yukseklik": 20}
+
+yazdir("Oyuncu - Engel Çarpışıyor mu?:", vektor_fizik.aabb_carpismasi_mi(oyuncu, engel))
+yazdir("Oyuncu - Uzak Nesne Çarpışıyor mu?:", vektor_fizik.aabb_carpismasi_mi(oyuncu, uzak_nesne))
+`
+  },
+  {
+    title: "Mantık Bulmacaları & Zeka Algoritmaları (bulmaca_zeka)",
+    description: "%100 Saf Varyn ile 4x4 Sudoku Doğrulayıcı, Hanoi Kuleleri Çözücü Adımları, Vezir Tehdit Kontrolü ve Anagram Testi.",
+    code: `# Saf Varyn ile Bulmaca ve Zeka Oyunları Algoritmaları Testi
+getir bulmaca_zeka
+
+yazdir("=== 1. 4x4 SUDOKU DOĞRULAYICI ===")
+değişken gecerli_sudoku = [
+    [1, 2, 3, 4],
+    [3, 4, 1, 2],
+    [2, 1, 4, 3],
+    [4, 3, 2, 1]
+]
+yazdir("Sudoku Çözümü Geçerli mi?:", bulmaca_zeka.sudoku_4x4_dogrula(gecerli_sudoku))
+
+yazdir("\\n=== 2. HANOİ KULELERİ ÇÖZÜCÜ (3 DİSK) ===")
+değişken hamleler = bulmaca_zeka.hanoi_hamleleri(3, "A", "C", "B")
+yazdir("Toplam Hamle Sayısı:", uzunluk(hamleler))
+döngü h içinde hamleler:
+    yazdir("  ->", h)
+
+yazdir("\\n=== 3. 4-VEZİR TEHDİT KONTROLÜ ===")
+# [0, 2, 3, 1] sütun pozisyonları
+değişken vezirler = [1, 3, 0, 2]
+yazdir("Tahtadaki vezirler birbirini tehdit ediyor mu?:", bulmaca_zeka.vezir_tehditi_var_mi(vezirler))
+
+yazdir("\\n=== 4. ANAGRAM KONTROLÜ ===")
+yazdir("'karpuz' ve 'puzkar' anagram mı?:", bulmaca_zeka.anagram_mi("karpuz", "puzkar"))
+yazdir("'varyn' ve 'python' anagram mı?:", bulmaca_zeka.anagram_mi("varyn", "python"))
 `
   }
 ];

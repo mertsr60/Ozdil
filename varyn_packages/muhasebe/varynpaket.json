@@ -1,0 +1,10 @@
+{
+  "isim": "muhasebe",
+  "surum": "1.0.0",
+  "yazar": "finans_ekibi",
+  "tur": "python",
+  "aciklama": "Vergi (KDV, Gelir Vergisi), net/brüt maaş, zam ve fatura hesaplama kütüphanesi.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "5a9022bbe7a71bf404888174ffcb6e3e69f9cbac648a2977bf9dcf0d9adbc947e2755dd4d062c904673fabe5c5e5be6850ba9d4026ee2d500dc12d450a9d41c4e88774607981593a15961eda4c31ae13a827d8d7e979442f576bdccae01d572d265182602ee00dd0f1b375cf55d9a45871865381328342c8a33ec1d5e65beb0f"
+}

@@ -2,7 +2,7 @@
 import plugin_api
 
 def _append_element(elem):
-    if getattr(plugin_api.plugin, "current_page", None) is not None:
+    if plugin_api.plugin.current_page is not None:
         plugin_api.plugin.current_page["elements"].append(elem)
     else:
         plugin_api.plugin.gui_elements.append(elem)
@@ -36,7 +36,7 @@ def yazi(metin, stil="normal"):
 
 def buton(metin, mesaj=""):
     if callable(mesaj):
-        func_name = getattr(mesaj, '__name__', 'buton_olay')
+        func_name = str(mesaj)
         event_name = f"click_{func_name}"
         plugin_api.plugin.event_ekle(event_name, mesaj)
         action_val = event_name

@@ -1,0 +1,64 @@
+# 2D/3D Vektör Matematiği ve Çarpışma Fiziği Kütüphanesi - %100 Saf Varyn
+
+işlem vektor2d(x, y):
+    döndür {"x": ondalik(x), "y": ondalik(y)}
+
+işlem vektor3d(x, y, z):
+    döndür {"x": ondalik(x), "y": ondalik(y), "z": ondalik(z)}
+
+işlem vektor_topla(v1, v2):
+    eğer "z" içinde v1 ve "z" içinde v2:
+        döndür {"x": v1["x"] + v2["x"], "y": v1["y"] + v2["y"], "z": v1["z"] + v2["z"]}
+    döndür {"x": v1["x"] + v2["x"], "y": v1["y"] + v2["y"]}
+
+işlem vektor_cikar(v1, v2):
+    eğer "z" içinde v1 ve "z" içinde v2:
+        döndür {"x": v1["x"] - v2["x"], "y": v1["y"] - v2["y"], "z": v1["z"] - v2["z"]}
+    döndür {"x": v1["x"] - v2["x"], "y": v1["y"] - v2["y"]}
+
+işlem vektor_olcekle(v, skaler):
+    eğer "z" içinde v:
+        döndür {"x": v["x"] * skaler, "y": v["y"] * skaler, "z": v["z"] * skaler}
+    döndür {"x": v["x"] * skaler, "y": v["y"] * skaler}
+
+işlem nokta_carpim(v1, v2):
+    eğer "z" içinde v1 ve "z" içinde v2:
+        döndür (v1["x"] * v2["x"]) + (v1["y"] * v2["y"]) + (v1["z"] * v2["z"])
+    döndür (v1["x"] * v2["x"]) + (v1["y"] * v2["y"])
+
+işlem vektor_uzunluk(v):
+    değişken kareler = 0.0
+    eğer "z" içinde v:
+        kareler = (v["x"] * v["x"]) + (v["y"] * v["y"]) + (v["z"] * v["z"])
+    değilse:
+        kareler = (v["x"] * v["x"]) + (v["y"] * v["y"])
+    eğer kareler == 0.0:
+        döndür 0.0
+    değişken kok = kareler / 2.0
+    döngü i içinde aralık(20):
+        kok = (kok + (kareler / kok)) / 2.0
+    döndür kok
+
+işlem vektor_birim(v):
+    değişken u = vektor_uzunluk(v)
+    eğer u == 0.0:
+        döndür v
+    döndür vektor_olcekle(v, 1.0 / u)
+
+işlem capraz_carpim_3d(v1, v2):
+    değişken rx = (v1["y"] * v2["z"]) - (v1["z"] * v2["y"])
+    değişken ry = (v1["z"] * v2["x"]) - (v1["x"] * v2["z"])
+    değişken rz = (v1["x"] * v2["y"]) - (v1["y"] * v2["x"])
+    döndür {"x": rx, "y": ry, "z": rz}
+
+işlem aabb_carpismasi_mi(kutu1, kutu2):
+    değişken k1_sag = kutu1["x"] + kutu1["genislik"]
+    değişken k1_alt = kutu1["y"] + kutu1["yukseklik"]
+    değişken k2_sag = kutu2["x"] + kutu2["genislik"]
+    değişken k2_alt = kutu2["y"] + kutu2["yukseklik"]
+    
+    eğer k1_sag < kutu2["x"] veya kutu1["x"] > k2_sag:
+        döndür yanlış
+    eğer k1_alt < kutu2["y"] veya kutu1["y"] > k2_alt:
+        döndür yanlış
+    döndür doğru

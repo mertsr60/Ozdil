@@ -1,0 +1,10 @@
+{
+  "isim": "ses_muzik",
+  "surum": "1.0.0",
+  "yazar": "muzik_studyosu",
+  "tur": "python",
+  "aciklama": "Ses frekansı hesaplama, nota frekans eşleme, bpm ve ritim zamanlayıcı simülatörü.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "3dfabf6137667d4024e5e147b3b4d391e2689fac3a22d2c90e90ad033baa858085cda810fcc1b01ebd42ec5e6588f75f310649495233be988c48c99aa042f17fcbf4ce9c162eca9f66c06d96fc0f3be895a13480534e471ac90c070e4fb5bce78c5052e57a85d3a91802e3bdfc453d5c6b81b8082afd16edffc7082e43484a31"
+}

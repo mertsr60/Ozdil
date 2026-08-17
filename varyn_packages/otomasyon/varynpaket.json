@@ -1,0 +1,10 @@
+{
+  "isim": "otomasyon",
+  "surum": "1.0.0",
+  "yazar": "sistem_otomasyonu",
+  "tur": "python",
+  "aciklama": "Zamanlanmış görevler, kronometre, zamanlayıcı ve günlük (logger) otomasyon araçları.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "1c788c0cb310e9016a1124478be9457314afde8148c4a658625ccb13510b067157e878e92d7d39dbd1c7b9e923f49ca9cd25c5d64723c32fcff5e1413f3d496c9dcaab0666aa2637f1ea9dcd610511da5eee9f25847b606f645016360990e1f1a0d041e94a396da3a5fc982788482885d211aeb21c9517d5bba303868648a8dc"
+}

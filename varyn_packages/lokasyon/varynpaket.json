@@ -1,0 +1,10 @@
+{
+  "isim": "lokasyon",
+  "surum": "1.0.0",
+  "yazar": "cografi_bilgiler",
+  "tur": "python",
+  "aciklama": "Coğrafi koordinatlar, Haversine mesafe hesaplama ve şehir bulucu kütüphanesi.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "3029a58f370fea6ff56abebb865c3f400d91306846ff87b64a33e1bb407ec426591b42754aa037e2d2a596d96e65c00a9e3fb173f9ceece5b3a2e3b0b4115c2853e6e6218c57ed242a5bc8fc13e1847141d2861a1d8e60b162c25487bd650cb10c79bddd8a4ac10de714c8b45039a94c0eb1bbd8515d0da8c7704b45ecf5892d"
+}

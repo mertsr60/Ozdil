@@ -364,6 +364,7 @@ class Interpreter:
             if op == '>': return left_val > right_val
             if op == '<=': return left_val <= right_val
             if op == '>=': return left_val >= right_val
+            if op in ('içinde', 'icinde', 'in'): return left_val in right_val
         except Exception as e:
             if isinstance(e, VarynError):
                 raise e

@@ -1,0 +1,94 @@
+# Klasik Şifreleme ve Kriptoloji Kütüphanesi - %100 Saf Varyn
+
+işlem harf_indisi(harf):
+    değişken alfabe = "abcdefghijklmnopqrstuvwxyz"
+    döngü i içinde aralık(26):
+        eğer alfabe[i] == harf:
+            döndür i
+    döndür -1
+
+işlem rot13(metin_degeri):
+    değişken alfabe_kucuk = "abcdefghijklmnopqrstuvwxyz"
+    değişken alfabe_buyuk = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    değişken sonuc = ""
+    döngü i içinde aralık(uzunluk(metin_degeri)):
+        değişken c = metin_degeri[i]
+        değişken bulundu = yanlış
+        döngü j içinde aralık(26):
+            eğer alfabe_kucuk[j] == c:
+                sonuc = sonuc + alfabe_kucuk[(j + 13) % 26]
+                bulundu = doğru
+                dur
+            değilse_eğer alfabe_buyuk[j] == c:
+                sonuc = sonuc + alfabe_buyuk[(j + 13) % 26]
+                bulundu = doğru
+                dur
+        eğer değil bulundu:
+            sonuc = sonuc + c
+    döndür sonuc
+
+işlem atbash_sifrele(metin_degeri):
+    değişken alfabe = "abcdefghijklmnopqrstuvwxyz"
+    değişken sonuc = ""
+    döngü i içinde aralık(uzunluk(metin_degeri)):
+        değişken c = metin_degeri[i]
+        değişken idx = harf_indisi(c)
+        eğer idx != -1:
+            sonuc = sonuc + alfabe[25 - idx]
+        değilse:
+            sonuc = sonuc + c
+    döndür sonuc
+
+işlem vigenere_sifrele(duz_metin, anahtar):
+    değişken alfabe = "abcdefghijklmnopqrstuvwxyz"
+    değişken sonuc = ""
+    değişken anahtar_uzunluk = uzunluk(anahtar)
+    değişken k_idx = 0
+    döngü i içinde aralık(uzunluk(duz_metin)):
+        değişken c = duz_metin[i]
+        değişken p_val = harf_indisi(c)
+        eğer p_val != -1:
+            değişken k_val = harf_indisi(anahtar[k_idx % anahtar_uzunluk])
+            değişken yeni_val = (p_val + k_val) % 26
+            sonuc = sonuc + alfabe[yeni_val]
+            k_idx = k_idx + 1
+        değilse:
+            sonuc = sonuc + c
+    döndür sonuc
+
+işlem vigenere_coz(sifreli_metin, anahtar):
+    değişken alfabe = "abcdefghijklmnopqrstuvwxyz"
+    değişken sonuc = ""
+    değişken anahtar_uzunluk = uzunluk(anahtar)
+    değişken k_idx = 0
+    döngü i içinde aralık(uzunluk(sifreli_metin)):
+        değişken c = sifreli_metin[i]
+        değişken c_val = harf_indisi(c)
+        eğer c_val != -1:
+            değişken k_val = harf_indisi(anahtar[k_idx % anahtar_uzunluk])
+            değişken p_val = (c_val - k_val + 26) % 26
+            sonuc = sonuc + alfabe[p_val]
+            k_idx = k_idx + 1
+        değilse:
+            sonuc = sonuc + c
+    döndür sonuc
+
+işlem cit_sifrele(metin_degeri, ray_sayisi):
+    eğer ray_sayisi <= 1:
+        döndür metin_degeri
+    değişken raylar = []
+    döngü i içinde aralık(ray_sayisi):
+        raylar.ekle("")
+    değişken aktif_ray = 0
+    değişken yon = 1
+    döngü i içinde aralık(uzunluk(metin_degeri)):
+        raylar[aktif_ray] = raylar[aktif_ray] + metin_degeri[i]
+        eğer aktif_ray == 0:
+            yon = 1
+        değilse_eğer aktif_ray == ray_sayisi - 1:
+            yon = -1
+        aktif_ray = aktif_ray + yon
+    değişken sonuc = ""
+    döngü i içinde aralık(ray_sayisi):
+        sonuc = sonuc + raylar[i]
+    döndür sonuc

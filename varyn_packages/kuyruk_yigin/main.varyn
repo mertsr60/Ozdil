@@ -1,0 +1,79 @@
+# Kuyruk ve Yığın Veri Yapıları Kütüphanesi - %100 Saf Varyn
+
+işlem yigin_olustur():
+    döndür []
+
+işlem yigin_ekle(yigin, eleman):
+    yigin.ekle(eleman)
+    döndür yigin
+
+işlem yigin_cikar(yigin):
+    değişken n = uzunluk(yigin)
+    eğer n == 0:
+        döndür boş
+    değişken son_indis = n - 1
+    değişken son_eleman = yigin[son_indis]
+    değişken yeni_yigin = []
+    döngü i içinde aralık(son_indis):
+        yeni_yigin.ekle(yigin[i])
+    döndür son_eleman
+
+işlem yigin_bak(yigin):
+    değişken n = uzunluk(yigin)
+    eğer n == 0:
+        döndür boş
+    döndür yigin[n - 1]
+
+işlem yigin_bos_mu(yigin):
+    döndür uzunluk(yigin) == 0
+
+işlem kuyruk_olustur():
+    döndür []
+
+işlem kuyruk_ekle(kuyruk, eleman):
+    kuyruk.ekle(eleman)
+    döndür kuyruk
+
+işlem kuyruk_cikar(kuyruk):
+    değişken n = uzunluk(kuyruk)
+    eğer n == 0:
+        döndür boş
+    değişken ilk = kuyruk[0]
+    değişken yeni_kuyruk = []
+    döngü i içinde aralık(1, n):
+        yeni_kuyruk.ekle(kuyruk[i])
+    döndür ilk
+
+işlem kuyruk_bak(kuyruk):
+    eğer uzunluk(kuyruk) == 0:
+        döndür boş
+    döndür kuyruk[0]
+
+işlem kuyruk_bos_mu(kuyruk):
+    döndür uzunluk(kuyruk) == 0
+
+işlem parantez_dengeli_mi(ifade):
+    değişken yigin = []
+    döngü i içinde aralık(uzunluk(ifade)):
+        değişken k = ifade[i]
+        eğer k == "(" veya k == "[" veya k == "{":
+            yigin.ekle(k)
+        değilse_eğer k == ")" veya k == "]" veya k == "}":
+            eğer uzunluk(yigin) == 0:
+                döndür yanlış
+            değişken son = yigin[uzunluk(yigin) - 1]
+            değişken uygun = yanlış
+            eğer k == ")" ve son == "(":
+                uygun = doğru
+            değilse_eğer k == "]" ve son == "[":
+                uygun = doğru
+            değilse_eğer k == "}" ve son == "{":
+                uygun = doğru
+            eğer değil uygun:
+                döndür yanlış
+            değişken n_y = uzunluk(yigin)
+            değişken temp = []
+            döngü j içinde aralık(n_y - 1):
+                temp.ekle(yigin[j])
+            yigin = temp
+    döndür uzunluk(yigin) == 0

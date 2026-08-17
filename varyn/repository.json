@@ -1,6 +1,16 @@
 {
   "paketler": [
     {
+      "isim": "algoritma",
+      "surum": "1.1.0",
+      "yazar": "varyn_toplulugu",
+      "tur": "varyn",
+      "aciklama": "Tamamen ÖzDil ile yazılmış ilk kütüphane. Sıralama, arama, istatistik, matematiksel ve sayı dizisi (Fibonacci) algoritmaları içerir.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "9f61a02197077ed3d4777d2644401ad208ec4f51b172cf62f24d04b59188a64e63eb4bbb8d325f792533f410b32a986cf2cdc0351750e0d0f4a45a49e9c7a21c94072e5cc29bf5728539057656ac65030f7841366d33620aa03993f83febecbf7e1704d2827b632e787deda66cb9d62db627e599463b0c15294f3b957693d1f1"
+    },
+    {
       "isim": "matematik",
       "surum": "1.0.0",
       "yazar": "varyn_toplulugu",
@@ -8,7 +18,7 @@
       "aciklama": "Gelişmiş matematiksel işlemler ve sabitler kütüphanesi.",
       "izinler": [],
       "bagimliliklar": [],
-      "imza": "31ebd9efbd4f476ec73c098b5ccd6f5d96c585e42303b7f8ab7c83837e065147"
+      "imza": "468f1c7f7b7ad730f19d7f3b89ed296a06a1f0a5e193480657755fe64067b0be96c885b1cdaba84fda6594754f317d50077661318e431cb3f9ab0399c1f15f9cc6d35e253636dccb519f51760acef827c8525342716a9c07c2087ecc1c5d2f7a7f5ea46daaa7ebd7060cf100003d53a46b7da1b7cf77789556bb2620c2f6baad"
     },
     {
       "isim": "renkler",
@@ -18,7 +28,7 @@
       "aciklama": "Konsol çıktılarını renklendirmek için kullanılan ANSI renk kütüphanesi.",
       "izinler": [],
       "bagimliliklar": [],
-      "imza": "c0af7e0543a3304afdac1d99bbfad50bd06c5a6ceb91ec0052db0b7b690e8148"
+      "imza": "83bad9e010f486ebef8119693a1753d99390acc7a3c9ac76d517d3c15a379de84c808510b54e84f85a50d70023612c7eb1161271fe24fe05fb689088a8ef1feb3a2111d1caf50e0218b0990e97188134b27fd9dec47f30866ea7020f70323daeb5be6f11615aedb6519b2a91c5ee387c89bfd2429b296d3a90e653b527355804"
     },
     {
       "isim": "hesap",
@@ -30,7 +40,7 @@
       "bagimliliklar": [
         "renkler>=1.2.0"
       ],
-      "imza": "49a0f2ea3b9b3d8204d6e31fb64bef75e6984db3cf67f360d90cd4d680905847"
+      "imza": "82b990ce7c4fd80d3ee7017057966009e0ebefbb664f3435fbc2d119b1f5fd60d41d8daff1d0e24300800f4d92e6ab167a4ae1b9d66d15d8cc8869663686303536fbccd610711426fefa4b89c91b5f6ccbd4fce3dd43db006eb4a79151f3e2c9d69183f3a38b534d08dd8edb2e32f5990083917da87bf28d3f0b4bdd006e3652"
     },
     {
       "isim": "grafik",
@@ -40,7 +50,7 @@
       "aciklama": "Varyn için konsol tabanlı grafik çizim ve görselleştirme araçları.",
       "izinler": [],
       "bagimliliklar": [],
-      "imza": "43b8ae008499305e476b63608c19c1fddab209a803f75349836f217ec2f380f0"
+      "imza": "2dbe23575bcd98117c0f2f0a555031b281c871eb38ac35cea28cad0d753cd5a33b039ed584c336a81979a26e01c7f206aeca70822b3d7854d394f2b7a1a8237dfaee709c6f889f4e65b2d14a6dce845f36931f5e5a439b5c9b11abe71b9ff032da85274734a1185a396056623a2d0fb5d62fb0cb362a72046adc3785f7b5ace1"
     },
     {
       "isim": "kamera",
@@ -53,7 +63,7 @@
         "dosya_sistemi"
       ],
       "bagimliliklar": [],
-      "imza": "92484cf1d26114f0d0c43f34abb1f0934af0b173ad5d486b166a3ddaf184092e"
+      "imza": "94d422e1c0afb7c4ac0ef71cb0409e849a7be0e41ff3efbb7cdb4551233842fce97847294e9661480d08d14eddf2c253d35ff8588f38c826c7ba0e90d83ab1c0dfc509983d22d2bed7644d5739ff6c714dd3823995b9dc76a0425f3ed8a98f1f5588e5200b32a42856e9152d624041daf3701edbaf4b336d589720d62ac61539"
     },
     {
       "isim": "veri_analizi",
@@ -63,17 +73,17 @@
       "aciklama": "Veri listeleri üzerinde istatistiksel işlemler yapan kütüphane.",
       "izinler": [],
       "bagimliliklar": [],
-      "imza": "7b0c3fc73c6b252696a761344436b6fc85ed00072e23fac387e5dd6df605f978"
+      "imza": "4180b7a133cd500d770c0424db985129597701dbab4e8b98b52ff99c2cff3fd129995544d96f62d1a050274018e44ca4d26f949051ef2072298e9ea5b25027d5a010db5a607feb87654bf8c2fdb8854b031c5bbb30e733e41778494f5fc5d023aafeaf738a5be0d2cfbd680cfd729c32336bf45e998df9af926155cacba99a4f"
     },
     {
       "isim": "yapay_zeka",
-      "surum": "1.1.0",
-      "yazar": "varyn_toplulugu",
+      "surum": "1.1.2",
+      "yazar": "ai_uzmani",
       "tur": "varyn",
       "aciklama": "Temel yapay zeka ve doğrusal regresyon tahmin modeli, k-means kümeleme, k-NN sınıflandırma ve yapay sinir hücresi simülasyonu.",
       "izinler": [],
       "bagimliliklar": [],
-      "imza": "a2a003d2162af50ba0f2fed5dfa5cbbb8325435742c78a8010df99d98fdf698a"
+      "imza": "884a04c10ce9bc0a2ac7e4f5c8c9781d92d78dfecb01efe3e7ff4f9ee5b965a161e16384be7cefc3fa958e060f9f94c7824d1f4e410b0d080fa2b00de38da387b39b9581c9b091b30a0bbb66df9ea75ca212cdc40eec612b090aa220aa0548ce3b72d89a57f5b1c9514f2f99e6ef8605dd12e212ee0e37a5cfa5493a00d0f2ed"
     },
     {
       "isim": "tarih_saat",
@@ -83,7 +93,7 @@
       "aciklama": "Tarih, saat ve Türkçe tarih biçimlendirme kütüphanesi.",
       "izinler": [],
       "bagimliliklar": [],
-      "imza": "ab665e086d06f039392ab21ef4f40c9b0d07475b8879c19191aed126930a7614"
+      "imza": "7cbb80441b50bb694ccfd841ac0c121ac990a4f5a805b95fb981ef37115dece1646bd51318f659a40d992226a8b911eba20359ad2c993017a185b96378fbaf878d44197e1570971b7c42a8d1b964b32951b136234da90db6a10f599b7b6e7080f4cda9a20d201390478f44266c41fe38504e66f3c9fd21fb6c12c1b2a525fb19"
     },
     {
       "isim": "metin_isleme",
@@ -93,7 +103,7 @@
       "aciklama": "Gelişmiş Türkçe karakter duyarlı büyük/küçük harf dönüşümü, slug yapımı ve sesli harf analizi.",
       "izinler": [],
       "bagimliliklar": [],
-      "imza": "6b713cecdeb763e1eba0003a4b13ebc2f240dbf4a51fbe34331f64d5d98f0065"
+      "imza": "910494a047e5b42e0418b27f51f091604addd67d20d9bdb64e196c542a83e67d4bfdb8b22afef79624ca9005653c8f91111867ec4b81b6af6c2ee258185d1bf90dced3c2a089d3962fb7371a249a41128ed9418cef709f990072887325f919817fe419d5005e456626fa450172be1f8fe8dba48bf29d8dd259ee7384cf097c77"
     },
     {
       "isim": "kripto",
@@ -103,7 +113,7 @@
       "aciklama": "Veri özetleme (MD5, SHA256), Base64 kodlama/çözme ve Sezar şifreleme kütüphanesi.",
       "izinler": [],
       "bagimliliklar": [],
-      "imza": "7c8e1b75284e38cad5fcf481aa357a8c5e98d090811bd3af2436771462b45bd8"
+      "imza": "dc86753a1ce9ad0b3f0db3f86cd5ece93b03388efd6a4057573c31d64b7d052295b9f1ab68a62384bf2d51defe8e2df6ed596cfb427123715a790ea7f3a5dc80392f60b9c3c11a9da77e00e9a92bdc88523e7e4128145aa12b61f5f81f39eee1fb3599fed93bfb7ea4b9d346c42bcad8ba65389fda098e3df66f19c9ccf8af4"
     },
     {
       "isim": "rastgele",
@@ -113,7 +123,7 @@
       "aciklama": "Rastgele sayı üretimi, liste elemanı seçimi ve güvenli şifre oluşturucu.",
       "izinler": [],
       "bagimliliklar": [],
-      "imza": "86de639f766ecb13ebcc4b1d1535a4bba023dfc9bcc4da54f33d99f0c7b9e09e"
+      "imza": "7b1b23e3e04f2793025d0165736dd380b2e840ae996d2a0755af00d999b25a770d30b78bac07ee97432ff5c6983ee02a15d97d7e250b005c7a5ee813c2b909b2336b03c954133d662d8dc7b7f1c64dfb9f313b9c93154834c82f35e537dbbc32f0fb9eb38517cc522cfb064aa5c910bd359cf4e9aeb5b57d1ed635eb028d9fab"
     },
     {
       "isim": "finans",
@@ -123,7 +133,7 @@
       "aciklama": "Bileşik faiz hesaplama, döviz çevirme, enflasyon etkisi ve kredi taksit tablosu çıkaran finansal analiz kütüphanesi.",
       "izinler": [],
       "bagimliliklar": [],
-      "imza": "cac98cf937858fbad4f86977129be0d083fea0ed21bc775c1476dbc78361d42e"
+      "imza": "2f58c09f3c131aee1e0394f4c8f78d17e829ebea3a5f13caf5f451e9d10ffaf6083dfa0fad8b6c19200ba81d0f4226cbc4c8626a4e83a42ad21b592f94d2ab2b9e2072a39d9b2169edbb7b9a1525890460dfadd5b93d4769c5671a933b880e1fa809482f462a801b708a9c2a58d01ade55f9d12faa9b82483db1628fdfaf5e75"
     },
     {
       "isim": "oyun",
@@ -133,7 +143,7 @@
       "aciklama": "Taş-kağıt-makas simülasyonu, sayı tahmin rehberliği, şans zarları ve skor tablosu oluşturucu içeren eğlenceli oyun araçları.",
       "izinler": [],
       "bagimliliklar": [],
-      "imza": "02c95379150b0b0739dd83b86d4fd30307fd5146d6c85ffeb9005fc4ddf0aaf0"
+      "imza": "33c7e0b0882b5209e4adba81f1c56f8b87e139d7873d62d27edc228b4521105400ffd4af8265feca270070e1da95f77faa80d6269b21504d7a7012975bad701382c70f467b501c4650401d8193ba378041a759cc4e4aaceaad75afb01a3f5e174d0a7af1b50e43c8505a55c61290371dae5c2259c8f3dcb6e937950768b38323"
     },
     {
       "isim": "telefon",
@@ -143,7 +153,7 @@
       "aciklama": "Mobil telefonlar için etkileşimli, görsel ve zengin arayüz elemanları tasarlamayı sağlayan GUI kütüphanesi.",
       "izinler": [],
       "bagimliliklar": [],
-      "imza": "4dc29fdb009635c5b6ceedcd44c110c7af31fa705064ee5218a6e5314bc49db9"
+      "imza": "4fcac1684e01052f5270b3b950014b4419c216391b7f61b44150e0be8ba0f290d5f55432b1deabf881336f2b4a9d09afaed89d4fa7f0aae60f80e05820b33b53f7e5f633224354c805abe5cc1d7c3a8d476abeecea749253909be5ac794c829296c90d820ed7e045874cc884e3650be9909f76245090b32808992d827031c5d6"
     },
     {
       "isim": "program",
@@ -153,7 +163,209 @@
       "aciklama": "ÖzDil / Varyn ile tam donanımlı masaüstü ve pencere tabanlı grafik programları, form uygulamaları, veri panelleri ve etkileşimli yazılımlar geliştirme kütüphanesi.",
       "izinler": [],
       "bagimliliklar": [],
-      "imza": "24345c7c7682d27ae4421c47a544b1a9e8897c570d0f0ced08cf298ba77b31d8696fa54e5e596487ba260792d30821cf43aae9f5e34ea5682c39c16d95dc6a213d396d10f9e54e8a9e192514f97bb20315c4c836fca8c8b6feffdd86a82f7db8278574dc86fb9371ea0971db1cbd7a626aa5fd2fad32f2b1be9283f6bf7a46ef"
+      "imza": "489e8a96dfc6de2c9947fa3641037fcff43e6ac21885a5d7fea4d6b1c7ffe0eead0606ae904251e0d76d967dd2951d4526a0beb8b6892b89e9ff34962ff4d741bf7c234c0132281c95a63ca53ba398645970812274abad7311743dfda453436d1d29b3f5048141d13c9543ce4b08fdeaafb52a131f0d3902265b071a8aa75dc"
+    },
+    {
+      "isim": "veritabani",
+      "surum": "1.0.0",
+      "yazar": "varyn_toplulugu",
+      "tur": "python",
+      "aciklama": "ÖzDil / Varyn için anahtar-değer ve JSON tabanlı bellek içi veritabanı kütüphanesi.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "5b70a5817f8657f3f1ff95c06cdb3c11e946c3352d2e2807a803e897834f351f268d882e59c0bdc26dcdcbe9e2cf8ae47173d14fff106352998a14fa85b6980e36881947b4a5869c45228a35aeb97abccb5f9cff5eff46f694689ce6dd715c0df794876f29075e10774b94ad6c8a5d55b3b134cf6aee9069f8556afac7723d25"
+    },
+    {
+      "isim": "ag_istemci",
+      "surum": "1.0.0",
+      "yazar": "ag_uzmani",
+      "tur": "python",
+      "aciklama": "HTTP/HTTPS istekleri gönderme, REST API etkileşimi ve veri çekme kütüphanesi.",
+      "izinler": [
+        "ag"
+      ],
+      "bagimliliklar": [],
+      "imza": "6432840c902cb0f5de0f17805810491a0ab56919cf025527513391e96e4ccf7c694ce9c15448eee0ab6c24652ae8ab0e224ff84ba5916d843301ef2772403adf8e6458d6e2b1df567f8a941991ef048ec36cdd05d56738f661ea64fd05fe3dfba8014f753e8e72573d6cf4d19eb40d2bd9c71f8196a2abe3b47ac663762ea2b7"
+    },
+    {
+      "isim": "sifreleme_araclari",
+      "surum": "1.0.0",
+      "yazar": "guvenlik_ekibi",
+      "tur": "python",
+      "aciklama": "Güvenli karma fonksiyonları (SHA256, MD5), Base64 dönüştürme ve Sezar şifreleme araçları.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "13dfbaa2c594ad662d19309db39353e13d19672a260a7d9de70519933dab1fa8ca9638f51c0e61c19d55dd763465d69df765f235e663a114510f1a81e5fbb993d0d0a65645106ddddb9632be077b495506fae1dc3e98a4ffad0541ae41f173469ea0c64b812c75cc37c0dcbd5175c174c46d9671525e6a7d3b6c9cd29f3c90c"
+    },
+    {
+      "isim": "ses_muzik",
+      "surum": "1.0.0",
+      "yazar": "muzik_studyosu",
+      "tur": "python",
+      "aciklama": "Ses frekansı hesaplama, nota frekans eşleme, bpm ve ritim zamanlayıcı simülatörü.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "3dfabf6137667d4024e5e147b3b4d391e2689fac3a22d2c90e90ad033baa858085cda810fcc1b01ebd42ec5e6588f75f310649495233be988c48c99aa042f17fcbf4ce9c162eca9f66c06d96fc0f3be895a13480534e471ac90c070e4fb5bce78c5052e57a85d3a91802e3bdfc453d5c6b81b8082afd16edffc7082e43484a31"
+    },
+    {
+      "isim": "muhasebe",
+      "surum": "1.0.0",
+      "yazar": "finans_ekibi",
+      "tur": "python",
+      "aciklama": "Vergi (KDV, Gelir Vergisi), net/brüt maaş, zam ve fatura hesaplama kütüphanesi.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "5a9022bbe7a71bf404888174ffcb6e3e69f9cbac648a2977bf9dcf0d9adbc947e2755dd4d062c904673fabe5c5e5be6850ba9d4026ee2d500dc12d450a9d41c4e88774607981593a15961eda4c31ae13a827d8d7e979442f576bdccae01d572d265182602ee00dd0f1b375cf55d9a45871865381328342c8a33ec1d5e65beb0f"
+    },
+    {
+      "isim": "fizik",
+      "surum": "1.0.0",
+      "yazar": "bilim_toplulugu",
+      "tur": "python",
+      "aciklama": "2D ve 3D temel fizik, hareket denklemleri, serbest düşme, atışlar ve enerji simülasyonu.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "3308bc473bb204da4d301c3a55a2d9c62479cc670fda59e6a6e3642ef4fc3f018ba695e13737cbe9b3ec12363b6420635d0184042c7d83e55a0222c76333886bfd5b6ee1cb6f6d001ccc5e596be19481eecb9c6dd5c6dd9a74b09a0c04495d938574e6eaebb9023b2471e3810e69ee5879d0ac480df0172399b074eea490cb6c"
+    },
+    {
+      "isim": "geometri",
+      "surum": "1.0.0",
+      "yazar": "matematik_kulubu",
+      "tur": "python",
+      "aciklama": "2D Alan/Çevre ve 3D Hacim/Yüzey Alanı hesaplama kütüphanesi.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "fc3e008784fcb28e50e4059fba1e99902aeb45b0bb1f2d7909dabe475b2e35dfa3f0f1c99532f2d4d85a84bc6c7c627e14e6a8234e48bcfc1450dcb9b1fe376ebda9712719561b186360cc82c49b70967036b5f7b437f0b22115e456442bab3ad69f6b8c709bb4c5bcb252d82281645ad89315f3d9e34921e37518bac3d3e2e"
+    },
+    {
+      "isim": "otomasyon",
+      "surum": "1.0.0",
+      "yazar": "sistem_otomasyonu",
+      "tur": "python",
+      "aciklama": "Zamanlanmış görevler, kronometre, zamanlayıcı ve günlük (logger) otomasyon araçları.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "1c788c0cb310e9016a1124478be9457314afde8148c4a658625ccb13510b067157e878e92d7d39dbd1c7b9e923f49ca9cd25c5d64723c32fcff5e1413f3d496c9dcaab0666aa2637f1ea9dcd610511da5eee9f25847b606f645016360990e1f1a0d041e94a396da3a5fc982788482885d211aeb21c9517d5bba303868648a8dc"
+    },
+    {
+      "isim": "lokasyon",
+      "surum": "1.0.0",
+      "yazar": "cografi_bilgiler",
+      "tur": "python",
+      "aciklama": "Coğrafi koordinatlar, Haversine mesafe hesaplama ve şehir bulucu kütüphanesi.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "3029a58f370fea6ff56abebb865c3f400d91306846ff87b64a33e1bb407ec426591b42754aa037e2d2a596d96e65c00a9e3fb173f9ceece5b3a2e3b0b4115c2853e6e6218c57ed242a5bc8fc13e1847141d2861a1d8e60b162c25487bd650cb10c79bddd8a4ac10de714c8b45039a94c0eb1bbd8515d0da8c7704b45ecf5892d"
+    },
+    {
+      "isim": "donusturucu",
+      "surum": "1.0.0",
+      "yazar": "donusum_ekibi",
+      "tur": "python",
+      "aciklama": "Sıcaklık (C, F, K), uzunluk, ağırlık, alan ve dijital veri boyutu dönüştürme kütüphanesi.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "2a68d96e5147af56e0667a96f97361132d5a7ab1172782cb102fa8741374746fc8bba6c7b2b2820f9d34a49c5844e1474e0fb37f540c38df8999bfd5582887840689bb2a80df46e28906ed407dc7bdc8f5a3004c2388c8029d23ab55ba2cbfe6db6182c939d7e714d2b1a1411ac5fc89c64f9d042ca490939de3e67d172e3d4f"
+    },
+    {
+      "isim": "kuyruk_yigin",
+      "surum": "1.0.0",
+      "yazar": "varyn_toplulugu",
+      "tur": "varyn",
+      "aciklama": "Saf Varyn ile yazılmış Yığın (Stack), Kuyruk (Queue) ve parantez dengeleme veri yapıları kütüphanesi.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "350d6460c06095cab7a670c0f2d173ced5b23e1d46d552f8c8a9a39130d425b0e91d07928456bbe783b18b9fe9fe1432057b35ff69824b7f1ebdb7568a38794ea6c918e6c277a4f58384ffd7b98dae3b594ac55723c3522c2dca46675bcbbe8c1e215ca5142ddf9bb8e231594afe83275ae32b3fc3aef87806e2cbcc266220c2"
+    },
+    {
+      "isim": "matris",
+      "surum": "1.0.0",
+      "yazar": "varyn_toplulugu",
+      "tur": "varyn",
+      "aciklama": "Saf Varyn ile yazılmış Matris ve Lineer Cebir işlemleri (toplama, çarpma, transpoz, determinant, birim matris).",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "23359936bdc55b391723fe54ddf5873a579e4b1c2dde358e6ba5d56a82f34b21b59da71a3f209f958beecf8ed507381ee7f6721ae8233fc86dc2ee1ddc40aee6c44861ad8f8667debf60250e860b3d0d1da89569a17b2d11ef237a5d6f1ad509a75f1e0524b254e277feb87cde8acf7f32c879978f0cb81c9eea4ec3c90b8221"
+    },
+    {
+      "isim": "sayi_teorisi",
+      "surum": "1.0.0",
+      "yazar": "varyn_toplulugu",
+      "tur": "varyn",
+      "aciklama": "Saf Varyn ile Asal Çarpanlar, Armstrong Sayıları, Mükemmel Sayılar, Collatz Dizisi ve Pascal Üçgeni.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "6ab32497a859e28ad61f561b126075b1d932a84b27ad0c110c0f90185feb474d2fd43ddfc935e06cf82d6a7ca5f7a6a1a4a94da695f8a5eefa33cbc2826ae7dd2bccb988e7e7e5e5dbdcedd9a18f6f416d8836f40bc8dd74f00284ed3b1784a88bdf3b1387bd2e6ec9a97e93382ebfd480f58308804e37844733272501a779f0"
+    },
+    {
+      "isim": "agac_graf",
+      "surum": "1.0.0",
+      "yazar": "varyn_toplulugu",
+      "tur": "varyn",
+      "aciklama": "Saf Varyn ile İkili Arama Ağacı (BST), Çizge (Graph) temsili, Kenar ekleme ve BFS gezintisi.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "492894afea962574ae4fc078510a67f8f13d3495ccf6608a3afdf8f1cc418a1fbae35dc0d156e5a0c4882fa09931804cdff3b28f58aade2f42f12614713e384a33fe33f46137a74665055c4d436e5b9a48d579320cafe81933897cac00486a83b5a175c9b97ab2ec348c4472269cbcd65cb12a5d8da04ebd9e91270a9cd1d632"
+    },
+    {
+      "isim": "istatistik_pro",
+      "surum": "1.0.0",
+      "yazar": "varyn_toplulugu",
+      "tur": "varyn",
+      "aciklama": "Saf Varyn ile Varyans, Standart Sapma, Çeyrekler (Q1/Q3), Min-Max Ölçekleme ve Pearson Korelasyonu.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "816969622e8373698a61330f9edbf959a9e96fbfb676e4490c53d016e15d43503d0d169abc811d3f66c4d4b5c02e2e54f9f6fcd331dfd40bd33c82bd543e845354bcebae00c154be0230eb98338ae837008f28cacd37986a92fae45e7f96043d0b6dfeb87ea58a8aba4053a40c7ec229c655757c859da2843f73cbf647108f64"
+    },
+    {
+      "isim": "metin_bicim",
+      "surum": "1.0.0",
+      "yazar": "varyn_toplulugu",
+      "tur": "varyn",
+      "aciklama": "Saf Varyn ile Metin Doldurma (Padding), Ters Çevirme, Kelime Frekansı ve Levenshtein Düzenleme Mesafesi.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "25c2f81f0abbe6b8eeafecd34a3e6d87787219314aa8be0c352e8266c96b30a01cf88f3653fa44254e3400e60a189c15c39b8d1f07ad4e5795cfe178e4366f3954744dfbeab1d5546d603eb21912cffaa7eb150d16b5375a77873df70c03a86af554a97243bc0d832cba6559b1a8e2c20c6ad961f62d0dbddb8f1f6c1c298b9f"
+    },
+    {
+      "isim": "kripto_klasik",
+      "surum": "1.0.0",
+      "yazar": "varyn_toplulugu",
+      "tur": "varyn",
+      "aciklama": "Saf Varyn ile Klasik Şifreleme (ROT13, Atbash, Vigenère, Çit / Rail Fence şifreleme ve çözme).",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "14f3410aa07193e8f9613b6217fab645c13f249e5ca7d0cbe39a6904eaa4f7c4573f93327d38504e3af5b7edb8ae59aae01eba239bba5e28e6720296da97b2a06671074b84b789d8f978c7076763c560fddefb711d33f6ac39fd0f623365d83194fd98c001c34edae10a9ad570182b811922bb738bc846cf127f54458165fa6b"
+    },
+    {
+      "isim": "siralama_koleksiyonu",
+      "surum": "1.0.0",
+      "yazar": "varyn_toplulugu",
+      "tur": "varyn",
+      "aciklama": "Saf Varyn ile Kabarcık (Bubble), Seçmeli (Selection), Eklemeli (Insertion) ve Saymalı (Counting) sıralama algoritmaları.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "b2d9ef0efef07876e56145b51aeaf1d2b54bdcce8788d2e8fda88941a8c639f724749da00c02c13684f154fa54fa0336865e6015b4c60681412080d0f9ec86d9e8a53d2a78f24780e061118656c73caa3e77b3e1bdb85429d309440610b09c3e358bd4792d52ceb4ab4cec062c99cb41cf05c92635d472a52c09e8fe0fa619e3"
+    },
+    {
+      "isim": "vektor_fizik",
+      "surum": "1.0.0",
+      "yazar": "varyn_toplulugu",
+      "tur": "varyn",
+      "aciklama": "Saf Varyn ile 2D/3D Vektör Matematiği, Büyüklük, Normalizasyon, Nokta Çarpımı ve AABB Çarpışma Testi.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "68f83d2378afdeb0111867dfbfa8646d781cd091deb617b78ebee2eb3032f10468ce47425cdbd9f14b159e67614e522e2e79cb42f332938df3bf74932eea8b077a6688b5d59559c86f10d8d7983c731302d11e2e08bf14fe8fa1ade849882e35716c592b7c5fa85cfccaa59c33b4d6a64fd6075a32c66d976fdf9c593ff1b69d"
+    },
+    {
+      "isim": "bulmaca_zeka",
+      "surum": "1.0.0",
+      "yazar": "varyn_toplulugu",
+      "tur": "varyn",
+      "aciklama": "Saf Varyn ile Sudoku 4x4 Doğrulayıcı, Hanoi Kuleleri Çözücü, N-Vezir Tehdit Kontrolü ve Anagram Testi.",
+      "izinler": [],
+      "bagimliliklar": [],
+      "imza": "4c97323c2d58076e42f4aa1f012078dfc6953e970311b8f5a61ab9c75e3d5b05b388c276f9eeefbdb818cbb9107244be7da6ffc34855ef5e5cbaedb9573bb266fba355c999137df985a21b15ed7078c5df3158fcf70c9f992d7c780bcce576cec9a23287887cef464001d77ce3fdc116293da461a3e834b3b289f7077540c2c6"
     }
   ]
 }

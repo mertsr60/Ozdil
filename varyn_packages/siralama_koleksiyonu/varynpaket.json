@@ -1,0 +1,10 @@
+{
+  "isim": "siralama_koleksiyonu",
+  "surum": "1.0.0",
+  "yazar": "varyn_toplulugu",
+  "tur": "varyn",
+  "aciklama": "Saf Varyn ile Kabarcık (Bubble), Seçmeli (Selection), Eklemeli (Insertion) ve Saymalı (Counting) sıralama algoritmaları.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "b2d9ef0efef07876e56145b51aeaf1d2b54bdcce8788d2e8fda88941a8c639f724749da00c02c13684f154fa54fa0336865e6015b4c60681412080d0f9ec86d9e8a53d2a78f24780e061118656c73caa3e77b3e1bdb85429d309440610b09c3e358bd4792d52ceb4ab4cec062c99cb41cf05c92635d472a52c09e8fe0fa619e3"
+}

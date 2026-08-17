@@ -1,0 +1,10 @@
+{
+  "isim": "sayi_teorisi",
+  "surum": "1.0.0",
+  "yazar": "varyn_toplulugu",
+  "tur": "varyn",
+  "aciklama": "Saf Varyn ile Asal Çarpanlar, Armstrong Sayıları, Mükemmel Sayılar, Collatz Dizisi ve Pascal Üçgeni.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "6ab32497a859e28ad61f561b126075b1d932a84b27ad0c110c0f90185feb474d2fd43ddfc935e06cf82d6a7ca5f7a6a1a4a94da695f8a5eefa33cbc2826ae7dd2bccb988e7e7e5e5dbdcedd9a18f6f416d8836f40bc8dd74f00284ed3b1784a88bdf3b1387bd2e6ec9a97e93382ebfd480f58308804e37844733272501a779f0"
+}

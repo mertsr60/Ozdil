@@ -1,0 +1,89 @@
+# Metin Biçimlendirme, Arama ve Analiz Kütüphanesi - %100 Saf Varyn
+
+işlem metin_doldur_sol(metin_degeri, hedef_uzunluk, dolgu_karakteri):
+    değişken s = metin(metin_degeri)
+    değişken eksik = hedef_uzunluk - uzunluk(s)
+    eğer eksik <= 0:
+        döndür s
+    değişken on_ek = ""
+    döngü i içinde aralık(eksik):
+        on_ek = on_ek + dolgu_karakteri
+    döndür on_ek + s
+
+işlem metin_doldur_sag(metin_degeri, hedef_uzunluk, dolgu_karakteri):
+    değişken s = metin(metin_degeri)
+    değişken eksik = hedef_uzunluk - uzunluk(s)
+    eğer eksik <= 0:
+        döndür s
+    değişken son_ek = ""
+    döngü i içinde aralık(eksik):
+        son_ek = son_ek + dolgu_karakteri
+    döndür s + son_ek
+
+işlem kelimelere_ayir(cumle):
+    değişken kelimeler = []
+    değişken aktif_kelime = ""
+    döngü i içinde aralık(uzunluk(cumle)):
+        değişken c = cumle[i]
+        eğer c == " " veya c == "\t" veya c == "\n":
+            eğer uzunluk(aktif_kelime) > 0:
+                kelimeler.ekle(aktif_kelime)
+                aktif_kelime = ""
+        değilse:
+            aktif_kelime = aktif_kelime + c
+    eğer uzunluk(aktif_kelime) > 0:
+        kelimeler.ekle(aktif_kelime)
+    döndür kelimeler
+
+işlem kelime_frekansi(cumle):
+    değişken kelimeler = kelimelere_ayir(cumle)
+    değişken sozluk_veri = {}
+    döngü k içinde kelimeler:
+        eğer k içinde sozluk_veri:
+            sozluk_veri[k] = sozluk_veri[k] + 1
+        değilse:
+            sozluk_veri[k] = 1
+    döndür sozluk_veri
+
+işlem ters_cevir(metin_degeri):
+    değişken s = metin(metin_degeri)
+    değişken n = uzunluk(s)
+    değişken sonuc = ""
+    döngü i içinde aralık(n):
+        sonuc = sonuc + s[n - 1 - i]
+    döndür sonuc
+
+işlem palindrom_metin_mi(metin_degeri):
+    değişken s = metin(metin_degeri)
+    döndür s == ters_cevir(s)
+
+işlem duzenleme_mesafesi(s1, s2):
+    değişken m = uzunluk(s1)
+    değişken n = uzunluk(s2)
+    değişken dp = []
+    döngü i içinde aralık(m + 1):
+        değişken satir = []
+        döngü j içinde aralık(n + 1):
+            satir.ekle(0)
+        dp.ekle(satir)
+        
+    döngü i içinde aralık(m + 1):
+        dp[i][0] = i
+    döngü j içinde aralık(n + 1):
+        dp[0][j] = j
+        
+    döngü i içinde aralık(1, m + 1):
+        döngü j içinde aralık(1, n + 1):
+            eğer s1[i - 1] == s2[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1]
+            değilse:
+                değişken ekl = dp[i][j - 1]
+                değişken sil = dp[i - 1][j]
+                değişken deg = dp[i - 1][j - 1]
+                değişken min_islem = ekl
+                eğer sil < min_islem:
+                    min_islem = sil
+                eğer deg < min_islem:
+                    min_islem = deg
+                dp[i][j] = 1 + min_islem
+    döndür dp[m][n]

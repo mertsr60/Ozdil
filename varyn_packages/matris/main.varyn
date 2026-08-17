@@ -1,0 +1,95 @@
+# Matris ve Lineer Cebir Kütüphanesi - %100 Saf Varyn
+
+işlem matris_olustur(satir, sutun, varsayilan):
+    değişken m = []
+    döngü i içinde aralık(satir):
+        değişken s = []
+        döngü j içinde aralık(sutun):
+            s.ekle(varsayilan)
+        m.ekle(s)
+    döndür m
+
+işlem birim_matris(boyut):
+    değişken m = []
+    döngü i içinde aralık(boyut):
+        değişken s = []
+        döngü j içinde aralık(boyut):
+            eğer i == j:
+                s.ekle(1)
+            değilse:
+                s.ekle(0)
+        m.ekle(s)
+    döndür m
+
+işlem matris_topla(m1, m2):
+    değişken satir = uzunluk(m1)
+    değişken sutun = uzunluk(m1[0])
+    değişken sonuc = []
+    döngü i içinde aralık(satir):
+        değişken satir_dizi = []
+        döngü j içinde aralık(sutun):
+            satir_dizi.ekle(m1[i][j] + m2[i][j])
+        sonuc.ekle(satir_dizi)
+    döndür sonuc
+
+işlem matris_cikar(m1, m2):
+    değişken satir = uzunluk(m1)
+    değişken sutun = uzunluk(m1[0])
+    değişken sonuc = []
+    döngü i içinde aralık(satir):
+        değişken satir_dizi = []
+        döngü j içinde aralık(sutun):
+            satir_dizi.ekle(m1[i][j] - m2[i][j])
+        sonuc.ekle(satir_dizi)
+    döndür sonuc
+
+işlem skaler_carp(m, katsayi):
+    değişken sonuc = []
+    döngü i içinde aralık(uzunluk(m)):
+        değişken s = []
+        döngü j içinde aralık(uzunluk(m[i])):
+            s.ekle(m[i][j] * katsayi)
+        sonuc.ekle(s)
+    döndür sonuc
+
+işlem transpoz_al(m):
+    değişken satir = uzunluk(m)
+    değişken sutun = uzunluk(m[0])
+    değişken t = []
+    döngü j içinde aralık(sutun):
+        değişken s = []
+        döngü i içinde aralık(satir):
+            s.ekle(m[i][j])
+        t.ekle(s)
+    döndür t
+
+işlem matris_carp(m1, m2):
+    değişken satir1 = uzunluk(m1)
+    değişken sutun1 = uzunluk(m1[0])
+    değişken sutun2 = uzunluk(m2[0])
+    değişken sonuc = []
+    döngü i içinde aralık(satir1):
+        değişken s = []
+        döngü j içinde aralık(sutun2):
+            değişken toplam = 0
+            döngü k içinde aralık(sutun1):
+                toplam = toplam + (m1[i][k] * m2[k][j])
+            s.ekle(toplam)
+        sonuc.ekle(s)
+    döndür sonuc
+
+işlem determinant_2x2(m):
+    döndür (m[0][0] * m[1][1]) - (m[0][1] * m[1][0])
+
+işlem determinant_3x3(m):
+    değişken a = m[0][0] * ((m[1][1] * m[2][2]) - (m[1][2] * m[2][1]))
+    değişken b = m[0][1] * ((m[1][0] * m[2][2]) - (m[1][2] * m[2][0]))
+    değişken c = m[0][2] * ((m[1][0] * m[2][1]) - (m[1][1] * m[2][0]))
+    döndür a - b + c
+
+işlem iz_hesapla(m):
+    değişken toplam = 0
+    değişken n = uzunluk(m)
+    döngü i içinde aralık(n):
+        toplam = toplam + m[i][i]
+    döndür toplam

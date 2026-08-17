@@ -1,0 +1,12 @@
+{
+  "isim": "ag_istemci",
+  "surum": "1.0.0",
+  "yazar": "ag_uzmani",
+  "tur": "python",
+  "aciklama": "HTTP/HTTPS istekleri gönderme, REST API etkileşimi ve veri çekme kütüphanesi.",
+  "izinler": [
+    "ag"
+  ],
+  "bagimliliklar": [],
+  "imza": "6432840c902cb0f5de0f17805810491a0ab56919cf025527513391e96e4ccf7c694ce9c15448eee0ab6c24652ae8ab0e224ff84ba5916d843301ef2772403adf8e6458d6e2b1df567f8a941991ef048ec36cdd05d56738f661ea64fd05fe3dfba8014f753e8e72573d6cf4d19eb40d2bd9c71f8196a2abe3b47ac663762ea2b7"
+}

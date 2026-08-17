@@ -1,0 +1,10 @@
+{
+  "isim": "veritabani",
+  "surum": "1.0.0",
+  "yazar": "varyn_toplulugu",
+  "tur": "python",
+  "aciklama": "ÖzDil / Varyn için anahtar-değer ve JSON tabanlı bellek içi veritabanı kütüphanesi.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "5b70a5817f8657f3f1ff95c06cdb3c11e946c3352d2e2807a803e897834f351f268d882e59c0bdc26dcdcbe9e2cf8ae47173d14fff106352998a14fa85b6980e36881947b4a5869c45228a35aeb97abccb5f9cff5eff46f694689ce6dd715c0df794876f29075e10774b94ad6c8a5d55b3b134cf6aee9069f8556afac7723d25"
+}

@@ -8,7 +8,7 @@ formlar, veri tabloları, menüler, araç çubukları ve etkileşimli yazılıml
 import plugin_api
 
 def _append_element(elem):
-    if getattr(plugin_api.plugin, "current_program", None) is not None:
+    if plugin_api.plugin.current_program is not None:
         plugin_api.plugin.current_program["elements"].append(elem)
     else:
         # Program penceresi henüz açılmadıysa otomatik varsayılan pencere oluştur

@@ -1,0 +1,10 @@
+{
+  "isim": "metin_bicim",
+  "surum": "1.0.0",
+  "yazar": "varyn_toplulugu",
+  "tur": "varyn",
+  "aciklama": "Saf Varyn ile Metin Doldurma (Padding), Ters Çevirme, Kelime Frekansı ve Levenshtein Düzenleme Mesafesi.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "3fb82c92d25d4e73fe604e86becec408a96ea848283e15cba8446cea85bdce49a0a92fcf43f6a75525eed5f680594e631e3093bac0f4c9593961bafda792ec836fff3c2341cb3fadfce516ccbdfdba8c7d1bbcf62a997f74ec7db6eec17d37b1f66473b5892b9ea179818d01384d5bd16f2786c0ded2d2244a8a9bbfad3db35f"
+}

@@ -1,0 +1,10 @@
+{
+  "isim": "kripto_klasik",
+  "surum": "1.0.0",
+  "yazar": "varyn_toplulugu",
+  "tur": "varyn",
+  "aciklama": "Saf Varyn ile Klasik Şifreleme (ROT13, Atbash, Vigenère, Çit / Rail Fence şifreleme ve çözme).",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "14f3410aa07193e8f9613b6217fab645c13f249e5ca7d0cbe39a6904eaa4f7c4573f93327d38504e3af5b7edb8ae59aae01eba239bba5e28e6720296da97b2a06671074b84b789d8f978c7076763c560fddefb711d33f6ac39fd0f623365d83194fd98c001c34edae10a9ad570182b811922bb738bc846cf127f54458165fa6b"
+}

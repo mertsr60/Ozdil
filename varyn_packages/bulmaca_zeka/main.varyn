@@ -1,0 +1,80 @@
+# Mantık, Zeka Oyunları ve Bulmaca Algoritmaları Kütüphanesi - %100 Saf Varyn
+
+işlem sudoku_4x4_dogrula(matris):
+    döngü i içinde aralık(4):
+        değişken sayac = [0, 0, 0, 0, 0]
+        döngü j içinde aralık(4):
+            değişken val = matris[i][j]
+            eğer val < 1 veya val > 4 veya sayac[val] > 0:
+                döndür yanlış
+            sayac[val] = 1
+            
+    döngü j içinde aralık(4):
+        değişken sayac = [0, 0, 0, 0, 0]
+        döngü i içinde aralık(4):
+            değişken val = matris[i][j]
+            eğer val < 1 veya val > 4 veya sayac[val] > 0:
+                döndür yanlış
+            sayac[val] = 1
+            
+    döngü bi içinde [0, 2]:
+        döngü bj içinde [0, 2]:
+            değişken sayac = [0, 0, 0, 0, 0]
+            döngü r içinde aralık(2):
+                döngü c içinde aralık(2):
+                    değişken val = matris[bi + r][bj + c]
+                    eğer val < 1 veya val > 4 veya sayac[val] > 0:
+                        döndür yanlış
+                    sayac[val] = 1
+    döndür doğru
+
+işlem hanoi_hamleleri(disk_sayisi, kaynak, hedef, yardimci):
+    eğer disk_sayisi == 1:
+        döndür [metin(kaynak) + " -> " + metin(hedef)]
+    değişken hamleler = []
+    değişken adim1 = hanoi_hamleleri(disk_sayisi - 1, kaynak, yardimci, hedef)
+    döngü h içinde adim1:
+        hamleler.ekle(h)
+    hamleler.ekle(metin(kaynak) + " -> " + metin(hedef))
+    değişken adim2 = hanoi_hamleleri(disk_sayisi - 1, yardimci, hedef, kaynak)
+    döngü h içinde adim2:
+        hamleler.ekle(h)
+    döndür hamleler
+
+işlem vezir_tehditi_var_mi(vezir_pozisyonlari):
+    değişken n = uzunluk(vezir_pozisyonlari)
+    döngü i içinde aralık(n):
+        döngü j içinde aralık(i + 1, n):
+            eğer vezir_pozisyonlari[i] == vezir_pozisyonlari[j]:
+                döndür doğru
+            değişken satir_farki = j - i
+            değişken sutun_farki = vezir_pozisyonlari[j] - vezir_pozisyonlari[i]
+            eğer sutun_farki < 0:
+                sutun_farki = sutun_farki * -1
+            eğer satir_farki == sutun_farki:
+                döndür doğru
+    döndür yanlış
+
+işlem anagram_mi(kelime1, kelime2):
+    eğer uzunluk(kelime1) != uzunluk(kelime2):
+        döndür yanlış
+    değişken harfler1 = []
+    değişken harfler2 = []
+    döngü i içinde aralık(uzunluk(kelime1)):
+        harfler1.ekle(kelime1[i])
+        harfler2.ekle(kelime2[i])
+    değişken n = uzunluk(harfler1)
+    döngü i içinde aralık(n):
+        döngü j içinde aralık(n - i - 1):
+            eğer harfler1[j] > harfler1[j + 1]:
+                değişken temp = harfler1[j]
+                harfler1[j] = harfler1[j + 1]
+                harfler1[j + 1] = temp
+            eğer harfler2[j] > harfler2[j + 1]:
+                değişken temp2 = harfler2[j]
+                harfler2[j] = harfler2[j + 1]
+                harfler2[j + 1] = temp2
+    döngü i içinde aralık(n):
+        eğer harfler1[i] != harfler2[i]:
+            döndür yanlış
+    döndür doğru

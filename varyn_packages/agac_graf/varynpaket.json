@@ -1,0 +1,10 @@
+{
+  "isim": "agac_graf",
+  "surum": "1.0.0",
+  "yazar": "varyn_toplulugu",
+  "tur": "varyn",
+  "aciklama": "Saf Varyn ile İkili Arama Ağacı (BST), Çizge (Graph) temsili, Kenar ekleme ve BFS gezintisi.",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "492894afea962574ae4fc078510a67f8f13d3495ccf6608a3afdf8f1cc418a1fbae35dc0d156e5a0c4882fa09931804cdff3b28f58aade2f42f12614713e384a33fe33f46137a74665055c4d436e5b9a48d579320cafe81933897cac00486a83b5a175c9b97ab2ec348c4472269cbcd65cb12a5d8da04ebd9e91270a9cd1d632"
+}

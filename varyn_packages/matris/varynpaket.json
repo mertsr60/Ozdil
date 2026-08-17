@@ -1,0 +1,10 @@
+{
+  "isim": "matris",
+  "surum": "1.0.0",
+  "yazar": "varyn_toplulugu",
+  "tur": "varyn",
+  "aciklama": "Saf Varyn ile yazılmış Matris ve Lineer Cebir işlemleri (toplama, çarpma, transpoz, determinant, birim matris).",
+  "izinler": [],
+  "bagimliliklar": [],
+  "imza": "23359936bdc55b391723fe54ddf5873a579e4b1c2dde358e6ba5d56a82f34b21b59da71a3f209f958beecf8ed507381ee7f6721ae8233fc86dc2ee1ddc40aee6c44861ad8f8667debf60250e860b3d0d1da89569a17b2d11ef237a5d6f1ad509a75f1e0524b254e277feb87cde8acf7f32c879978f0cb81c9eea4ec3c90b8221"
+}

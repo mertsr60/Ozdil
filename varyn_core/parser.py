@@ -235,7 +235,7 @@ class Parser:
 
     def parse_comparison(self):
         node = self.parse_term()
-        while self.current().type == 'OP' and self.current().value in ('<', '>', '<=', '>='):
+        while (self.current().type == 'OP' and self.current().value in ('<', '>', '<=', '>=')) or (self.current().type == 'KEYWORD' and self.current().value in ('içinde', 'icinde', 'in')):
             op = self.current().value
             self.pos += 1
             right = self.parse_term()
